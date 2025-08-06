@@ -1,6 +1,6 @@
 {
   "name": "vxe-gantt",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A Gantt chart based on Vxe UI and for use on PC systems",
   "scripts": {
     "update": "npm install --legacy-peer-deps",
