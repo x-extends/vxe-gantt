@@ -1,5 +1,7 @@
 import XEUtils from 'xe-utils'
 
+const reClsMap: { [key: string]: any } = {}
+
 let tpImgEl: HTMLImageElement | undefined
 
 export function initTpImg () {
@@ -17,7 +19,9 @@ export function getTpImg () {
   return tpImgEl
 }
 
-const reClsMap: { [key: string]: any } = {}
+export function getPropClass (property: any, params: any) {
+  return property ? XEUtils.isFunction(property) ? property(params) : property : ''
+}
 
 function getClsRE (cls: any) {
   if (!reClsMap[cls]) {
@@ -71,11 +75,18 @@ export function hasControlKey (evnt: KeyboardEvent | MouseEvent | DragEvent) {
   return evnt.ctrlKey || evnt.metaKey
 }
 
-export function toCssUnit (val?: number | string | null, unit = 'px') {
+export function toCssUnit (val?: number | string, unit = 'px') {
   if (XEUtils.isNumber(val) || /^\d+$/.test(`${val}`)) {
     return `${val}${unit}`
   }
   return `${val || ''}`
+}
+
+export function queryElement (elem: HTMLTableCellElement, selector: string) {
+  if (elem) {
+    return elem.querySelector<HTMLElement>(selector)
+  }
+  return null
 }
 
 export function getDomNode () {
@@ -86,6 +97,46 @@ export function getDomNode () {
     scrollLeft: documentElement.scrollLeft || bodyElem.scrollLeft,
     visibleHeight: documentElement.clientHeight || bodyElem.clientHeight,
     visibleWidth: documentElement.clientWidth || bodyElem.clientWidth
+  }
+}
+
+export function getOffsetHeight (elem?: HTMLElement) {
+  return elem ? elem.offsetHeight : 0
+}
+
+export function getPaddingTopBottomSize (elem: HTMLElement) {
+  if (elem) {
+    const computedStyle = getComputedStyle(elem)
+    const paddingTop = XEUtils.toNumber(computedStyle.paddingTop)
+    const paddingBottom = XEUtils.toNumber(computedStyle.paddingBottom)
+    return paddingTop + paddingBottom
+  }
+  return 0
+}
+
+export function setScrollTop (elem: HTMLElement | null | undefined, scrollTop: number) {
+  if (elem) {
+    elem.scrollTop = scrollTop
+  }
+}
+
+export function setScrollLeft (elem: HTMLElement | null | undefined, scrollLeft: number) {
+  if (elem) {
+    elem.scrollLeft = scrollLeft
+  }
+}
+
+// export function setScrollLeftAndTop (elem: HTMLElement | null, scrollLeft: number, scrollTop: number) {
+//   if (elem) {
+//     elem.scrollLeft = scrollLeft
+//     elem.scrollTop = scrollTop
+//   }
+// }
+
+export function updateCellTitle (overflowElem: any, column: any) {
+  const content = column.type === 'html' ? overflowElem.innerText : overflowElem.textContent
+  if (overflowElem.getAttribute('title') !== content) {
+    overflowElem.setAttribute('title', content)
   }
 }
 
@@ -121,16 +172,6 @@ export function getAbsolutePos (elem: any) {
   return { boundingTop, top: scrollTop + boundingTop, boundingLeft, left: scrollLeft + boundingLeft, visibleHeight, visibleWidth }
 }
 
-export function getPaddingTopBottomSize (elem: HTMLElement) {
-  if (elem) {
-    const computedStyle = getComputedStyle(elem)
-    const paddingTop = XEUtils.toNumber(computedStyle.paddingTop)
-    const paddingBottom = XEUtils.toNumber(computedStyle.paddingBottom)
-    return paddingTop + paddingBottom
-  }
-  return 0
-}
-
 const scrollIntoViewIfNeeded = 'scrollIntoViewIfNeeded'
 const scrollIntoView = 'scrollIntoView'
 
@@ -152,102 +193,4 @@ export function triggerEvent (targetElem: Element, type: string) {
 
 export function isNodeElement (elem: any): elem is HTMLElement {
   return elem && elem.nodeType === 1
-}
-
-export function updatePanelPlacement (targetElem: HTMLElement | null | undefined, panelElem: HTMLElement | null | undefined, options: {
-  placement?: '' | 'top' | 'bottom' | null
-  teleportTo?: boolean
-  marginSize?: number
-}) {
-  const { placement, teleportTo, marginSize } = Object.assign({ teleportTo: false, marginSize: 32 }, options)
-  let panelPlacement: 'top' | 'bottom' = 'bottom'
-  let top: number | '' = ''
-  let bottom: number | '' = ''
-  let left: number | '' = ''
-  const right: number | '' = ''
-  let minWidth: number | '' = ''
-  const stys: Record<string, string> = {}
-  if (panelElem && targetElem) {
-    const documentElement = document.documentElement
-    const bodyElem = document.body
-    const targetHeight = targetElem.offsetHeight
-    const panelHeight = panelElem.offsetHeight
-    const panelWidth = panelElem.offsetWidth
-
-    const panelRect = panelElem.getBoundingClientRect()
-    const targetRect = targetElem.getBoundingClientRect()
-    const visibleHeight = documentElement.clientHeight || bodyElem.clientHeight
-    const visibleWidth = documentElement.clientWidth || bodyElem.clientWidth
-    minWidth = targetElem.offsetWidth
-    if (teleportTo) {
-      left = targetRect.left
-      top = targetRect.top + targetHeight
-      if (placement === 'top') {
-        panelPlacement = 'top'
-        top = targetRect.top - panelHeight
-      } else if (!placement) {
-        // 如果下面不够放，则向上
-        if (top + panelHeight + marginSize > visibleHeight) {
-          panelPlacement = 'top'
-          top = targetRect.top - panelHeight
-        }
-        // 如果上面不够放，则向下（优先）
-        if (top < marginSize) {
-          panelPlacement = 'bottom'
-          top = targetRect.top + targetHeight
-        }
-      }
-      // 如果溢出右边
-      if (left + panelWidth + marginSize > visibleWidth) {
-        left -= left + panelWidth + marginSize - visibleWidth
-      }
-      // 如果溢出左边
-      if (left < marginSize) {
-        left = marginSize
-      }
-    } else {
-      if (placement === 'top') {
-        panelPlacement = 'top'
-        bottom = targetHeight
-      } else if (!placement) {
-        // 如果下面不够放，则向上
-        top = targetHeight
-        if (targetRect.top + targetRect.height + marginSize > visibleHeight) {
-          // 如果上面不够放，则向下（优先）
-          if (targetRect.top - targetHeight - panelHeight > marginSize) {
-            panelPlacement = 'top'
-            top = ''
-            bottom = targetHeight
-          }
-        }
-      }
-      // 是否超出右侧
-      if (panelRect.left + panelRect.width + marginSize > visibleWidth) {
-        left = -(panelRect.left + panelRect.width + marginSize - visibleWidth)
-      }
-    }
-    if (XEUtils.isNumber(top)) {
-      stys.top = toCssUnit(top)
-    }
-    if (XEUtils.isNumber(bottom)) {
-      stys.bottom = toCssUnit(bottom)
-    }
-    if (XEUtils.isNumber(left)) {
-      stys.left = toCssUnit(left)
-    }
-    if (XEUtils.isNumber(right)) {
-      stys.right = toCssUnit(right)
-    }
-    if (XEUtils.isNumber(minWidth)) {
-      stys.minWidth = toCssUnit(minWidth)
-    }
-  }
-  return {
-    top: top || 0,
-    bottom: bottom || 0,
-    left: left || 0,
-    right: right || 0,
-    style: stys,
-    placement: panelPlacement
-  }
 }

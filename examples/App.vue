@@ -27,7 +27,9 @@ const collapsed = ref(false)
 
 const navList = ref<VxeMenuPropTypes.Options>([
   { name: 'Home', icon: 'vxe-icon-user-fill', routerLink: { path: '/' } },
-  { name: 'GanttTest', routerLink: { name: 'GanttTest' } }
+  { name: 'GanttTest1', routerLink: { name: 'GanttTest1' } },
+  { name: 'GanttTest2', routerLink: { name: 'GanttTest2' } },
+  { name: 'GanttTest3', routerLink: { name: 'GanttTest3' } }
 ])
 
 const theme = ref((localStorage.getItem('VXE_THEME') as 'light' | 'dark') || 'light')

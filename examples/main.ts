@@ -5,11 +5,14 @@ import router from './router'
 import './styles/index.scss'
 
 // 引入组件库
-import VxeUI from '../packages'
-import '../styles/all.scss'
+import VxeUIAll, { VxeUI } from 'vxe-pc-ui'
+import 'vxe-pc-ui/lib/style.css'
 
-// import VxeUITable from 'vxe-table'
-// import 'vxe-table/lib/style.css'
+import VxeUITable from 'vxe-table'
+import 'vxe-table/lib/style.css'
+
+import VxeUIGantt from '../packages'
+import '../styles/all.scss'
 
 declare global {
   interface Window {
@@ -39,7 +42,8 @@ window.axios.defaults.baseURL = process.env.VUE_APP_SERVE_API_URL
 const app = createApp(App)
 
 app.use(router)
-app.use(VxeUI)
-// app.use(VxeUITable)
+app.use(VxeUIAll)
+app.use(VxeUITable)
+app.use(VxeUIGantt)
 
 app.mount('#app')

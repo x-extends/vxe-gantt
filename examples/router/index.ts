@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 
+import RouteLayout from '../views/layout/RouteLayout.vue'
 import StartInstall from '../views/start/StartInstall.vue'
 
 const routes: Array<RouteRecordRaw> = [
@@ -22,8 +23,24 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/component/gantt',
-    name: 'GanttTest',
-    component: () => import('../views/gantt/GanttTest.vue')
+    component: RouteLayout,
+    children: [
+      {
+        path: 'test1',
+        name: 'GanttTest1',
+        component: () => import('../views/gantt/GanttTest1.vue')
+      },
+      {
+        path: 'test2',
+        name: 'GanttTest2',
+        component: () => import('../views/gantt/GanttTest2.vue')
+      },
+      {
+        path: 'test3',
+        name: 'GanttTest3',
+        component: () => import('../views/gantt/GanttTest3.vue')
+      }
+    ]
   }
 ]
 
