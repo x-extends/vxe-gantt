@@ -1,4 +1,4 @@
-import { h, inject, computed, ref, Ref, onMounted, onUnmounted } from 'vue'
+import { h, inject, ref, Ref, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods } from '../../../types'
@@ -15,20 +15,8 @@ export default defineVxeComponent({
     const refHeaderTable = ref() as Ref<HTMLTableElement>
     const refHeaderXSpace = ref() as Ref<HTMLDivElement>
 
-    const computeHeaderHeight = computed(() => {
-      const $xeTable = internalData.xeTable
-      const { tableData } = reactData
-      if (tableData.length && $xeTable) {
-        const tableReactData = $xeTable.reactData
-        const { tHeaderHeight } = tableReactData
-        return tHeaderHeight
-      }
-      return ''
-    })
-
     const renderVN = () => {
-      const { tableColumn, headerGroups } = reactData
-      const headerHeight = computeHeaderHeight.value
+      const { tableColumn, headerGroups, viewCellWidth } = reactData
       return h('div', {
         ref: refElem,
         class: 'vxe-gantt-view--header-wrapper'
@@ -36,9 +24,6 @@ export default defineVxeComponent({
         h('div', {
           ref: refHeaderScroll,
           class: 'vxe-gantt-view--header-inner-wrapper',
-          style: {
-            height: `${headerHeight}px`
-          },
           onScroll: $xeGanttView.triggerHeaderScrollEvent
         }, [
           h('div', {
@@ -47,14 +32,14 @@ export default defineVxeComponent({
           }),
           h('table', {
             ref: refHeaderTable,
-            class: 'vxe-gantt-view--header-table',
-            style: {
-              width: `calc(var(--vxe-ui-gantt-view-column-width) * ${tableColumn.length})`
-            }
+            class: 'vxe-gantt-view--header-table'
           }, [
             h('colgroup', {}, tableColumn.map((column, cIndex) => {
               return h('col', {
-                key: cIndex
+                key: cIndex,
+                style: {
+                  width: `${viewCellWidth}px`
+                }
               })
             })),
             h('thead', {}, headerGroups.map((cols, rIndex) => {

@@ -48,3 +48,7 @@ export function formatText (value: any, placeholder?: any) {
 export function eqEmptyValue (cellValue: any) {
   return cellValue === '' || XEUtils.eqNull(cellValue)
 }
+
+export function getStringValue (cellValue: any) {
+  return eqEmptyValue(cellValue) ? '' : cellValue
+}

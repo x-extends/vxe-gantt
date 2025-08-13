@@ -1,4 +1,11 @@
 :root {
   /*gantt*/
-  --vxe-ui-gantt-view-column-width: 40px;
+  --vxe-ui-gantt-view-default-cell-width: 40px;
+  --vxe-ui-gantt-view-chart-bar-height: 1.6em;
+  --vxe-ui-gantt-view-split-bar-width: 10px;
+  --vxe-ui-gantt-view-split-bar-height: 6.8em;
+  --vxe-ui-gantt-view-table-default-width: 30%;
+  --vxe-ui-gantt-view-task-bar-border-radius: calc(var(--vxe-ui-gantt-view-split-bar-height) / 2);
+  --vxe-ui-gantt-view-task-bar-background-color: var(--vxe-ui-font-primary-lighten-color);
+  --vxe-ui-gantt-view-task-bar-completed-background-color: var(--vxe-ui-font-primary-color);
 }

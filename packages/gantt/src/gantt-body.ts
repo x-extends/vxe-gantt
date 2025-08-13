@@ -1,14 +1,19 @@
-import { h, inject, VNode, computed, ref, Ref, onMounted, onUnmounted } from 'vue'
+import { h, inject, VNode, ref, Ref, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
+import { getCellRestHeight } from './util'
+import GanttViewChartComponent from './gantt-chart'
 
-import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods } from '../../../types'
+import type { VxeTablePropTypes } from 'vxe-table'
+import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 export default defineVxeComponent({
   name: 'VxeGanttViewBody',
   setup () {
+    const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
     const { reactData, internalData } = $xeGanttView
+    const { refTable } = $xeGantt.getRefMaps()
 
     const refElem = ref() as Ref<HTMLDivElement>
     const refBodyScroll = ref() as Ref<HTMLDivElement>
@@ -16,29 +21,43 @@ export default defineVxeComponent({
     const refBodyXSpace = ref() as Ref<HTMLDivElement>
     const refBodyYSpace = ref() as Ref<HTMLDivElement>
 
-    const computeBodyHeight = computed(() => {
-      const $xeTable = internalData.xeTable
-      const { tableData } = reactData
-      if (tableData.length && $xeTable) {
-        const tableReactData = $xeTable.reactData
-        const { tBodyHeight } = tableReactData
-        return tBodyHeight
-      }
-      return ''
-    })
-
     const renderRows = () => {
+      const $xeTable = refTable.value
+
+      const fullAllDataRowIdData = $xeTable ? $xeTable.internalData.fullAllDataRowIdData : {}
+      let cellOpts: VxeTablePropTypes.CellConfig = {}
+      let rowOpts : VxeTablePropTypes.RowConfig = {}
+      let defaultRowHeight = 0
+      if ($xeTable) {
+        const { computeCellOpts, computeRowOpts, computeDefaultRowHeight } = $xeTable.getComputeMaps()
+        cellOpts = computeCellOpts.value
+        rowOpts = computeRowOpts.value
+        defaultRowHeight = computeDefaultRowHeight.value
+      }
+
       const { tableData, tableColumn } = reactData
 
       const trVNs:VNode[] = []
       tableData.forEach((row, rIndex) => {
+        const rowid = $xeTable ? $xeTable.getRowid(row) : ''
+        const rowRest = fullAllDataRowIdData[rowid] || {}
+        const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
         trVNs.push(
           h('tr', {
             key: rIndex
           }, tableColumn.map((column, cIndex) => {
-            return h('th', {
+            return h('td', {
               key: cIndex,
-              class: 'vxe-gantt-view--body-column'
+              class: 'vxe-gantt-view--body-column',
+              style: {
+                height: `${cellHeight}px`
+              },
+              onClick (evnt) {
+                $xeGantt.handleTaskCellClickEvent(evnt, { row })
+              },
+              onDblclick (evnt) {
+                $xeGantt.handleTaskCellDblclickEvent(evnt, { row })
+              }
             })
           }))
         )
@@ -47,8 +66,7 @@ export default defineVxeComponent({
     }
 
     const renderVN = () => {
-      const { tableColumn } = reactData
-      const bodyHeight = computeBodyHeight.value
+      const { tableColumn, viewCellWidth } = reactData
       return h('div', {
         ref: refElem,
         class: 'vxe-gantt-view--body-wrapper'
@@ -56,9 +74,6 @@ export default defineVxeComponent({
         h('div', {
           ref: refBodyScroll,
           class: 'vxe-gantt-view--body-inner-wrapper',
-          style: {
-            height: `${bodyHeight}px`
-          },
           onScroll: $xeGanttView.triggerBodyScrollEvent
         }, [
           h('div', {
@@ -71,18 +86,19 @@ export default defineVxeComponent({
           }),
           h('table', {
             ref: refBodyTable,
-            class: 'vxe-gantt-view--body-table',
-            style: {
-              width: `calc(var(--vxe-ui-gantt-view-column-width) * ${tableColumn.length})`
-            }
+            class: 'vxe-gantt-view--body-table'
           }, [
             h('colgroup', {}, tableColumn.map((column, cIndex) => {
               return h('col', {
-                key: cIndex
+                key: cIndex,
+                style: {
+                  width: `${viewCellWidth}px`
+                }
               })
             })),
             h('tbody', {}, renderRows())
-          ])
+          ]),
+          h(GanttViewChartComponent)
         ])
       ])
     }

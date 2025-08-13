@@ -27,12 +27,38 @@
   * **V1**
     * [x] ~~v1.0 基于 vue2.6+，停止维护~~
 
+## 浏览器支持
+
+![Edge](https://raw.github.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Chrome](https://raw.github.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.github.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![Opera](https://raw.github.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.github.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
+--- | --- | --- | --- | --- |
+80+ ✔ | 80+ ✔ | 90+ ✔ | 75+ ✔ | 10+ ✔ |
+
+## 在线文档
+
+👉 [基础库](https://vxeui.com)  
+👉 [表格库](https://vxetable.cn)  
+👉 [甘特图](https://gantt.vxeui.com)  
+👉 [可视化](https://design.vxeui.com)  
+
+## QQ 交流群
+
+该群供大家交流問題，如果群人数已满，将会不定期剔除不活跃的。  
+
+![qq](https://vxeui.com/resource/donation/qq1.png)
+![qq](https://vxeui.com/resource/donation/qq2.png)
+
+## 功能点
+
+[👀 Vxe Gantt](https://gantt.vxeui.com/)  
+
+* [x] gantt 甘特图
+
 ## 安装
 
 版本：[vue](https://www.npmjs.com/package/vue) 3.x
 
 ```shell
-npm install vxe-gantt
+npm install vxe-pc-ui vxe-table vxe-gantt
 ```
 
 Get on [unpkg](https://unpkg.com/vxe-gantt/) and [cdnjs](https://cdn.jsdelivr.net/npm/vxe-gantt/)

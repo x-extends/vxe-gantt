@@ -1,4 +1,6 @@
-import { log } from '@vxe-ui/core'
+import { VxeUI } from '@vxe-ui/core'
+
+const { log } = VxeUI
 
 const version = `gantt v${process.env.VUE_APP_VXE_VERSION}`
 
