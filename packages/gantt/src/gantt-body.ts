@@ -3,7 +3,7 @@ import { defineVxeComponent } from '../../ui/src/comp'
 import { getCellRestHeight } from './util'
 import GanttViewChartComponent from './gantt-chart'
 
-import type { VxeTablePropTypes } from 'vxe-table'
+import type { VxeTablePropTypes, TableInternalData } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 export default defineVxeComponent({
@@ -13,7 +13,6 @@ export default defineVxeComponent({
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
     const { reactData, internalData } = $xeGanttView
-    const { refTable } = $xeGantt.getRefMaps()
 
     const refElem = ref() as Ref<HTMLDivElement>
     const refBodyScroll = ref() as Ref<HTMLDivElement>
@@ -22,9 +21,10 @@ export default defineVxeComponent({
     const refBodyYSpace = ref() as Ref<HTMLDivElement>
 
     const renderRows = () => {
-      const $xeTable = refTable.value
+      const $xeTable = $xeGanttView.internalData.xeTable
 
-      const fullAllDataRowIdData = $xeTable ? $xeTable.internalData.fullAllDataRowIdData : {}
+      const tableInternalData = $xeTable ? $xeTable.internalData : {} as TableInternalData
+      const fullAllDataRowIdData = tableInternalData.fullAllDataRowIdData || {}
       let cellOpts: VxeTablePropTypes.CellConfig = {}
       let rowOpts : VxeTablePropTypes.RowConfig = {}
       let defaultRowHeight = 0

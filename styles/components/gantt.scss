@@ -518,9 +518,6 @@
     float: left;
   }
 }
-.vxe-gantt-view--header-table {
-  height: 100%;
-}
 .vxe-gantt-view--header-table,
 .vxe-gantt-view--body-table {
   border: 0;
@@ -555,9 +552,6 @@
 .vxe-gantt-view--header-column {
   text-align: center;
   font-size: 1em;
-}
-.vxe-gantt-view--body-column {
-  height: 48px;
 }
 .vxe-gantt-view--header-column,
 .vxe-gantt-view--body-column,

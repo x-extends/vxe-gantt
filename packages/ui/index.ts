@@ -59,8 +59,6 @@ setIcon({
   GANTT_VIEW_LEFT_CLOSE: iconPrefix + 'arrow-right',
   GANTT_VIEW_RIGHT_OPEN: iconPrefix + 'arrow-right',
   GANTT_VIEW_RIGHT_CLOSE: iconPrefix + 'arrow-left'
-
 })
 
-export * from '@vxe-ui/core'
 export default VxeUI

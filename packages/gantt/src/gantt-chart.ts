@@ -5,7 +5,7 @@ import XEUtils from 'xe-utils'
 import { getCellRestHeight } from './util'
 import { getStringValue } from '../../ui/src/utils'
 
-import type { VxeTablePropTypes } from 'vxe-table'
+import type { VxeTablePropTypes, TableInternalData } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 const { renderEmptyElement } = VxeUI
@@ -17,15 +17,15 @@ export default defineVxeComponent({
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
     const { reactData, internalData } = $xeGanttView
-    const { refTable } = $xeGantt.getRefMaps()
     const { computeProgressField, computeTitleField, computeTaskBarOpts } = $xeGantt.getComputeMaps()
 
     const refElem = ref() as Ref<HTMLDivElement>
 
     const renderVN = () => {
-      const $xeTable = refTable.value
+      const $xeTable = $xeGanttView.internalData.xeTable
 
-      const fullAllDataRowIdData = $xeTable ? $xeTable.internalData.fullAllDataRowIdData : {}
+      const tableInternalData = $xeTable ? $xeTable.internalData : {} as TableInternalData
+      const fullAllDataRowIdData = tableInternalData.fullAllDataRowIdData || {}
       let cellOpts: VxeTablePropTypes.CellConfig = {}
       let rowOpts : VxeTablePropTypes.RowConfig = {}
       let defaultRowHeight = 0
@@ -43,7 +43,7 @@ export default defineVxeComponent({
       const { showProgress, showContent, contentMethod, barStyle } = taskBarOpts
       const { round } = barStyle || {}
 
-      const trVNs:VNode[] = []
+      const trVNs: VNode[] = []
       tableData.forEach((row, rIndex) => {
         const rowid = $xeTable ? $xeTable.getRowid(row) : ''
         const rowRest = fullAllDataRowIdData[rowid] || {}

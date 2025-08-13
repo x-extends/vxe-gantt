@@ -1,4 +1,4 @@
-import * as VxeUIExport from './components'
+import * as VxeUIGanttExport from './components'
 
 export * from './components'
-export default VxeUIExport
+export default VxeUIGanttExport

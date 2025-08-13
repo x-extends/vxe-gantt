@@ -1,24 +1,27 @@
-import { h, ref, computed, provide, reactive, onUnmounted, watch, nextTick, VNode, ComponentPublicInstance, onMounted } from 'vue'
+import { h, ref, PropType, computed, provide, reactive, onUnmounted, watch, nextTick, VNode, onMounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import XEUtils from 'xe-utils'
 import { getLastZIndex, nextZIndex, isEnableConf } from '../../ui/src/utils'
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
 import { VxeUI } from '@vxe-ui/core'
-import { ganttProps } from './props'
 import { ganttEmits } from './emits'
 import { tableEmits } from './table-emits'
-import { tableProps } from './table-props'
 import { warnLog, errLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
+import { VxeTable as VxeTableComponent } from 'vxe-table'
 
 import type { VxeGanttConstructor, VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, GanttMethods, GanttPrivateMethods, VxeGanttPrivateMethods, GanttPrivateRef, VxeGanttProps, VxeGanttPrivateComputed, VxeGanttViewInstance, VxeGanttDefines } from '../../../types'
 import type { ValueOf, VxeFormEvents, VxeFormInstance, VxePagerEvents, VxeFormItemProps, VxePagerInstance, VxeComponentStyleType } from 'vxe-pc-ui'
-import type { VxeTableMethods, VxeToolbarPropTypes, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableEvents, VxeTableDefines, VxeTableEventProps, VxeToolbarInstance } from 'vxe-table'
+import type { VxeTableMethods, VxeToolbarPropTypes, VxeTableProps, VxeTablePropTypes, VxeTableConstructor, VxeTablePrivateMethods, VxeTableEvents, VxeTableDefines, VxeTableEventProps, VxeToolbarInstance, VxeGridPropTypes } from 'vxe-table'
 
 const { getConfig, getIcon, getI18n, commands, hooks, useFns, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement, getSlotVNs } = VxeUI
 
+const tableProps = (VxeTableComponent as any).props
+
 const tableComponentPropKeys = Object.keys(tableProps) as (keyof VxeTableProps)[]
 const tableComponentMethodKeys: (keyof VxeTableMethods)[] = ['clearAll', 'syncData', 'updateData', 'loadData', 'reloadData', 'reloadRow', 'loadColumn', 'reloadColumn', 'getRowNode', 'getColumnNode', 'getRowIndex', 'getVTRowIndex', 'getVMRowIndex', 'getColumnIndex', 'getVTColumnIndex', 'getVMColumnIndex', 'setRow', 'createData', 'createRow', 'revertData', 'clearData', 'isRemoveByRow', 'isInsertByRow', 'isUpdateByRow', 'getColumns', 'getColumnById', 'getColumnByField', 'getTableColumn', 'getFullColumns', 'getData', 'getCheckboxRecords', 'getParentRow', 'getTreeRowChildren', 'getTreeParentRow', 'getRowSeq', 'getRowById', 'getRowid', 'getTableData', 'getFullData', 'setColumnFixed', 'clearColumnFixed', 'setColumnWidth', 'getColumnWidth', 'recalcRowHeight', 'setRowHeightConf', 'getRowHeightConf', 'setRowHeight', 'getRowHeight', 'hideColumn', 'showColumn', 'resetColumn', 'refreshColumn', 'refreshScroll', 'recalculate', 'closeTooltip', 'isAllCheckboxChecked', 'isAllCheckboxIndeterminate', 'getCheckboxIndeterminateRecords', 'setCheckboxRow', 'setCheckboxRowKey', 'isCheckedByCheckboxRow', 'isCheckedByCheckboxRowKey', 'isIndeterminateByCheckboxRow', 'isIndeterminateByCheckboxRowKey', 'toggleCheckboxRow', 'setAllCheckboxRow', 'getRadioReserveRecord', 'clearRadioReserve', 'getCheckboxReserveRecords', 'clearCheckboxReserve', 'toggleAllCheckboxRow', 'clearCheckboxRow', 'setCurrentRow', 'isCheckedByRadioRow', 'isCheckedByRadioRowKey', 'setRadioRow', 'setRadioRowKey', 'clearCurrentRow', 'clearRadioRow', 'getCurrentRecord', 'getRadioRecord', 'getCurrentColumn', 'setCurrentColumn', 'clearCurrentColumn', 'setPendingRow', 'togglePendingRow', 'hasPendingByRow', 'isPendingByRow', 'getPendingRecords', 'clearPendingRow', 'setFilterByEvent', 'sort', 'setSort', 'setSortByEvent', 'clearSort', 'clearSortByEvent', 'isSort', 'getSortColumns', 'closeFilter', 'isFilter', 'clearFilterByEvent', 'isActiveFilterByColumn', 'isRowExpandLoaded', 'clearRowExpandLoaded', 'reloadRowExpand', 'reloadRowExpand', 'toggleRowExpand', 'setAllRowExpand', 'setRowExpand', 'isExpandByRow', 'isRowExpandByRow', 'clearRowExpand', 'clearRowExpandReserve', 'getRowExpandRecords', 'getTreeExpandRecords', 'isTreeExpandLoaded', 'clearTreeExpandLoaded', 'reloadTreeExpand', 'reloadTreeChilds', 'toggleTreeExpand', 'setAllTreeExpand', 'setTreeExpand', 'isTreeExpandByRow', 'clearTreeExpand', 'clearTreeExpandReserve', 'getScroll', 'scrollTo', 'scrollToRow', 'scrollToColumn', 'clearScroll', 'updateFooter', 'updateStatus', 'setMergeCells', 'removeInsertRow', 'removeMergeCells', 'getMergeCells', 'clearMergeCells', 'setMergeFooterItems', 'removeMergeFooterItems', 'getMergeFooterItems', 'clearMergeFooterItems', 'getCustomStoreData', 'setRowGroupExpand', 'setAllRowGroupExpand', 'clearRowGroupExpand', 'isRowGroupExpandByRow', 'isRowGroupRecord', 'isAggregateRecord', 'isAggregateExpandByRow', 'getAggregateContentByRow', 'getAggregateRowChildren', 'setRowGroups', 'clearRowGroups', 'openTooltip', 'moveColumnTo', 'moveRowTo', 'getCellLabel', 'getCellElement', 'focus', 'blur', 'connect']
+
+const defaultLayouts: VxeGanttPropTypes.Layouts = [['Form'], ['Toolbar', 'Top', 'Gantt', 'Bottom', 'Pager']]
 
 function createInternalData (): GanttInternalData {
   return {
@@ -28,7 +31,42 @@ function createInternalData (): GanttInternalData {
 
 export default defineVxeComponent({
   name: 'VxeGantt',
-  props: ganttProps,
+  props: {
+    ...(tableProps as {
+      border: PropType<VxeTablePropTypes.Border>
+      round: PropType<VxeTablePropTypes.Round>
+      loading: PropType<VxeTablePropTypes.Loading>
+      height: PropType<VxeTablePropTypes.Height>
+      minHeight: PropType<VxeTablePropTypes.MinHeight>
+      maxHeight: PropType<VxeTablePropTypes.MaxHeight>
+      seqConfig: PropType<VxeTablePropTypes.SeqConfig>
+      editConfig: PropType<VxeTablePropTypes.EditConfig>
+      sortConfig: PropType<VxeTablePropTypes.SortConfig>
+      filterConfig: PropType<VxeTablePropTypes.FilterConfig>
+      validConfig: PropType<VxeTablePropTypes.ValidConfig>
+      editRules: PropType<VxeTablePropTypes.EditRules>
+      animat: PropType<VxeTablePropTypes.Animat>
+      scrollbarConfig: PropType<VxeTablePropTypes.ScrollbarConfig>
+      params: PropType<VxeTablePropTypes.Params>
+    }),
+
+    columns: Array as PropType<VxeGridPropTypes.Columns<any>>,
+    pagerConfig: Object as PropType<VxeGridPropTypes.PagerConfig>,
+    proxyConfig: Object as PropType<VxeGridPropTypes.ProxyConfig<any>>,
+    toolbarConfig: Object as PropType<VxeGridPropTypes.ToolbarConfig>,
+    formConfig: Object as PropType<VxeGridPropTypes.FormConfig>,
+    zoomConfig: Object as PropType<VxeGridPropTypes.ZoomConfig>,
+
+    layouts: Array as PropType<VxeGanttPropTypes.Layouts>,
+    taskConfig: Object as PropType<VxeGanttPropTypes.TaskConfig>,
+    taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
+    taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
+    taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
+    size: {
+      type: String as PropType<VxeGridPropTypes.Size>,
+      default: () => getConfig().gantt.size || getConfig().size
+    }
+  },
   emits: ganttEmits,
   setup (props, context) {
     const { slots, emit } = context
@@ -40,8 +78,6 @@ export default defineVxeComponent({
     const VxeUIPagerComponent = VxeUI.getComponent('VxePager')
     const VxeTableComponent = VxeUI.getComponent('VxeTable')
     const VxeToolbarComponent = VxeUI.getComponent('VxeToolbar')
-
-    const defaultLayouts: VxeGanttPropTypes.Layouts = [['Form'], ['Toolbar', 'Top', 'Gantt', 'Bottom', 'Pager']]
 
     const { computeSize } = useFns.useSize(props)
 
@@ -66,7 +102,7 @@ export default defineVxeComponent({
     const internalData = createInternalData()
 
     const refElem = ref<HTMLDivElement>()
-    const refTable = ref<ComponentPublicInstance<VxeTableProps, VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods>>()
+    const refTable = ref<VxeTableConstructor & VxeTablePrivateMethods>()
     const refForm = ref<VxeFormInstance>()
     const refToolbar = ref<VxeToolbarInstance>()
     const refPager = ref<VxePagerInstance>()
@@ -226,7 +262,7 @@ export default defineVxeComponent({
     const computeTableExtendProps = computed(() => {
       const rest: Record<string, any> = {}
       tableComponentPropKeys.forEach((key) => {
-        rest[key] = props[key]
+        rest[key] = (props as any)[key]
       })
       return rest
     })

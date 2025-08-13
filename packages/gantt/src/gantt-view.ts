@@ -295,6 +295,7 @@ export default defineVxeComponent({
       const { scrollbarWidth, scrollbarHeight, tableColumn } = reactData
       const { elemStore } = internalData
       const $xeTable = internalData.xeTable
+
       const el = refElem.value
       if (!el || !el.clientHeight) {
         return

@@ -34,31 +34,6 @@ const componentList = [
 ]
 
 const languages = [
-  'zh-CN',
-  'zh-CHT',
-  'zh-HK',
-  'zh-MO',
-  'zh-TW',
-  'en-US',
-  'ja-JP',
-  'es-ES',
-  'pt-BR',
-  'vi-VN',
-  'ru-RU',
-  'ko-KR',
-  'hu-HU',
-  'ug-CN',
-  'uz-UZ',
-  'nb-NO',
-  'hy-AM',
-  'fr-FR',
-  'de-DE',
-  'ar-EG',
-  'uk-UA',
-  'th-TH',
-  'it-IT',
-  'id-ID',
-  'ms-MY'
 ]
 
 const styleCode = 'require(\'./style.css\')'
