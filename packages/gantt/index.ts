@@ -1,9 +1,9 @@
-import { App } from 'vue'
+import { VueConstructor } from 'vue'
 import { VxeUI } from '@vxe-ui/core'
 import VxeGanttComponent from './src/gantt'
 
 export const VxeGantt = Object.assign({}, VxeGanttComponent, {
-  install (app: App) {
+  install (app: VueConstructor) {
     app.component(VxeGanttComponent.name as string, VxeGanttComponent)
   }
 })

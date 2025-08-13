@@ -1,4 +1,4 @@
-import * as VxeUIGanttExport from './all'
+import * as VxeUIDesignExport from './all'
 
 export * from './all'
-export default VxeUIGanttExport
+export default VxeUIDesignExport

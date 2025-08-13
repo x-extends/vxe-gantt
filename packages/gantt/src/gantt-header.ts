@@ -1,60 +1,63 @@
-import { h, inject, computed, ref, Ref, onMounted, onUnmounted } from 'vue'
+import { CreateElement } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 
-import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods } from '../../../types'
+import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 export default defineVxeComponent({
   name: 'VxeGanttView',
-  setup () {
-    const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
+  inject: {
+    $xeGantt: {
+      default: null
+    },
+    $xeGanttView: {
+      default: null
+    }
+  },
+  props: {},
+  data () {
+    return {}
+  },
+  computed: {
+    ...({} as {
+        $xeGantt(): (VxeGanttConstructor & VxeGanttPrivateMethods)
+        $xeGanttView(): (VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
+      })
+  },
+  methods: {
+    //
+    // Render
+    //
+    renderVN (h: CreateElement) {
+      const _vm = this
+      const $xeGanttView = _vm.$xeGanttView
+      const { reactData } = $xeGanttView
 
-    const { reactData, internalData } = $xeGanttView
-
-    const refElem = ref() as Ref<HTMLDivElement>
-    const refHeaderScroll = ref() as Ref<HTMLDivElement>
-    const refHeaderTable = ref() as Ref<HTMLTableElement>
-    const refHeaderXSpace = ref() as Ref<HTMLDivElement>
-
-    const computeHeaderHeight = computed(() => {
-      const $xeTable = internalData.xeTable
-      const { tableData } = reactData
-      if (tableData.length && $xeTable) {
-        const tableReactData = $xeTable.reactData
-        const { tHeaderHeight } = tableReactData
-        return tHeaderHeight
-      }
-      return ''
-    })
-
-    const renderVN = () => {
-      const { tableColumn, headerGroups } = reactData
-      const headerHeight = computeHeaderHeight.value
+      const { tableColumn, headerGroups, viewCellWidth } = reactData
       return h('div', {
-        ref: refElem,
+        ref: 'refElem',
         class: 'vxe-gantt-view--header-wrapper'
       }, [
         h('div', {
-          ref: refHeaderScroll,
+          ref: 'refHeaderScroll',
           class: 'vxe-gantt-view--header-inner-wrapper',
-          style: {
-            height: `${headerHeight}px`
-          },
-          onScroll: $xeGanttView.triggerHeaderScrollEvent
+          on: {
+            scroll: $xeGanttView.triggerHeaderScrollEvent
+          }
         }, [
           h('div', {
-            ref: refHeaderXSpace,
+            ref: 'refHeaderXSpace',
             class: 'vxe-body--x-space'
           }),
           h('table', {
-            ref: refHeaderTable,
-            class: 'vxe-gantt-view--header-table',
-            style: {
-              width: `calc(var(--vxe-ui-gantt-view-column-width) * ${tableColumn.length})`
-            }
+            ref: 'refHeaderTable',
+            class: 'vxe-gantt-view--header-table'
           }, [
             h('colgroup', {}, tableColumn.map((column, cIndex) => {
               return h('col', {
-                key: cIndex
+                key: cIndex,
+                style: {
+                  width: `${viewCellWidth}px`
+                }
               })
             })),
             h('thead', {}, headerGroups.map((cols, rIndex) => {
@@ -64,8 +67,10 @@ export default defineVxeComponent({
                 return h('th', {
                   key: cIndex,
                   class: 'vxe-gantt-view--header-column',
-                  colspan: column.children ? column.children.length : null,
-                  title: `${column.field}`
+                  attrs: {
+                    colspan: column.children ? column.children.length : null,
+                    title: `${column.field}`
+                  }
                 }, column.title)
               }))
             }))
@@ -73,25 +78,32 @@ export default defineVxeComponent({
         ])
       ])
     }
+  },
+  mounted () {
+    const _vm = this
+    const $xeGanttView = _vm.$xeGanttView
+    const { internalData } = $xeGanttView
 
-    onMounted(() => {
-      const { elemStore } = internalData
-      const prefix = 'main-header-'
-      elemStore[`${prefix}wrapper`] = refElem
-      elemStore[`${prefix}scroll`] = refHeaderScroll
-      elemStore[`${prefix}table`] = refHeaderTable
-      elemStore[`${prefix}xSpace`] = refHeaderXSpace
-    })
+    const { elemStore } = internalData
+    const prefix = 'main-header-'
+    elemStore[`${prefix}wrapper`] = _vm.$refs.refElem as HTMLDivElement
+    elemStore[`${prefix}scroll`] = _vm.$refs.refHeaderScroll as HTMLDivElement
+    elemStore[`${prefix}table`] = _vm.$refs.refHeaderTable as HTMLDivElement
+    elemStore[`${prefix}xSpace`] = _vm.$refs.refHeaderXSpace as HTMLDivElement
+  },
+  destroyed () {
+    const _vm = this
+    const $xeGanttView = _vm.$xeGanttView
+    const { internalData } = $xeGanttView
 
-    onUnmounted(() => {
-      const { elemStore } = internalData
-      const prefix = 'main-header-'
-      elemStore[`${prefix}wrapper`] = null
-      elemStore[`${prefix}scroll`] = null
-      elemStore[`${prefix}table`] = null
-      elemStore[`${prefix}xSpace`] = null
-    })
-
-    return renderVN
+    const { elemStore } = internalData
+    const prefix = 'main-header-'
+    elemStore[`${prefix}wrapper`] = null
+    elemStore[`${prefix}scroll`] = null
+    elemStore[`${prefix}table`] = null
+    elemStore[`${prefix}xSpace`] = null
+  },
+  render (this: any, h) {
+    return this.renderVN(h)
   }
 })

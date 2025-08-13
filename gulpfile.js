@@ -20,7 +20,7 @@ const sass = gulpSass(dartSass)
 
 const tsSettings = {
   ...tsconfig.compilerOptions,
-  target: 'es2016'
+  target: 'es2015'
 }
 
 const exportModuleName = 'VxeUIGantt'
@@ -34,31 +34,6 @@ const componentList = [
 ]
 
 const languages = [
-  'zh-CN',
-  'zh-CHT',
-  'zh-HK',
-  'zh-MO',
-  'zh-TW',
-  'en-US',
-  'ja-JP',
-  'es-ES',
-  'pt-BR',
-  'vi-VN',
-  'ru-RU',
-  'ko-KR',
-  'hu-HU',
-  'ug-CN',
-  'uz-UZ',
-  'nb-NO',
-  'hy-AM',
-  'fr-FR',
-  'de-DE',
-  'ar-EG',
-  'uk-UA',
-  'th-TH',
-  'it-IT',
-  'id-ID',
-  'ms-MY'
 ]
 
 const styleCode = 'require(\'./style.css\')'
@@ -83,6 +58,8 @@ gulp.task('build_escode', function () {
     .pipe(replace('process.env.VUE_APP_VXE_VERSION', `"${pack.version}"`))
     .pipe(replace('process.env.VUE_APP_VXE_ENV', 'process.env.NODE_ENV'))
     .pipe(ts(tsSettings))
+    .pipe(replace('export default /* define-vxe-component start */ defineVxeComponent({', 'export default {'))
+    .pipe(replace('}); /* define-vxe-component end */', '};'))
     .pipe(gulp.dest(esmOutDir))
 })
 

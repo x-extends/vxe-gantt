@@ -1,6 +1,7 @@
-import { createApp } from 'vue'
+import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
+import i18n from './i18n'
 
 import './styles/index.scss'
 
@@ -35,15 +36,16 @@ VxeUI.setConfig({
   }
 })
 
-VxeUI.setLanguage((localStorage.getItem('VXE_LANGUAGE') as 'zh-CN' | 'en-US') || 'zh-CN')
-
 window.axios.defaults.baseURL = process.env.VUE_APP_SERVE_API_URL
 
-const app = createApp(App)
+Vue.use(VxeUIAll)
+Vue.use(VxeUITable)
+Vue.use(VxeUIGantt)
 
-app.use(router)
-app.use(VxeUIAll)
-app.use(VxeUITable)
-app.use(VxeUIGantt)
+Vue.config.productionTip = false
 
-app.mount('#app')
+new Vue({
+  router,
+  i18n,
+  render: h => h(App)
+}).$mount('#app')

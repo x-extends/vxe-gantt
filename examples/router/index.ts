@@ -1,15 +1,12 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import Vue from 'vue'
+import VueRouter, { RouteConfig } from 'vue-router'
 
 import RouteLayout from '../views/layout/RouteLayout.vue'
 import StartInstall from '../views/start/StartInstall.vue'
 
-const routes: Array<RouteRecordRaw> = [
-  {
-    path: '/*',
-    redirect: {
-      name: 'StartInstall'
-    }
-  },
+Vue.use(VueRouter)
+
+const routes: Array<RouteConfig> = [
   {
     path: '/',
     redirect: {
@@ -44,8 +41,9 @@ const routes: Array<RouteRecordRaw> = [
   }
 ]
 
-const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+const router = new VueRouter({
+  mode: 'hash',
+  base: process.env.BASE_URL,
   routes
 })
 

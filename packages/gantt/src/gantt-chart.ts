@@ -1,13 +1,17 @@
 import { VNode, CreateElement } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
+import { VxeUI } from '@vxe-ui/core'
+import XEUtils from 'xe-utils'
 import { getCellRestHeight } from './util'
-import GanttViewChartComponent from './gantt-chart'
+import { getStringValue } from '../../ui/src/utils'
 
 import type { VxeTablePropTypes, TableInternalData } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
+const { renderEmptyElement } = VxeUI
+
 export default defineVxeComponent({
-  name: 'VxeGanttViewBody',
+  name: 'VxeGanttViewChart',
   inject: {
     $xeGantt: {
       default: null
@@ -30,7 +34,7 @@ export default defineVxeComponent({
     //
     // Render
     //
-    renderRows (h: CreateElement) {
+    renderVN (h: CreateElement) {
       const _vm = this
       const $xeGantt = _vm.$xeGantt
       const $xeGanttView = _vm.$xeGanttView
@@ -48,79 +52,71 @@ export default defineVxeComponent({
       }
 
       const { reactData } = $xeGanttView
-      const { tableData, tableColumn } = reactData
+      const { tableData } = reactData
+      const titleField = $xeGantt.computeTitleField
+      const progressField = $xeGantt.computeProgressField
+      const taskBarOpts = $xeGantt.computeTaskBarOpts
+      const { showProgress, showContent, contentMethod, barStyle } = taskBarOpts
+      const { round } = barStyle || {}
 
-      const trVNs:VNode[] = []
+      const trVNs: VNode[] = []
       tableData.forEach((row, rIndex) => {
         const rowid = $xeTable ? $xeTable.getRowid(row) : ''
         const rowRest = fullAllDataRowIdData[rowid] || {}
         const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
+        let title = getStringValue(XEUtils.get(row, titleField))
+        const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
+        if (contentMethod) {
+          title = getStringValue(contentMethod({ row, title }))
+        }
         trVNs.push(
-          h('tr', {
-            key: rIndex
-          }, tableColumn.map((column, cIndex) => {
-            return h('td', {
-              key: cIndex,
-              class: 'vxe-gantt-view--body-column',
-              style: {
-                height: `${cellHeight}px`
+          h('div', {
+            key: rIndex,
+            attrs: {
+              rowid
+            },
+            class: ['vxe-gantt-view--chart-row', {
+              'is--round': round
+            }],
+            style: {
+              height: `${cellHeight}px`
+            }
+          }, [
+            h('div', {
+              class: 'vxe-gantt-view--chart-bar',
+              attrs: {
+                rowid
               },
               on: {
                 click (evnt: MouseEvent) {
-                  $xeGantt.handleTaskCellClickEvent(evnt, { row })
+                  $xeGantt.handleTaskBarClickEvent(evnt, { row })
                 },
                 dblclick (evnt: MouseEvent) {
-                  $xeGantt.handleTaskCellDblclickEvent(evnt, { row })
+                  $xeGantt.handleTaskBarDblclickEvent(evnt, { row })
                 }
               }
-            })
-          }))
+            }, [
+              showProgress
+                ? h('div', {
+                  class: 'vxe-gantt-view--chart-progress',
+                  style: {
+                    width: `${progressValue || 0}%`
+                  }
+                })
+                : renderEmptyElement($xeGantt),
+              showContent
+                ? h('div', {
+                  class: 'vxe-gantt-view--chart-content'
+                }, title)
+                : renderEmptyElement($xeGantt)
+            ])
+          ])
         )
       })
-      return trVNs
-    },
-    renderVN (h: CreateElement) {
-      const _vm = this
-      const $xeGanttView = _vm.$xeGanttView
-      const { reactData } = $xeGanttView
-
-      const { tableColumn, viewCellWidth } = reactData
       return h('div', {
         ref: 'refElem',
-        class: 'vxe-gantt-view--body-wrapper'
-      }, [
-        h('div', {
-          ref: 'refBodyScroll',
-          class: 'vxe-gantt-view--body-inner-wrapper',
-          on: {
-            scroll: $xeGanttView.triggerBodyScrollEvent
-          }
-        }, [
-          h('div', {
-            ref: 'refBodyXSpace',
-            class: 'vxe-body--x-space'
-          }),
-          h('div', {
-            ref: 'refBodyYSpace',
-            class: 'vxe-body--y-space'
-          }),
-          h('table', {
-            ref: 'refBodyTable',
-            class: 'vxe-gantt-view--body-table'
-          }, [
-            h('colgroup', {}, tableColumn.map((column, cIndex) => {
-              return h('col', {
-                key: cIndex,
-                style: {
-                  width: `${viewCellWidth}px`
-                }
-              })
-            })),
-            h('tbody', {}, _vm.renderRows(h))
-          ]),
-          h(GanttViewChartComponent)
-        ])
-      ])
+        class: 'vxe-gantt-view--chart-wrapper'
+      }, trVNs)
     }
   },
   mounted () {
@@ -129,12 +125,8 @@ export default defineVxeComponent({
     const { internalData } = $xeGanttView
 
     const { elemStore } = internalData
-    const prefix = 'main-body-'
+    const prefix = 'main-chart-'
     elemStore[`${prefix}wrapper`] = _vm.$refs.refElem as HTMLDivElement
-    elemStore[`${prefix}scroll`] = _vm.$refs.refBodyScroll as HTMLDivElement
-    elemStore[`${prefix}table`] = _vm.$refs.refBodyTable as HTMLDivElement
-    elemStore[`${prefix}xSpace`] = _vm.$refs.refBodyXSpace as HTMLDivElement
-    elemStore[`${prefix}ySpace`] = _vm.$refs.refBodyYSpace as HTMLDivElement
   },
   destroyed () {
     const _vm = this
@@ -142,12 +134,8 @@ export default defineVxeComponent({
     const { internalData } = $xeGanttView
 
     const { elemStore } = internalData
-    const prefix = 'main-body-'
+    const prefix = 'main-chart-'
     elemStore[`${prefix}wrapper`] = null
-    elemStore[`${prefix}scroll`] = null
-    elemStore[`${prefix}table`] = null
-    elemStore[`${prefix}xSpace`] = null
-    elemStore[`${prefix}ySpace`] = null
   },
   render (this: any, h) {
     return this.renderVN(h)

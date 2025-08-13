@@ -1,3 +1,3 @@
-import { defineComponent } from 'vue'
+import Vue from 'vue'
 
-export const defineVxeComponent = defineComponent
+export const defineVxeComponent = ((options: any) => options) as typeof Vue.extend

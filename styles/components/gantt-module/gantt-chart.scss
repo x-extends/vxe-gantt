@@ -1,0 +1,65 @@
+.vxe-gantt-view--chart-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+.vxe-gantt-view--chart-row {
+  position: relative;
+  &.is--round {
+    & > .vxe-gantt-view--chart-bar {
+      border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius);
+      &:hover {
+        &::after {
+          border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius);
+        }
+      }
+      & > .vxe-gantt-view--chart-progress {
+        border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius) 0 0 var(--vxe-ui-gantt-view-task-bar-border-radius);
+      }
+    }
+  }
+}
+.vxe-gantt-view--chart-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  color: #ffffff;
+  transform: translateY(-50%);
+  height: var(--vxe-ui-gantt-view-chart-bar-height);
+  background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
+  pointer-events: all;
+  &:hover {
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+.vxe-gantt-view--chart-progress {
+  flex-shrink: 0;
+  width: 0;
+  height: 100%;
+  text-align: left;
+  background-color: var(--vxe-ui-gantt-view-task-bar-completed-background-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vxe-gantt-view--chart-content {
+  position: absolute;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9em;
+  padding: 0 0.6em;
+}

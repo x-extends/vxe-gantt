@@ -1,19 +1,22 @@
-import { App } from 'vue'
-import { setConfig, VxeGlobalConfig } from '@vxe-ui/core'
-
+import { VueConstructor } from 'vue'
+import VxeUI from './ui'
 import VxeGantt from './gantt'
+
+import type { VxeGlobalConfig } from 'vxe-pc-ui'
+
+const { setConfig } = VxeUI
 
 const components = [
   VxeGantt
 ]
 
-export function install (app: App, options?: VxeGlobalConfig) {
+export function install (app: VueConstructor, options?: VxeGlobalConfig) {
   setConfig(options)
 
   components.forEach(component => app.use(component))
 }
 
-export * from './ui'
+export { VxeUI }
 
 // Components
 export * from './gantt'

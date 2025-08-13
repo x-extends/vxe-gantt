@@ -1,4 +1,7 @@
 @use './base.scss';
 
 [data-vxe-ui-theme="light"] {
+  /*gantt*/
+  --vxe-ui-gantt-view-handle-background-color: #8b8b8b;
+  --vxe-ui-gantt-view-split-bar-background-color: #e2e2e3;
 }
