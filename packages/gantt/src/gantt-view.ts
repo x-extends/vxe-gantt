@@ -1,6 +1,6 @@
 import { h, ref, reactive, nextTick, inject, watch, provide, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
-import { setScrollTop, setScrollLeft } from '../../ui/src/dom'
+import { setScrollTop, setScrollLeft, removeClass, addClass } from '../../ui/src/dom'
 import { VxeUI } from '@vxe-ui/core'
 import { getRefElem } from './util'
 import XEUtils from 'xe-utils'
@@ -131,6 +131,8 @@ export default defineVxeComponent({
     } as unknown as VxeGanttViewConstructor & VxeGanttViewPrivateMethods
 
     const handleParseColumn = () => {
+      const ganttProps = $xeGantt.props
+      const { treeConfig } = ganttProps
       const { minViewDate, maxViewDate } = reactData
       const taskViewOpts = computeTaskViewOpts.value
       const fullCols: VxeGanttPropTypes.Column[] = []
@@ -182,10 +184,15 @@ export default defineVxeComponent({
             if ($xeTable) {
               const startField = computeStartField.value
               const endField = computeEndField.value
+              const { computeTreeOpts } = $xeTable.getComputeMaps()
               const tableInternalData = $xeTable.internalData
-              const { afterFullData } = tableInternalData
+              const { afterFullData, afterTreeFullData } = tableInternalData
+              const treeOpts = computeTreeOpts.value
+              const { transform } = treeOpts
+              const childrenField = treeOpts.children || treeOpts.childrenField
+
               const ctMaps: Record<string, VxeGanttDefines.RowCacheItem> = {}
-              afterFullData.forEach(row => {
+              const handleParseRender = (row: any) => {
                 const rowid = $xeTable.getRowid(row)
                 const startValue = XEUtils.get(row, startField)
                 const endValue = XEUtils.get(row, endField)
@@ -201,7 +208,13 @@ export default defineVxeComponent({
                     oWidthSize
                   }
                 }
-              })
+              }
+
+              if (treeConfig) {
+                XEUtils.eachTree(afterTreeFullData, handleParseRender, { children: transform ? treeOpts.mapChildrenField : childrenField })
+              } else {
+                afterFullData.forEach(handleParseRender)
+              }
               internalData.chartMaps = ctMaps
             }
           }
@@ -213,6 +226,8 @@ export default defineVxeComponent({
     }
 
     const handleUpdateData = () => {
+      const ganttProps = $xeGantt.props
+      const { treeConfig } = ganttProps
       const $xeTable = internalData.xeTable
       const sdMaps: Record<string, any> = {}
       const edMaps: Record<string, any> = {}
@@ -221,9 +236,14 @@ export default defineVxeComponent({
       if ($xeTable) {
         const startField = computeStartField.value
         const endField = computeEndField.value
+        const { computeTreeOpts } = $xeTable.getComputeMaps()
         const tableInternalData = $xeTable.internalData
-        const { afterFullData } = tableInternalData
-        afterFullData.forEach(row => {
+        const { afterFullData, afterTreeFullData } = tableInternalData
+        const treeOpts = computeTreeOpts.value
+        const { transform } = treeOpts
+        const childrenField = treeOpts.children || treeOpts.childrenField
+
+        const handleMinMaxData = (row: any) => {
           const startValue = XEUtils.get(row, startField)
           const endValue = XEUtils.get(row, endField)
           if (startValue && endValue) {
@@ -236,7 +256,13 @@ export default defineVxeComponent({
               maxDate = endDate
             }
           }
-        })
+        }
+
+        if (treeConfig) {
+          XEUtils.eachTree(afterTreeFullData, handleMinMaxData, { children: transform ? treeOpts.mapChildrenField : childrenField })
+        } else {
+          afterFullData.forEach(handleMinMaxData)
+        }
       }
       reactData.minViewDate = minDate
       reactData.maxViewDate = maxDate
@@ -400,6 +426,7 @@ export default defineVxeComponent({
     const handleLazyRecalculate = () => {
       calcScrollbar()
       updateStyle()
+      updateChart()
       return nextTick()
     }
 
@@ -584,6 +611,34 @@ export default defineVxeComponent({
     const ganttViewPrivateMethods: VxeGanttViewPrivateMethods = {
       handleUpdateStyle: updateStyle,
       handleLazyRecalculate,
+      handleUpdateCurrentRow (row) {
+        const $xeTable = internalData.xeTable
+        const el = refElem.value
+        if ($xeTable && el) {
+          if (row) {
+            const tableProps = $xeTable.props
+            const { highlightCurrentRow } = tableProps
+            const { computeRowOpts } = $xeTable.getComputeMaps()
+            const rowOpts = computeRowOpts.value
+            if (rowOpts.isCurrent || highlightCurrentRow) {
+              XEUtils.arrayEach(el.querySelectorAll(`.vxe-gantt-view--body-row[rowid="${$xeTable.getRowid(row)}"]`), elem => addClass(elem, 'row--current'))
+            }
+          } else {
+            XEUtils.arrayEach(el.querySelectorAll('.vxe-gantt-view--body-row.row--current'), elem => removeClass(elem, 'row--current'))
+          }
+        }
+      },
+      handleUpdateHoverRow (row) {
+        const $xeTable = internalData.xeTable
+        const el = refElem.value
+        if ($xeTable && el) {
+          if (row) {
+            XEUtils.arrayEach(el.querySelectorAll(`.vxe-gantt-view--body-row[rowid="${$xeTable.getRowid(row)}"]`), elem => addClass(elem, 'row--hover'))
+          } else {
+            XEUtils.arrayEach(el.querySelectorAll('.vxe-gantt-view--body-row.row--hover'), elem => removeClass(elem, 'row--hover'))
+          }
+        }
+      },
       triggerHeaderScrollEvent (evnt) {
         const { elemStore, inVirtualScroll, inBodyScroll, inFooterScroll } = internalData
         if (inVirtualScroll) {

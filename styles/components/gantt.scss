@@ -130,13 +130,6 @@
   border: var(--vxe-ui-table-border-width) solid var(--vxe-ui-table-border-color);
 }
 .vxe-gantt {
-  &.border--default,
-  &.border--full,
-  &.border--outer {
-    .vxe-gantt-view--header-wrapper {
-      background-color: var(--vxe-ui-table-header-background-color);
-    }
-  }
   &.border--full {
     .vxe-gantt-view--header-column,
     .vxe-gantt-view--body-column,
@@ -203,7 +196,6 @@
       }
     }
   }
-  
   &.border--default,
   &.border--full {
     .vxe-gantt-view--scroll-y-top-corner {
@@ -254,6 +246,27 @@
           border-left: var(--vxe-ui-table-border-width) solid var(--vxe-ui-table-border-color);
         }
       }
+    }
+  }
+  &.border--default,
+  &.border--inner {
+    .vxe-gantt-view--header-column,
+    .vxe-gantt-view--body-column,
+    .vxe-gantt-view--footer-column {
+      background-image: linear-gradient(var(--vxe-ui-table-border-color), var(--vxe-ui-table-border-color));
+      background-repeat: no-repeat;
+      background-size: 100% var(--vxe-ui-table-border-width);
+      background-position: right bottom;
+    }
+  }
+  &.border--inner {
+    .vxe-gantt--border-line {
+      border-width: 0 0 1px 0;
+    }
+  }
+  &.border--none {
+    .vxe-gantt--border-line {
+      display: none;
     }
   }
 }
@@ -528,6 +541,9 @@
     width: var(--vxe-ui-gantt-view-default-cell-width);
   }
 }
+.vxe-gantt-view--header-wrapper {
+  background-color: var(--vxe-ui-table-header-background-color);
+}
 .vxe-gantt-view--header-wrapper,
 .vxe-gantt-view--body-wrapper {
   overflow: hidden;
@@ -560,6 +576,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+// 行高亮
+.vxe-gantt-view--body-row {
+  &.row--stripe {
+    background-color: var(--vxe-ui-table-row-striped-background-color);
+  }
+  &.row--current {
+    background-color: var(--vxe-ui-table-row-current-background-color);
+  }
+  &.row--hover {
+    background-color: var(--vxe-ui-table-row-hover-background-color);
+    &.row--stripe {
+      background-color: var(--vxe-ui-table-row-hover-striped-background-color);
+    }
+    &.row--current {
+      background-color: var(--vxe-ui-table-row-hover-current-background-color);
+    }
+  }
 }
 
 .vxe-gantt-view {

@@ -17,8 +17,8 @@ interface RowVO {
 }
 
 const gridOptions = reactive<VxeGanttProps<RowVO>>({
-  border: true,
   height: 400,
+  border: 'none',
   columnConfig: {
     resizable: true
   },

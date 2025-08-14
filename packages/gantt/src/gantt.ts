@@ -1397,6 +1397,22 @@ export default defineVxeComponent({
         $xeGantt.dispatchEvent('zoom', { type: reactData.isZMax ? 'max' : 'revert' }, evnt)
       },
       handleTaskCellClickEvent (evnt, params) {
+        const $xeTable = refTable.value
+        if ($xeTable) {
+          const tableProps = $xeTable.props
+          const { highlightCurrentRow } = tableProps
+          const { computeRowOpts } = $xeTable.getComputeMaps()
+          const rowOpts = computeRowOpts.value
+          const { row } = params
+          // 如果是当前行
+          if (rowOpts.isCurrent || highlightCurrentRow) {
+            $xeTable.triggerCurrentRowEvent(evnt, Object.assign({
+              $table: $xeTable,
+              rowIndex: $xeTable.getRowIndex(row),
+              $rowIndex: $xeTable.getVMRowIndex(row)
+            }, params))
+          }
+        }
         $xeGantt.dispatchEvent('task-cell-click', params, evnt)
       },
       handleTaskCellDblclickEvent (evnt, params) {
@@ -1501,7 +1517,8 @@ export default defineVxeComponent({
     const renderToolbar = () => {
       const { toolbarConfig } = props
       const toolbarOpts = computeToolbarOpts.value
-      if ((toolbarConfig && isEnableConf(toolbarOpts)) || slots.toolbar) {
+      const toolbarSlot = slots.toolbar
+      if ((toolbarConfig && isEnableConf(toolbarOpts)) || toolbarSlot) {
         let slotVNs: VNode[] = []
         if (slots.toolbar) {
           slotVNs = slots.toolbar({ $grid: null, $gantt: $xeGantt })
@@ -1709,20 +1726,21 @@ export default defineVxeComponent({
       if (!enabled) {
         return renderEmptyElement($xeGantt)
       }
+      const isResize = resize && showLeftView && showRightView
       const ons: {
         onMousedown?: typeof dragSplitEvent
       } = {}
-      if (resize) {
+      if (isResize) {
         ons.onMousedown = dragSplitEvent
       }
       return h('div', {
         class: ['vxe-gantt--view-split-bar', {
-          'is--resize': resize,
-          ...ons
+          'is--resize': isResize
         }]
       }, [
         h('div', {
-          class: 'vxe-gantt--view-split-bar-handle'
+          class: 'vxe-gantt--view-split-bar-handle',
+          ...ons
         }),
         showCollapseTableButton || showCollapseTaskButton
           ? h('div', {
