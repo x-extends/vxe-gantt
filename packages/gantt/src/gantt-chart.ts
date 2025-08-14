@@ -5,7 +5,7 @@ import XEUtils from 'xe-utils'
 import { getCellRestHeight } from './util'
 import { getStringValue } from '../../ui/src/utils'
 
-import type { VxeTablePropTypes, TableInternalData } from 'vxe-table'
+import type { TableInternalData, TableReactData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 const { renderEmptyElement } = VxeUI
@@ -34,89 +34,122 @@ export default defineVxeComponent({
     //
     // Render
     //
-    renderVN (h: CreateElement) {
+    renderTaskBar (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, $rowIndex: number) {
       const _vm = this
       const $xeGantt = _vm.$xeGantt
-      const $xeGanttView = _vm.$xeGanttView
-      const $xeTable = $xeGanttView.internalData.xeTable
 
-      const tableInternalData = ($xeTable ? $xeTable as unknown : {}) as TableInternalData
-      const fullAllDataRowIdData = tableInternalData.fullAllDataRowIdData || {}
-      let cellOpts: VxeTablePropTypes.CellConfig = {}
-      let rowOpts : VxeTablePropTypes.RowConfig = {}
-      let defaultRowHeight = 0
-      if ($xeTable) {
-        cellOpts = $xeTable.computeCellOpts
-        rowOpts = $xeTable.computeRowOpts
-        defaultRowHeight = $xeTable.computeDefaultRowHeight
-      }
+      const tableProps = $xeTable
+      const { treeConfig } = tableProps
+      const tableInternalData = $xeTable as unknown as TableInternalData
+      const { fullAllDataRowIdData } = tableInternalData
+      const cellOpts = $xeTable.computeCellOpts
+      const rowOpts = $xeTable.computeRowOpts
+      const defaultRowHeight = $xeTable.computeDefaultRowHeight
 
-      const { reactData } = $xeGanttView
-      const { tableData } = reactData
       const titleField = $xeGantt.computeTitleField
       const progressField = $xeGantt.computeProgressField
       const taskBarOpts = $xeGantt.computeTaskBarOpts
       const { showProgress, showContent, contentMethod, barStyle } = taskBarOpts
       const { round } = barStyle || {}
 
-      const trVNs: VNode[] = []
-      tableData.forEach((row, rIndex) => {
-        const rowid = $xeTable ? $xeTable.getRowid(row) : ''
-        const rowRest = fullAllDataRowIdData[rowid] || {}
-        const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
-        let title = getStringValue(XEUtils.get(row, titleField))
-        const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
-        if (contentMethod) {
-          title = getStringValue(contentMethod({ row, title }))
+      const rowRest = fullAllDataRowIdData[rowid] || {}
+      const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
+      let title = getStringValue(XEUtils.get(row, titleField))
+      const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
+
+      if (contentMethod) {
+        title = getStringValue(contentMethod({ row, title }))
+      }
+      return h('div', {
+        key: treeConfig ? rowid : $rowIndex,
+        attrs: {
+          rowid
+        },
+        class: ['vxe-gantt-view--chart-row', {
+          'is--round': round
+        }],
+        style: {
+          height: `${cellHeight}px`
         }
-        trVNs.push(
-          h('div', {
-            key: rIndex,
-            attrs: {
-              rowid
+      }, [
+        h('div', {
+          class: 'vxe-gantt-view--chart-bar',
+          attrs: {
+            rowid
+          },
+          on: {
+            click (evnt: MouseEvent) {
+              $xeGantt.handleTaskBarClickEvent(evnt, { row })
             },
-            class: ['vxe-gantt-view--chart-row', {
-              'is--round': round
-            }],
-            style: {
-              height: `${cellHeight}px`
+            dblclick (evnt: MouseEvent) {
+              $xeGantt.handleTaskBarDblclickEvent(evnt, { row })
             }
-          }, [
-            h('div', {
-              class: 'vxe-gantt-view--chart-bar',
-              attrs: {
-                rowid
-              },
-              on: {
-                click (evnt: MouseEvent) {
-                  $xeGantt.handleTaskBarClickEvent(evnt, { row })
-                },
-                dblclick (evnt: MouseEvent) {
-                  $xeGantt.handleTaskBarDblclickEvent(evnt, { row })
-                }
+          }
+        }, [
+          showProgress
+            ? h('div', {
+              class: 'vxe-gantt-view--chart-progress',
+              style: {
+                width: `${progressValue || 0}%`
               }
-            }, [
-              showProgress
-                ? h('div', {
-                  class: 'vxe-gantt-view--chart-progress',
-                  style: {
-                    width: `${progressValue || 0}%`
-                  }
-                })
-                : renderEmptyElement($xeGantt),
-              showContent
-                ? h('div', {
-                  class: 'vxe-gantt-view--chart-content'
-                }, title)
-                : renderEmptyElement($xeGantt)
-            ])
-          ])
-        )
+            })
+            : renderEmptyElement($xeGantt),
+          showContent
+            ? h('div', {
+              class: 'vxe-gantt-view--chart-content'
+            }, title)
+            : renderEmptyElement($xeGantt)
+        ])
+      ])
+    },
+    renderRows (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) {
+      const _vm = this
+      const $xeGanttView = _vm.$xeGanttView
+      const { reactData } = $xeGanttView
+
+      const tableProps = $xeTable
+      const { treeConfig } = tableProps
+      const tableReactData = $xeTable as unknown as TableReactData
+      const { treeExpandedFlag } = tableReactData
+      const tableInternalData = $xeTable as unknown as TableInternalData
+      const { treeExpandedMaps } = tableInternalData
+      const treeOpts = $xeTable.computeTreeOpts
+      const { transform } = treeOpts
+      const childrenField = treeOpts.children || treeOpts.childrenField
+
+      const { scrollYLoad } = reactData
+
+      const trVNs: VNode[] = []
+      tableData.forEach((row, $rowIndex) => {
+        const rowid = $xeTable ? $xeTable.getRowid(row) : ''
+        trVNs.push(_vm.renderTaskBar(h, $xeTable, row, rowid, $rowIndex))
+        let isExpandTree = false
+        let rowChildren: any[] = []
+
+        if (treeConfig && !scrollYLoad && !transform) {
+          rowChildren = row[childrenField]
+          isExpandTree = !!treeExpandedFlag && rowChildren && rowChildren.length > 0 && !!treeExpandedMaps[rowid]
+        }
+        // 如果是树形表格
+        if (isExpandTree) {
+          trVNs.push(..._vm.renderRows(h, $xeTable, rowChildren))
+        }
       })
+      return trVNs
+    },
+    renderVN (h: CreateElement): VNode {
+      const _vm = this
+      const $xeGanttView = _vm.$xeGanttView
+      const { reactData } = $xeGanttView
+
+      const $xeTable = $xeGanttView.internalData.xeTable
+
+      const { tableData } = reactData
+
       return h('div', {
         ref: 'refElem',
         class: 'vxe-gantt-view--chart-wrapper'
-      }, trVNs)
+      }, $xeTable ? _vm.renderRows(h, $xeTable, tableData) : [])
     }
   },
   mounted () {

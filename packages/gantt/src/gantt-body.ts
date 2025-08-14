@@ -3,8 +3,8 @@ import { defineVxeComponent } from '../../ui/src/comp'
 import { getCellRestHeight } from './util'
 import GanttViewChartComponent from './gantt-chart'
 
-import type { VxeTablePropTypes, TableInternalData } from 'vxe-table'
-import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
+import type { TableInternalData, TableReactData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
+import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods, VxeGanttPropTypes } from '../../../types'
 
 export default defineVxeComponent({
   name: 'VxeGanttViewBody',
@@ -30,52 +30,96 @@ export default defineVxeComponent({
     //
     // Render
     //
-    renderRows (h: CreateElement) {
+    renderColumn (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, $rowIndex: number, column: VxeGanttPropTypes.Column, $columnIndex: number) {
       const _vm = this
       const $xeGantt = _vm.$xeGantt
+
+      const tableInternalData = $xeTable as unknown as TableInternalData
+      const { fullAllDataRowIdData } = tableInternalData
+      const cellOpts = $xeTable.computeCellOpts
+      const rowOpts = $xeTable.computeRowOpts
+      const defaultRowHeight = $xeTable.computeDefaultRowHeight
+
+      const rowRest = fullAllDataRowIdData[rowid] || {}
+      const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
+
+      return h('td', {
+        key: $columnIndex,
+        class: 'vxe-gantt-view--body-column',
+        style: {
+          height: `${cellHeight}px`
+        },
+        on: {
+          click (evnt: MouseEvent) {
+            $xeGantt.handleTaskCellClickEvent(evnt, { row, column })
+          },
+          dblclick (evnt: MouseEvent) {
+            $xeGantt.handleTaskCellDblclickEvent(evnt, { row, column })
+          }
+        }
+      })
+    },
+    renderRows (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) {
+      const _vm = this
       const $xeGanttView = _vm.$xeGanttView
-      const $xeTable = $xeGanttView.internalData.xeTable
-
-      const tableInternalData = ($xeTable ? $xeTable as unknown : {}) as TableInternalData
-      const fullAllDataRowIdData = tableInternalData.fullAllDataRowIdData || {}
-      let cellOpts: VxeTablePropTypes.CellConfig = {}
-      let rowOpts : VxeTablePropTypes.RowConfig = {}
-      let defaultRowHeight = 0
-      if ($xeTable) {
-        cellOpts = $xeTable.computeCellOpts
-        rowOpts = $xeTable.computeRowOpts
-        defaultRowHeight = $xeTable.computeDefaultRowHeight
-      }
-
       const { reactData } = $xeGanttView
-      const { tableData, tableColumn } = reactData
+
+      const tableProps = $xeTable
+      const { treeConfig, stripe, highlightHoverRow } = tableProps
+      const tableReactData = $xeTable as unknown as TableReactData
+      const { treeExpandedFlag } = tableReactData
+      const tableInternalData = $xeTable as unknown as TableInternalData
+      const { fullAllDataRowIdData, treeExpandedMaps } = tableInternalData
+      const rowOpts = $xeTable.computeRowOpts
+      const treeOpts = $xeTable.computeTreeOpts
+      const { transform } = treeOpts
+      const childrenField = treeOpts.children || treeOpts.childrenField
+
+      const { tableColumn, scrollYLoad } = reactData
 
       const trVNs:VNode[] = []
-      tableData.forEach((row, rIndex) => {
-        const rowid = $xeTable ? $xeTable.getRowid(row) : ''
+      tableData.forEach((row, $rowIndex) => {
+        const rowid = $xeTable.getRowid(row)
         const rowRest = fullAllDataRowIdData[rowid] || {}
-        const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
+        const trOns: Record<string, any> = {}
+        let rowIndex = $rowIndex
+        let _rowIndex = -1
+        if (rowRest) {
+          rowIndex = rowRest.index
+          _rowIndex = rowRest._index
+        }
+        // 当前行事件
+        if (rowOpts.isHover || highlightHoverRow) {
+          trOns.mouseenter = (evnt: MouseEvent) => {
+            $xeTable.triggerHoverEvent(evnt, { row, rowIndex })
+          }
+          trOns.mouseleave = () => {
+            $xeTable.clearHoverRow()
+          }
+        }
         trVNs.push(
           h('tr', {
-            key: rIndex
-          }, tableColumn.map((column, cIndex) => {
-            return h('td', {
-              key: cIndex,
-              class: 'vxe-gantt-view--body-column',
-              style: {
-                height: `${cellHeight}px`
-              },
-              on: {
-                click (evnt: MouseEvent) {
-                  $xeGantt.handleTaskCellClickEvent(evnt, { row })
-                },
-                dblclick (evnt: MouseEvent) {
-                  $xeGantt.handleTaskCellDblclickEvent(evnt, { row })
-                }
-              }
-            })
-          }))
+            key: treeConfig ? rowid : $rowIndex,
+            class: ['vxe-gantt-view--body-row', {
+              'row--stripe': stripe && (_rowIndex + 1) % 2 === 0
+            }],
+            attrs: {
+              rowid
+            },
+            on: trOns
+          }, tableColumn.map((column, $columnIndex) => _vm.renderColumn(h, $xeTable, row, rowid, $rowIndex, column, $columnIndex)))
         )
+        let isExpandTree = false
+        let rowChildren: any[] = []
+
+        if (treeConfig && !scrollYLoad && !transform) {
+          rowChildren = row[childrenField]
+          isExpandTree = !!treeExpandedFlag && rowChildren && rowChildren.length > 0 && !!treeExpandedMaps[rowid]
+        }
+        // 如果是树形表格
+        if (isExpandTree) {
+          trVNs.push(..._vm.renderRows(h, $xeTable, rowChildren))
+        }
       })
       return trVNs
     },
@@ -84,7 +128,9 @@ export default defineVxeComponent({
       const $xeGanttView = _vm.$xeGanttView
       const { reactData } = $xeGanttView
 
-      const { tableColumn, viewCellWidth } = reactData
+      const $xeTable = $xeGanttView.internalData.xeTable
+
+      const { tableData, tableColumn, viewCellWidth } = reactData
       return h('div', {
         ref: 'refElem',
         class: 'vxe-gantt-view--body-wrapper'
@@ -116,7 +162,7 @@ export default defineVxeComponent({
                 }
               })
             })),
-            h('tbody', {}, _vm.renderRows(h))
+            h('tbody', {}, $xeTable ? _vm.renderRows(h, $xeTable, tableData) : [])
           ]),
           h(GanttViewChartComponent)
         ])

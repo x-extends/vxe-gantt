@@ -8,7 +8,7 @@
 export default {
   data () {
     const gridOptions = {
-      border: true,
+      // border: true,
       height: 400,
       columnConfig: {
         resizable: true

@@ -307,7 +307,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const proxyOpts = $xeGantt.computeProxyOpts
       const pagerOpts = $xeGantt.computePagerOpts
       const isLoading = $xeGantt.computeIsLoading
-      const tProps = Object.assign({}, tableExtendProps)
+      const tProps = Object.assign({}, tableExtendProps, {
+        showOverflow: true,
+        showHeaderOverflow: true,
+        showFooterOverflow: true,
+        showFooter: false
+      })
       if (isZMax) {
         if (tableExtendProps.maxHeight) {
           tProps.maxHeight = '100%'
@@ -1495,7 +1500,22 @@ export default /* define-vxe-component start */ defineVxeComponent({
     },
     handleTaskCellClickEvent (evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
       const $xeGantt = this
+      const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
+      if ($xeTable) {
+        const tableProps = $xeTable
+        const { highlightCurrentRow } = tableProps
+        const rowOpts = $xeTable.computeRowOpts
+        const { row } = params
+        // 如果是当前行
+        if (rowOpts.isCurrent || highlightCurrentRow) {
+          $xeTable.triggerCurrentRowEvent(evnt, Object.assign({
+            $table: $xeTable,
+            rowIndex: $xeTable.getRowIndex(row),
+            $rowIndex: $xeTable.getVMRowIndex(row)
+          }, params))
+        }
+      }
       $xeGantt.dispatchEvent('task-cell-click', params, evnt)
     },
     handleTaskCellDblclickEvent (evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
@@ -1706,10 +1726,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       const { toolbarConfig } = props
       const toolbarSlot = slots.toolbar
-      const hasToolbar = !!(toolbarSlot || isEnableConf(toolbarConfig) || toolbar)
       const toolbarOpts = $xeGantt.computeToolbarOpts
 
-      if (hasToolbar) {
+      if ((toolbarConfig && isEnableConf(toolbarOpts)) || toolbarSlot) {
         return h('div', {
           key: 'toolbar',
           ref: 'refToolbarWrapper',
@@ -1854,20 +1873,21 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if (!enabled) {
         return renderEmptyElement($xeGantt)
       }
+      const isResize = resize && showLeftView && showRightView
       const ons: {
         mousedown?: any
       } = {}
-      if (resize) {
+      if (isResize) {
         ons.mousedown = $xeGantt.dragSplitEvent
       }
       return h('div', {
         class: ['vxe-gantt--view-split-bar', {
-          'is--resize': resize,
-          on: ons
+          'is--resize': isResize
         }]
       }, [
         h('div', {
-          class: 'vxe-gantt--view-split-bar-handle'
+          class: 'vxe-gantt--view-split-bar-handle',
+          on: ons
         }),
         showCollapseTableButton || showCollapseTaskButton
           ? h('div', {

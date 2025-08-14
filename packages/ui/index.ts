@@ -1,6 +1,7 @@
 import { VxeUI } from '@vxe-ui/core'
+import { errLog } from './src/log'
 
-const { setConfig, setIcon } = VxeUI
+const { setConfig, setIcon, checkVersion } = VxeUI
 
 VxeUI.ganttVersion = process.env.VUE_APP_VXE_VERSION as string
 
@@ -61,4 +62,11 @@ setIcon({
   GANTT_VIEW_RIGHT_CLOSE: iconPrefix + 'arrow-left'
 })
 
+if (!checkVersion(VxeUI.tableVersion, 3, 18)) {
+  errLog('vxe.error.errorVersion', [`vxe-table@${VxeUI.tableVersion || '?'}`, 'vxe-table v3.18+'])
+}
+
+export {
+  VxeUI
+}
 export default VxeUI
