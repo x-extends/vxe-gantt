@@ -24,6 +24,8 @@ export default defineVxeComponent({
     const renderTaskBar = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, $rowIndex: number) => {
       const tableProps = $xeTable.props
       const { treeConfig } = tableProps
+      const tableReactData = $xeTable.reactData
+      const { resizeHeightFlag } = tableReactData
       const tableInternalData = $xeTable.internalData
       const { fullAllDataRowIdData } = tableInternalData
       const { computeCellOpts, computeRowOpts, computeDefaultRowHeight } = $xeTable.getComputeMaps()
@@ -38,7 +40,10 @@ export default defineVxeComponent({
       const { round } = barStyle || {}
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
+      const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
+      const isRsHeight = resizeHeight > 0
       const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
+
       let title = getStringValue(XEUtils.get(row, titleField))
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
 
@@ -49,7 +54,8 @@ export default defineVxeComponent({
         key: treeConfig ? rowid : $rowIndex,
         rowid,
         class: ['vxe-gantt-view--chart-row', {
-          'is--round': round
+          'is--round': round,
+          'col--rs-height': isRsHeight
         }],
         style: {
           height: `${cellHeight}px`

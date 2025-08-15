@@ -6,6 +6,7 @@ import { getRefElem } from './util'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
+import GanttViewFooterComponent from './gantt-footer'
 
 import type { VxeGanttViewConstructor, GanttViewReactData, GanttViewPrivateRef, VxeGanttPropTypes, VxeGanttDefines, VxeGanttViewPrivateMethods, GanttViewInternalData, VxeGanttViewMethods, GanttViewPrivateComputed, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
@@ -41,7 +42,7 @@ function createInternalData (): GanttViewInternalData {
   }
 }
 const maxYHeight = 5e6
-const maxXWidth = 5e6
+// const maxXWidth = 5e6
 
 export default defineVxeComponent({
   name: 'VxeGanttView',
@@ -75,9 +76,9 @@ export default defineVxeComponent({
       // 是否启用了纵向 Y 可视渲染方式加载
       scrollYLoad: false,
       // 是否存在纵向滚动条
-      overflowY: false,
+      overflowY: true,
       // 是否存在横向滚动条
-      overflowX: false,
+      overflowX: true,
       // 纵向滚动条的宽度
       scrollbarWidth: 0,
       // 横向滚动条的高度
@@ -327,13 +328,15 @@ export default defineVxeComponent({
         return
       }
 
+      const scrollbarOpts = computeScrollbarOpts.value
       const scrollbarXToTop = computeScrollbarXToTop.value
+      const scrollbarYToLeft = computeScrollbarYToLeft.value
 
       const xLeftCornerEl = refScrollXLeftCornerElem.value
       const xRightCornerEl = refScrollXRightCornerElem.value
       const scrollXVirtualEl = refScrollXVirtualElem.value
 
-      const osbWidth = scrollbarWidth
+      let osbWidth = scrollbarWidth
       const osbHeight = scrollbarHeight
 
       let tbHeight = 0
@@ -346,6 +349,12 @@ export default defineVxeComponent({
         tFooterHeight = tableInternalData.tFooterHeight
       }
 
+      let yScrollbarVisible = 'visible'
+      if (scrollbarYToLeft || (scrollbarOpts.y && scrollbarOpts.y.visible === false)) {
+        osbWidth = 0
+        yScrollbarVisible = 'hidden'
+      }
+
       const headerScrollElem = getRefElem(elemStore['main-header-scroll'])
       if (headerScrollElem) {
         headerScrollElem.style.height = `${tHeaderHeight}px`
@@ -353,6 +362,10 @@ export default defineVxeComponent({
       const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
       if (bodyScrollElem) {
         bodyScrollElem.style.height = `${tbHeight}px`
+      }
+      const footerScrollElem = getRefElem(elemStore['main-footer-scroll'])
+      if (footerScrollElem) {
+        footerScrollElem.style.height = `${tFooterHeight}px`
       }
 
       if (scrollXVirtualEl) {
@@ -377,7 +390,7 @@ export default defineVxeComponent({
       if (scrollYVirtualEl) {
         scrollYVirtualEl.style.width = `${osbWidth}px`
         scrollYVirtualEl.style.height = `${tbHeight + tHeaderHeight + tFooterHeight}px`
-        scrollYVirtualEl.style.visibility = 'visible'
+        scrollYVirtualEl.style.visibility = yScrollbarVisible
       }
       const yTopCornerEl = refScrollYTopCornerElem.value
       if (yTopCornerEl) {
@@ -430,61 +443,11 @@ export default defineVxeComponent({
       return nextTick()
     }
 
-    const updateScrollXSpace = () => {
-      const { scrollXLoad, scrollXWidth } = reactData
-      const { elemStore } = internalData
-      const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
-      const bodyTableElem = getRefElem(elemStore['main-body-table'])
+    // const updateScrollXSpace = () => {
 
-      let xSpaceLeft = 0
-
-      let clientWidth = 0
-      if (bodyScrollElem) {
-        clientWidth = bodyScrollElem.clientWidth
-      }
-      // 虚拟渲染
-      let isScrollXBig = false
-      let ySpaceWidth = scrollXWidth
-      if (scrollXWidth > maxXWidth) {
-        // 触右
-        if (bodyScrollElem && bodyTableElem && bodyScrollElem.scrollLeft + clientWidth >= maxXWidth) {
-          xSpaceLeft = maxXWidth - bodyTableElem.clientWidth
-        } else {
-          xSpaceLeft = (maxXWidth - clientWidth) * (xSpaceLeft / (scrollXWidth - clientWidth))
-        }
-        ySpaceWidth = maxXWidth
-        isScrollXBig = true
-      }
-
-      if (bodyTableElem) {
-        bodyTableElem.style.transform = `translate(${xSpaceLeft}px, ${reactData.scrollYTop || 0}px)`
-      }
-
-      const layoutList = ['header', 'body', 'footer']
-      layoutList.forEach(layout => {
-        const xSpaceElem = getRefElem(elemStore[`main-${layout}-xSpace`])
-        if (xSpaceElem) {
-          xSpaceElem.style.width = scrollXLoad ? `${ySpaceWidth}px` : ''
-        }
-      })
-
-      reactData.scrollXLeft = xSpaceLeft
-      reactData.scrollXWidth = ySpaceWidth
-      reactData.isScrollXBig = isScrollXBig
-
-      const scrollXSpaceEl = refScrollXSpaceElem.value
-      if (scrollXSpaceEl) {
-        scrollXSpaceEl.style.width = `${ySpaceWidth}px`
-      }
-
-      calcScrollbar()
-      return nextTick().then(() => {
-        updateStyle()
-      })
-    }
+    // }
 
     const updateScrollYSpace = () => {
-      const { scrollYLoad, overflowY } = reactData
       const { elemStore } = internalData
       const $xeTable = internalData.xeTable
       const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
@@ -516,21 +479,19 @@ export default defineVxeComponent({
         }
         ySpaceHeight = maxYHeight
       }
-      if (!(scrollYLoad && overflowY)) {
-        scrollYTop = 0
-      }
 
+      const bodyChartWrapperElem = getRefElem(elemStore['main-chart-wrapper'])
       if (bodyTableElem) {
         bodyTableElem.style.transform = `translate(${reactData.scrollXLeft || 0}px, ${scrollYTop}px)`
       }
+      if (bodyChartWrapperElem) {
+        bodyChartWrapperElem.style.transform = `translate(${reactData.scrollXLeft || 0}px, ${scrollYTop}px)`
+      }
 
-      const layoutList = ['header', 'body', 'footer']
-      layoutList.forEach(layout => {
-        const ySpaceElem = getRefElem(elemStore[`main-${layout}-ySpace`])
-        if (ySpaceElem) {
-          ySpaceElem.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
-        }
-      })
+      const bodyYSpaceElem = getRefElem(elemStore['main-body-ySpace'])
+      if (bodyYSpaceElem) {
+        bodyYSpaceElem.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
+      }
 
       const scrollYSpaceEl = refScrollYSpaceElem.value
       if (scrollYSpaceEl) {
@@ -736,8 +697,30 @@ export default defineVxeComponent({
           handleScrollEvent(evnt, isRollY, isRollX, currTopNum, wrapperEl.scrollLeft)
         }
       },
-      updateScrollXSpace,
-      updateScrollYSpace
+      handleUpdateSXSpace () {
+        const { scrollXLoad, scrollXWidth } = reactData
+        const { elemStore } = internalData
+
+        const layoutList = ['header', 'body', 'footer']
+        layoutList.forEach(layout => {
+          const xSpaceElem = getRefElem(elemStore[`main-${layout}-xSpace`])
+          if (xSpaceElem) {
+            xSpaceElem.style.width = scrollXLoad ? `${scrollXWidth}px` : ''
+          }
+        })
+
+        const scrollXSpaceEl = refScrollXSpaceElem.value
+        if (scrollXSpaceEl) {
+          scrollXSpaceEl.style.width = `${scrollXWidth}px`
+        }
+
+        calcScrollbar()
+        return nextTick()
+      },
+      handleUpdateSYSpace: updateScrollYSpace,
+      handleUpdateSYStatus (sYLoad) {
+        reactData.scrollYLoad = sYLoad
+      }
     }
 
     const handleGlobalResizeEvent = () => {
@@ -814,7 +797,8 @@ export default defineVxeComponent({
         class: 'vxe-gantt-view--viewport-wrapper'
       }, [
         h(GanttViewHeaderComponent),
-        h(GanttViewBodyComponent)
+        h(GanttViewBodyComponent),
+        h(GanttViewFooterComponent)
       ])
     }
 

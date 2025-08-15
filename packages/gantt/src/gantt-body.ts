@@ -21,6 +21,8 @@ export default defineVxeComponent({
     const refBodyYSpace = ref() as Ref<HTMLDivElement>
 
     const renderColumn = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, $rowIndex: number, column: VxeGanttPropTypes.Column, $columnIndex: number) => {
+      const tableReactData = $xeTable.reactData
+      const { resizeHeightFlag } = tableReactData
       const tableInternalData = $xeTable.internalData
       const { fullAllDataRowIdData } = tableInternalData
       const { computeCellOpts, computeRowOpts, computeDefaultRowHeight } = $xeTable.getComputeMaps()
@@ -29,11 +31,15 @@ export default defineVxeComponent({
       const defaultRowHeight = computeDefaultRowHeight.value
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
+      const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
+      const isRsHeight = resizeHeight > 0
       const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
 
       return h('td', {
         key: $columnIndex,
-        class: 'vxe-gantt-view--body-column',
+        class: ['vxe-gantt-view--body-column', {
+          'col--rs-height': isRsHeight
+        }],
         style: {
           height: `${cellHeight}px`
         },
@@ -48,12 +54,14 @@ export default defineVxeComponent({
 
     const renderRows = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) => {
       const tableProps = $xeTable.props
-      const { treeConfig, stripe, highlightHoverRow } = tableProps
+      const { treeConfig, stripe, highlightHoverRow, editConfig } = tableProps
       const tableReactData = $xeTable.reactData
-      const { treeExpandedFlag } = tableReactData
+      const { treeExpandedFlag, selectRadioRow, pendingRowFlag } = tableReactData
       const tableInternalData = $xeTable.internalData
-      const { fullAllDataRowIdData, treeExpandedMaps } = tableInternalData
-      const { computeTreeOpts, computeRowOpts } = $xeTable.getComputeMaps()
+      const { fullAllDataRowIdData, treeExpandedMaps, pendingRowMaps } = tableInternalData
+      const { computeRadioOpts, computeCheckboxOpts, computeTreeOpts, computeRowOpts } = $xeTable.getComputeMaps()
+      const radioOpts = computeRadioOpts.value
+      const checkboxOpts = computeCheckboxOpts.value
       const rowOpts = computeRowOpts.value
       const treeOpts = computeTreeOpts.value
       const { transform } = treeOpts
@@ -72,6 +80,11 @@ export default defineVxeComponent({
           rowIndex = rowRest.index
           _rowIndex = rowRest._index
         }
+        // 是否新增行
+        let isNewRow = false
+        if (editConfig) {
+          isNewRow = $xeTable.isInsertByRow(row)
+        }
         // 当前行事件
         if (rowOpts.isHover || highlightHoverRow) {
           trOns.onMouseenter = (evnt: MouseEvent) => {
@@ -85,7 +98,11 @@ export default defineVxeComponent({
           h('tr', {
             key: treeConfig ? rowid : $rowIndex,
             class: ['vxe-gantt-view--body-row', {
-              'row--stripe': stripe && (_rowIndex + 1) % 2 === 0
+              'row--stripe': stripe && (_rowIndex + 1) % 2 === 0,
+              'is--new': isNewRow,
+              'row--radio': radioOpts.highlight && $xeTable.eqRow(selectRadioRow, row),
+              'row--checked': checkboxOpts.highlight && $xeTable.isCheckedByCheckboxRow(row),
+              'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid]
             }],
             rowid,
             ...trOns

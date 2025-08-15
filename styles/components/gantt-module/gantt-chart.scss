@@ -14,9 +14,6 @@
           border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius);
         }
       }
-      & > .vxe-gantt-view--chart-progress {
-        border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius) 0 0 var(--vxe-ui-gantt-view-task-bar-border-radius);
-      }
     }
   }
 }
@@ -31,6 +28,7 @@
   transform: translateY(-50%);
   height: var(--vxe-ui-gantt-view-chart-bar-height);
   background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
+  overflow: hidden;
   pointer-events: all;
   &:hover {
     &::after {

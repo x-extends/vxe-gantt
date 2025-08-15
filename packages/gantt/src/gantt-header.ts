@@ -1,12 +1,10 @@
 import { h, inject, ref, Ref, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
-import { getCellHeight } from './util'
 
-import type { VxeTablePropTypes } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods } from '../../../types'
 
 export default defineVxeComponent({
-  name: 'VxeGanttView',
+  name: 'VxeGanttViewHeader',
   setup () {
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
@@ -18,20 +16,7 @@ export default defineVxeComponent({
     const refHeaderXSpace = ref() as Ref<HTMLDivElement>
 
     const renderVN = () => {
-      const $xeTable = $xeGanttView.internalData.xeTable
-
       const { tableColumn, headerGroups, viewCellWidth } = reactData
-
-      let defaultRowHeight: number = 0
-      let headerCellOpts : VxeTablePropTypes.HeaderCellConfig = {}
-      let currCellHeight = 0
-      if ($xeTable) {
-        const { computeDefaultRowHeight, computeHeaderCellOpts } = $xeTable.getComputeMaps()
-        defaultRowHeight = computeDefaultRowHeight.value
-        headerCellOpts = computeHeaderCellOpts.value
-        currCellHeight = getCellHeight(headerCellOpts.height) || defaultRowHeight
-      }
-
       return h('div', {
         ref: refElem,
         class: 'vxe-gantt-view--header-wrapper'
@@ -47,10 +32,7 @@ export default defineVxeComponent({
           }),
           h('table', {
             ref: refHeaderTable,
-            class: 'vxe-gantt-view--header-table',
-            style: {
-              height: `${currCellHeight}px`
-            }
+            class: 'vxe-gantt-view--header-table'
           }, [
             h('colgroup', {}, tableColumn.map((column, cIndex) => {
               return h('col', {
