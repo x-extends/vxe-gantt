@@ -4,7 +4,7 @@ import { defineVxeComponent } from '../../ui/src/comp'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 export default defineVxeComponent({
-  name: 'VxeGanttView',
+  name: 'VxeGanttViewHeader',
   inject: {
     $xeGantt: {
       default: null
@@ -12,10 +12,6 @@ export default defineVxeComponent({
     $xeGanttView: {
       default: null
     }
-  },
-  props: {},
-  data () {
-    return {}
   },
   computed: {
     ...({} as {

@@ -40,6 +40,8 @@ export default defineVxeComponent({
 
       const tableProps = $xeTable
       const { treeConfig } = tableProps
+      const tableReactData = $xeTable as unknown as TableReactData
+      const { resizeHeightFlag } = tableReactData
       const tableInternalData = $xeTable as unknown as TableInternalData
       const { fullAllDataRowIdData } = tableInternalData
       const cellOpts = $xeTable.computeCellOpts
@@ -53,7 +55,10 @@ export default defineVxeComponent({
       const { round } = barStyle || {}
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
+      const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
+      const isRsHeight = resizeHeight > 0
       const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
+
       let title = getStringValue(XEUtils.get(row, titleField))
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
 
@@ -66,7 +71,8 @@ export default defineVxeComponent({
           rowid
         },
         class: ['vxe-gantt-view--chart-row', {
-          'is--round': round
+          'is--round': round,
+          'col--rs-height': isRsHeight
         }],
         style: {
           height: `${cellHeight}px`

@@ -4,15 +4,16 @@ import { VxeUI } from '@vxe-ui/core'
 import XEUtils from 'xe-utils'
 import { getLastZIndex, nextZIndex, isEnableConf } from '../../ui/src/utils'
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
+import { getSlotVNs } from '../../ui/src/vn'
 import { warnLog, errLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
 
 import type { ValueOf, VxeFormInstance, VxeFormItemProps, VxePagerInstance, VxePagerDefines, VxeComponentStyleType, VxeComponentSizeType, VxeFormDefines, VxeFormItemPropTypes } from 'vxe-pc-ui'
-import type { VxeTableMethods, VxeToolbarPropTypes, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableDefines, VxeToolbarInstance, TableInternalData, VxeTablePropTypes, VxeGridPropTypes } from 'vxe-table'
-import type { VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, VxeGanttViewInstance, VxeGanttDefines } from '../../../types'
+import type { VxeTableMethods, VxeToolbarPropTypes, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableDefines, TableReactData, VxeToolbarInstance, TableInternalData, VxeTablePropTypes, VxeGridPropTypes } from 'vxe-table'
+import type { VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, VxeGanttViewInstance, VxeGanttDefines, VxeGanttConstructor } from '../../../types'
 
-const { getConfig, getIcon, getI18n, commands, globalMixins, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement, getSlotVNs } = VxeUI
+const { getConfig, getIcon, getI18n, commands, globalMixins, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement } = VxeUI
 
 const tableProps = (VxeTableComponent as any).props
 
@@ -21,12 +22,18 @@ const propKeys = Object.keys(tableProps) as (keyof VxeTableProps)[]
 
 const defaultLayouts: VxeGanttPropTypes.Layouts = [['Form'], ['Toolbar', 'Top', 'Gantt', 'Bottom', 'Pager']]
 
-function getTableOns (_vm: any) {
-  const { $listeners, proxyConfig, proxyOpts } = _vm
+function getTableOns ($xeGantt: VxeGanttConstructor) {
+  const _vm = $xeGantt as any
+  const $listeners = _vm.$listeners
+
+  const props = $xeGantt
+
+  const { proxyConfig } = props
+  const proxyOpts = $xeGantt.computeProxyOpts
   const ons: any = {}
   XEUtils.each($listeners, (cb: any, type: any) => {
     ons[type] = (...args: any[]) => {
-      _vm.$emit(type, ...args)
+      $xeGantt.$emit(type, ...args)
     }
   })
   if (proxyConfig) {
@@ -74,6 +81,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
       editConfig: PropType<VxeTablePropTypes.EditConfig>
       sortConfig: PropType<VxeTablePropTypes.SortConfig>
       filterConfig: PropType<VxeTablePropTypes.FilterConfig>
+      expandConfig: PropType<VxeTablePropTypes.ExpandConfig>
+      aggregateConfig: PropType<VxeTablePropTypes.AggregateConfig>
       validConfig: PropType<VxeTablePropTypes.ValidConfig>
       editRules: PropType<VxeTablePropTypes.EditRules>
       animat: PropType<VxeTablePropTypes.Animat>
@@ -100,8 +109,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
   },
   provide () {
     const $xeGantt = this
+    const $xeGrid = null
 
     return {
+      $xeGrid,
       $xeGantt
     }
   },
@@ -308,10 +319,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const pagerOpts = $xeGantt.computePagerOpts
       const isLoading = $xeGantt.computeIsLoading
       const tProps = Object.assign({}, tableExtendProps, {
+        // 不支持修改的属性
         showOverflow: true,
         showHeaderOverflow: true,
-        showFooterOverflow: true,
-        showFooter: false
+        showFooterOverflow: true
       })
       if (isZMax) {
         if (tableExtendProps.maxHeight) {
@@ -1505,6 +1516,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if ($xeTable) {
         const tableProps = $xeTable
         const { highlightCurrentRow } = tableProps
+        const tableReactData = $xeTable as unknown as TableReactData
+        const { radioColumn, checkboxColumn } = tableReactData
+        const radioOpts = $xeTable.computeRadioOpts
+        const checkboxOpts = $xeTable.computeCheckboxOpts
         const rowOpts = $xeTable.computeRowOpts
         const { row } = params
         // 如果是当前行
@@ -1514,6 +1529,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
             rowIndex: $xeTable.getRowIndex(row),
             $rowIndex: $xeTable.getVMRowIndex(row)
           }, params))
+        }
+        // 如果是单选框
+        if ((radioColumn && radioOpts.trigger === 'row')) {
+          $xeTable.triggerRadioRowEvent(evnt, params)
+        }
+        // 如果是复选框
+        if ((checkboxColumn && checkboxOpts.trigger === 'row')) {
+          $xeTable.handleToggleCheckRowEvent(evnt, params)
         }
       }
       $xeGantt.dispatchEvent('task-cell-click', params, evnt)
@@ -1539,6 +1562,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
       XEUtils.eachTree(columns, column => {
+        const { type } = column
         if (column.slots) {
           XEUtils.each(column.slots, (func) => {
             if (!XEUtils.isFunction(func)) {
@@ -1547,6 +1571,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
               }
             }
           })
+        }
+        if (type === 'expand') {
+          errLog('vxe.error.errProp', ['type=expand', 'type=seq,radio,checkbox,html'])
         }
       })
       return $xeTable.loadColumn(columns)
@@ -1794,7 +1821,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         h(VxeTableComponent as Component, {
           key: 'table',
           props: tableProps,
-          on: getTableOns($xeGantt),
+          on: getTableOns($xeGantt as VxeGanttConstructor),
           scopedSlots: slots,
           ref: 'refTable'
         })
@@ -1962,7 +1989,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
                       class: 'vxe-gantt--resizable-split-number-right'
                     }, '20px')
                   ])
-                ])
+                ]),
+                h('div', {
+                  class: 'vxe-gantt--border-line'
+                })
               ])
             )
             break
@@ -2010,10 +2040,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         ]),
         h('div', {
           class: 'vxe-gantt--layout-footer-wrapper'
-        }, $xeGantt.renderChildLayout(h, footKeys)),
-        h('div', {
-          class: 'vxe-gantt--border-line'
-        })
+        }, $xeGantt.renderChildLayout(h, footKeys))
       ]
     },
     renderVN (h: CreateElement): VNode {
@@ -2061,6 +2088,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
     }
     if (proxyOpts.props) {
       warnLog('vxe.error.delProp', ['proxy-config.props', 'proxy-config.response'])
+    }
+    if (props.expandConfig) {
+      warnLog('vxe.error.notProp', ['expand-config'])
+    }
+    if (props.aggregateConfig) {
+      warnLog('vxe.error.notProp', ['aggregate-config'])
     }
 
     $xeGantt.$nextTick(() => {
