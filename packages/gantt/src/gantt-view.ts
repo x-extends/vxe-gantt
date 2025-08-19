@@ -258,7 +258,7 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   const reactData = $xeGanttView.reactData
   const internalData = $xeGanttView.internalData
 
-  const { scrollbarWidth, scrollbarHeight, tableColumn } = reactData
+  const { scrollbarWidth, scrollbarHeight, tableColumn, headerGroups } = reactData
   const { elemStore } = internalData
   const $xeTable = internalData.xeTable
 
@@ -297,6 +297,7 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   const headerScrollElem = getRefElem(elemStore['main-header-scroll'])
   if (headerScrollElem) {
     headerScrollElem.style.height = `${tHeaderHeight}px`
+    headerScrollElem.style.setProperty('--vxe-ui-gantt-view-cell-height', `${tHeaderHeight / headerGroups.length}px`)
   }
   const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
   if (bodyScrollElem) {
