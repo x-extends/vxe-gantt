@@ -62,8 +62,14 @@ setIcon({
   GANTT_VIEW_RIGHT_CLOSE: iconPrefix + 'arrow-left'
 })
 
-if (!checkVersion(VxeUI.tableVersion, 3, 18)) {
-  errLog('vxe.error.errorVersion', [`vxe-table@${VxeUI.tableVersion || '?'}`, 'vxe-table v3.18+'])
+const pVersion = 3
+const sVersion = 18
+if (checkVersion) {
+  if (!checkVersion(VxeUI.tableVersion, pVersion, sVersion)) {
+    errLog('vxe.error.errorVersion', [`vxe-table@${VxeUI.tableVersion || '?'}`, `vxe-table v${pVersion}.${sVersion}+`])
+  }
+} else {
+  errLog(`Requires vxe-table v${pVersion}.${sVersion}+`)
 }
 
 export {

@@ -314,6 +314,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       const { seqConfig, pagerConfig, editConfig, proxyConfig } = props
       const { isZMax, tablePage } = reactData
+      const taskViewOpts = $xeGantt.computeTaskViewOpts
+      const { tableStyle } = taskViewOpts
       const tableExtendProps = $xeGantt.computeTableExtendProps as any
       const proxyOpts = $xeGantt.computeProxyOpts
       const pagerOpts = $xeGantt.computePagerOpts
@@ -324,6 +326,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
         showHeaderOverflow: true,
         showFooterOverflow: true
       })
+      if (tableStyle) {
+        const { border } = tableStyle
+        if (!XEUtils.eqNull(border)) {
+          tProps.border = border
+        }
+      }
       if (isZMax) {
         if (tableExtendProps.maxHeight) {
           tProps.maxHeight = '100%'
@@ -416,7 +424,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const $xeGantt = this
       const props = $xeGantt
 
-      const { border } = props
+      let { border } = props
+      const taskViewOpts = $xeGantt.computeTaskViewOpts as VxeGanttPropTypes.TaskViewConfig
+      const { viewStyle } = taskViewOpts
+      if (viewStyle) {
+        if (!XEUtils.eqNull(viewStyle.border)) {
+          border = viewStyle.border as VxeTablePropTypes.Border
+        }
+      }
       if (border === true) {
         return 'full'
       }
@@ -721,7 +736,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if (!el) {
         return
       }
-      const ganttContainerEl = $xeGantt.$refs.refGanttContainer as HTMLDivElement
+      const ganttContainerEl = $xeGantt.$refs.refGanttContainerElem as HTMLDivElement
       if (!ganttContainerEl) {
         return
       }
@@ -1434,7 +1449,47 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    callSlot (slotFunc: any, params: any, h: CreateElement, vNodes: any) {
+    hasTableViewVisible () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      return reactData.showLeftView
+    },
+    showTableView () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      reactData.showLeftView = true
+      return $xeGantt.$nextTick()
+    },
+    hideTableView () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      reactData.showLeftView = false
+      return $xeGantt.$nextTick()
+    },
+    hasTaskViewVisible () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      return reactData.showRightView
+    },
+    showTaskView () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      reactData.showRightView = true
+      return $xeGantt.$nextTick()
+    },
+    hideTaskView () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      reactData.showRightView = false
+      return $xeGantt.$nextTick()
+    },
+    callSlot (slotFunc: any, params: any, h: CreateElement) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
 
@@ -1443,7 +1498,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
           slotFunc = slots[slotFunc] || null
         }
         if (XEUtils.isFunction(slotFunc)) {
-          return getSlotVNs(slotFunc.call(this, params, h, vNodes))
+          return getSlotVNs(slotFunc.call(this, params, h))
         }
       }
       return []
@@ -1966,7 +2021,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
           case 'Gantt':
             childVNs.push(
               h('div', {
-                ref: 'refGanttContainer',
+                ref: 'refGanttContainerElem',
                 key: 'tv',
                 class: 'vxe-gantt--gantt-container'
               }, [
@@ -1975,6 +2030,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
                 $xeGantt.renderSplitBar(h),
                 $xeGantt.renderTaskView(h),
                 $xeGantt.renderTableRight(h),
+                h('div', {
+                  ref: 'refClassifyWrapperElem'
+                }),
                 h('div', {
                   ref: 'refResizableSplitTip',
                   class: 'vxe-gantt--resizable-split-tip'

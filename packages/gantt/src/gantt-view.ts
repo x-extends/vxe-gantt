@@ -45,6 +45,14 @@ function createInternalData (): GanttViewInternalData {
 const maxYHeight = 5e6
 // const maxXWidth = 5e6
 
+function parseStringDate ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods, dateValue: any) {
+  const $xeGantt = $xeGanttView.$xeGantt
+
+  const taskOpts = $xeGantt.computeTaskOpts
+  const { dateFormat } = taskOpts
+  return XEUtils.toStringDate(dateValue, dateFormat || null)
+}
+
 function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
   const $xeGantt = $xeGanttView.$xeGantt
   const reactData = $xeGanttView.reactData
@@ -115,8 +123,8 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
             const startValue = XEUtils.get(row, startField)
             const endValue = XEUtils.get(row, endField)
             if (startValue && endValue) {
-              const startDate = XEUtils.toStringDate(startValue)
-              const endDate = XEUtils.toStringDate(endValue)
+              const startDate = parseStringDate($xeGanttView, startValue)
+              const endDate = parseStringDate($xeGanttView, endValue)
               const oLeftSize = Math.floor((startDate.getTime() - minViewDate.getTime()) / 86400000)
               const oWidthSize = Math.floor((endDate.getTime() - startDate.getTime()) / 86400000) + 1
               ctMaps[rowid] = {
@@ -168,11 +176,11 @@ function handleUpdateData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewP
       const startValue = XEUtils.get(row, startField)
       const endValue = XEUtils.get(row, endField)
       if (startValue && endValue) {
-        const startDate = XEUtils.toStringDate(startValue)
+        const startDate = parseStringDate($xeGanttView, startValue)
         if (!minDate || minDate.getTime() > startDate.getTime()) {
           minDate = startDate
         }
-        const endDate = XEUtils.toStringDate(endValue)
+        const endDate = parseStringDate($xeGanttView, endValue)
         if (!maxDate || maxDate.getTime() < endDate.getTime()) {
           maxDate = endDate
         }
@@ -281,7 +289,7 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   }
 
   let yScrollbarVisible = 'visible'
-  if (scrollbarYToLeft && (scrollbarOpts.y && scrollbarOpts.y.visible === false)) {
+  if (scrollbarYToLeft || (scrollbarOpts.y && scrollbarOpts.y.visible === false)) {
     osbWidth = 0
     yScrollbarVisible = 'hidden'
   }

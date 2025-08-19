@@ -48,6 +48,9 @@ export default defineVxeComponent({
       const rowOpts = $xeTable.computeRowOpts
       const defaultRowHeight = $xeTable.computeDefaultRowHeight
 
+      const ganttSlots = $xeGantt.$scopedSlots
+      const taskBarSlot = ganttSlots.taskBar || ganttSlots['task-bar']
+
       const titleField = $xeGantt.computeTitleField
       const progressField = $xeGantt.computeProgressField
       const taskBarOpts = $xeGantt.computeTaskBarOpts
@@ -79,7 +82,7 @@ export default defineVxeComponent({
         }
       }, [
         h('div', {
-          class: 'vxe-gantt-view--chart-bar',
+          class: taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar',
           attrs: {
             rowid
           },
@@ -91,21 +94,23 @@ export default defineVxeComponent({
               $xeGantt.handleTaskBarDblclickEvent(evnt, { row })
             }
           }
-        }, [
-          showProgress
-            ? h('div', {
-              class: 'vxe-gantt-view--chart-progress',
-              style: {
-                width: `${progressValue || 0}%`
-              }
-            })
-            : renderEmptyElement($xeGantt),
-          showContent
-            ? h('div', {
-              class: 'vxe-gantt-view--chart-content'
-            }, title)
-            : renderEmptyElement($xeGantt)
-        ])
+        }, taskBarSlot
+          ? $xeGantt.callSlot(taskBarSlot, { row }, h)
+          : [
+              showProgress
+                ? h('div', {
+                  class: 'vxe-gantt-view--chart-progress',
+                  style: {
+                    width: `${progressValue}%`
+                  }
+                })
+                : renderEmptyElement($xeGantt),
+              showContent
+                ? h('div', {
+                  class: 'vxe-gantt-view--chart-content'
+                }, title)
+                : renderEmptyElement($xeGantt)
+            ])
       ])
     },
     renderRows (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) {
