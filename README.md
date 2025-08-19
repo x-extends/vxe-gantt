@@ -52,6 +52,8 @@
 [👀 Vxe Gantt](https://gantt.vxeui.com/)  
 
 * [x] gantt 甘特图
+* [x] ([企业版](https://vxetable.cn/pluginDocs/)) 依赖线
+* [x] ([企业版](https://vxetable.cn/pluginDocs/)) 任务条拖拽
 
 ## 安装
 

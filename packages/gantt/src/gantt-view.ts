@@ -51,7 +51,7 @@ export default defineVxeComponent({
 
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
 
-    const { computeTaskViewOpts, computeStartField, computeEndField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft } = $xeGantt.getComputeMaps()
+    const { computeTaskOpts, computeTaskViewOpts, computeStartField, computeEndField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft } = $xeGantt.getComputeMaps()
 
     const refElem = ref<HTMLDivElement>()
 
@@ -131,6 +131,12 @@ export default defineVxeComponent({
       getComputeMaps: () => computeMaps
     } as unknown as VxeGanttViewConstructor & VxeGanttViewPrivateMethods
 
+    const parseStringDate = (dateValue: any) => {
+      const taskOpts = computeTaskOpts.value
+      const { dateFormat } = taskOpts
+      return XEUtils.toStringDate(dateValue, dateFormat || null)
+    }
+
     const handleParseColumn = () => {
       const ganttProps = $xeGantt.props
       const { treeConfig } = ganttProps
@@ -198,8 +204,8 @@ export default defineVxeComponent({
                 const startValue = XEUtils.get(row, startField)
                 const endValue = XEUtils.get(row, endField)
                 if (startValue && endValue) {
-                  const startDate = XEUtils.toStringDate(startValue)
-                  const endDate = XEUtils.toStringDate(endValue)
+                  const startDate = parseStringDate(startValue)
+                  const endDate = parseStringDate(endValue)
                   const oLeftSize = Math.floor((startDate.getTime() - minViewDate.getTime()) / 86400000)
                   const oWidthSize = Math.floor((endDate.getTime() - startDate.getTime()) / 86400000) + 1
                   ctMaps[rowid] = {
@@ -248,11 +254,11 @@ export default defineVxeComponent({
           const startValue = XEUtils.get(row, startField)
           const endValue = XEUtils.get(row, endField)
           if (startValue && endValue) {
-            const startDate = XEUtils.toStringDate(startValue)
+            const startDate = parseStringDate(startValue)
             if (!minDate || minDate.getTime() > startDate.getTime()) {
               minDate = startDate
             }
-            const endDate = XEUtils.toStringDate(endValue)
+            const endDate = parseStringDate(endValue)
             if (!maxDate || maxDate.getTime() < endDate.getTime()) {
               maxDate = endDate
             }

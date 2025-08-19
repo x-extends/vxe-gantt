@@ -109,7 +109,8 @@ export default defineVxeComponent({
     const refForm = ref<VxeFormInstance>()
     const refToolbar = ref<VxeToolbarInstance>()
     const refPager = ref<VxePagerInstance>()
-    const refGanttContainer = ref<HTMLDivElement>()
+    const refGanttContainerElem = ref<HTMLDivElement>()
+    const refClassifyWrapperElem = ref<HTMLDivElement>()
     const refGanttView = ref<VxeGanttViewInstance>()
 
     const refFormWrapper = ref<HTMLDivElement>()
@@ -273,6 +274,8 @@ export default defineVxeComponent({
     const computeTableProps = computed(() => {
       const { seqConfig, pagerConfig, editConfig, proxyConfig } = props
       const { isZMax, tablePage } = reactData
+      const taskViewOpts = computeTaskViewOpts.value
+      const { tableStyle } = taskViewOpts
       const tableExtendProps = computeTableExtendProps.value
       const proxyOpts = computeProxyOpts.value
       const pagerOpts = computePagerOpts.value
@@ -283,6 +286,12 @@ export default defineVxeComponent({
         showHeaderOverflow: true,
         showFooterOverflow: true
       })
+      if (tableStyle) {
+        const { border } = tableStyle
+        if (!XEUtils.eqNull(border)) {
+          tProps.border = border
+        }
+      }
       if (isZMax) {
         if (tableExtendProps.maxHeight) {
           tProps.maxHeight = '100%'
@@ -358,7 +367,14 @@ export default defineVxeComponent({
     })
 
     const computeTableBorder = computed(() => {
-      const { border } = props
+      let { border } = props
+      const taskViewOpts = computeTaskViewOpts.value
+      const { viewStyle } = taskViewOpts
+      if (viewStyle) {
+        if (!XEUtils.eqNull(viewStyle.border)) {
+          border = viewStyle.border
+        }
+      }
       if (border === true) {
         return 'full'
       }
@@ -373,7 +389,9 @@ export default defineVxeComponent({
       refTable,
       refForm,
       refToolbar,
-      refPager
+      refPager,
+      refGanttContainerElem,
+      refClassifyWrapperElem
     }
 
     const computeMaps: VxeGanttPrivateComputed = {
@@ -685,7 +703,7 @@ export default defineVxeComponent({
       if (!el) {
         return
       }
-      const ganttContainerEl = refGanttContainer.value
+      const ganttContainerEl = refGanttContainerElem.value
       if (!ganttContainerEl) {
         return
       }
@@ -1337,6 +1355,28 @@ export default defineVxeComponent({
           return $ganttView.refreshData()
         }
         return nextTick()
+      },
+      hasTableViewVisible () {
+        return reactData.showLeftView
+      },
+      showTableView () {
+        reactData.showLeftView = true
+        return nextTick()
+      },
+      hideTableView () {
+        reactData.showLeftView = false
+        return nextTick()
+      },
+      hasTaskViewVisible () {
+        return reactData.showRightView
+      },
+      showTaskView () {
+        reactData.showRightView = true
+        return nextTick()
+      },
+      hideTaskView () {
+        reactData.showRightView = false
+        return nextTick()
       }
     }
 
@@ -1806,7 +1846,7 @@ export default defineVxeComponent({
           case 'Gantt':
             childVNs.push(
               h('div', {
-                ref: refGanttContainer,
+                ref: refGanttContainerElem,
                 key: 'tv',
                 class: 'vxe-gantt--gantt-container'
               }, [
@@ -1815,6 +1855,9 @@ export default defineVxeComponent({
                 renderSplitBar(),
                 renderTaskView(),
                 renderTableRight(),
+                h('div', {
+                  ref: refClassifyWrapperElem
+                }),
                 h('div', {
                   ref: refResizableSplitTip,
                   class: 'vxe-gantt--resizable-split-tip'

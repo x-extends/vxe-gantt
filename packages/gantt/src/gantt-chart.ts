@@ -33,6 +33,9 @@ export default defineVxeComponent({
       const rowOpts = computeRowOpts.value
       const defaultRowHeight = computeDefaultRowHeight.value
 
+      const ganttSlots = $xeGantt.context.slots
+      const taskBarSlot = ganttSlots.taskBar || ganttSlots['task-bar']
+
       const titleField = computeTitleField.value
       const progressField = computeProgressField.value
       const taskBarOpts = computeTaskBarOpts.value
@@ -62,7 +65,7 @@ export default defineVxeComponent({
         }
       }, [
         h('div', {
-          class: 'vxe-gantt-view--chart-bar',
+          class: taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar',
           rowid,
           onClick (evnt) {
             $xeGantt.handleTaskBarClickEvent(evnt, { row })
@@ -70,21 +73,23 @@ export default defineVxeComponent({
           onDblclick (evnt) {
             $xeGantt.handleTaskBarDblclickEvent(evnt, { row })
           }
-        }, [
-          showProgress
-            ? h('div', {
-              class: 'vxe-gantt-view--chart-progress',
-              style: {
-                width: `${progressValue || 0}%`
-              }
-            })
-            : renderEmptyElement($xeGantt),
-          showContent
-            ? h('div', {
-              class: 'vxe-gantt-view--chart-content'
-            }, title)
-            : renderEmptyElement($xeGantt)
-        ])
+        }, taskBarSlot
+          ? $xeGantt.callSlot(taskBarSlot, { row })
+          : [
+              showProgress
+                ? h('div', {
+                  class: 'vxe-gantt-view--chart-progress',
+                  style: {
+                    width: `${progressValue || 0}%`
+                  }
+                })
+                : renderEmptyElement($xeGantt),
+              showContent
+                ? h('div', {
+                  class: 'vxe-gantt-view--chart-content'
+                }, title)
+                : renderEmptyElement($xeGantt)
+            ])
       ])
     }
 
