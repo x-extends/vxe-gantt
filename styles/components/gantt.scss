@@ -289,7 +289,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 13;
+  z-index: 3;
 }
 .vxe-gantt--view-split-bar-btn-wrapper {
   display: flex;
@@ -299,7 +299,7 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  z-index: 15;
+  z-index: 5;
   pointer-events: none;
   & > div {
     margin-top: 1em;
@@ -339,7 +339,7 @@
   left: 0;
   width: 1px;
   height: 100%;
-  z-index: 18;
+  z-index: 7;
   pointer-events: none;
   user-select: none;
   cursor: col-resize;
@@ -620,6 +620,40 @@
     }
     &.row--current {
       background-color: var(--vxe-ui-table-row-hover-current-background-color);
+    }
+  }
+}
+
+/*行拖拽*/
+.vxe-gantt-view--body-row {
+  &.row--drag-move {
+    transition: transform 0.5s ease;
+  }
+  &.row--drag-origin {
+    & > .vxe-gantt-view--body-column {
+      opacity: 0.3;
+    }
+  }
+}
+.vxe-gantt-view--body-column {
+  .vxe-gantt-view-cell--row-resizable {
+    position: absolute;
+    left: 0;
+    bottom: -0.4em;
+    height: 0.8em;
+    width: 100%;
+    text-align: center;
+    z-index: 1;
+    cursor: row-resize;
+  }
+}
+.vxe-gantt-view--body-row {
+  &:last-child {
+    .vxe-gantt-view--body-column {
+      .vxe-gantt-view-cell--row-resizable {
+        height: 0.4em;
+        bottom: -0px;
+      }
     }
   }
 }

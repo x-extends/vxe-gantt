@@ -3,7 +3,7 @@ import { defineVxeComponent } from '../../ui/src/comp'
 import { getCellRestHeight } from './util'
 import GanttViewChartComponent from './gantt-chart'
 
-import type { TableInternalData, TableReactData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
+import type { TableInternalData, TableReactData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods, VxeTableDefines } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods, VxeGanttPropTypes } from '../../../types'
 
 export default defineVxeComponent({
@@ -26,23 +26,62 @@ export default defineVxeComponent({
     //
     // Render
     //
-    renderColumn (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, $rowIndex: number, column: VxeGanttPropTypes.Column, $columnIndex: number) {
+    renderColumn (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number, column: VxeGanttPropTypes.Column, $columnIndex: number) {
       const _vm = this
       const $xeGantt = _vm.$xeGantt
 
       const tableReactData = $xeTable as unknown as TableReactData
       const { resizeHeightFlag } = tableReactData
       const tableInternalData = $xeTable as unknown as TableInternalData
-      const { fullAllDataRowIdData } = tableInternalData
+      const { fullAllDataRowIdData, visibleColumn } = tableInternalData
       const cellOpts = $xeTable.computeCellOpts
       const rowOpts = $xeTable.computeRowOpts
       const defaultRowHeight = $xeTable.computeDefaultRowHeight
+      const resizableOpts = $xeTable.computeResizableOpts
+      const { isAllRowDrag } = resizableOpts
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
       const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
       const isRsHeight = resizeHeight > 0
       const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
 
+      const tdVNs: VNode[] = []
+      if (isAllRowDrag && rowOpts.resizable) {
+        const cellParams: VxeTableDefines.CellRenderBodyParams = {
+          $table: $xeTable,
+          $grid: null,
+          $gantt: $xeGantt,
+          seq: -1,
+          rowid,
+          row,
+          rowIndex,
+          $rowIndex,
+          _rowIndex,
+          column: visibleColumn[0],
+          columnIndex: 0,
+          $columnIndex: 0,
+          _columnIndex: 0,
+          fixed: '',
+          type: '',
+          isHidden: false,
+          isEdit: false,
+          level: -1,
+
+          // 已废弃属性
+          visibleData: [],
+          data: [],
+          items: []
+        }
+        tdVNs.push(
+          h('div', {
+            class: 'vxe-gantt-view-cell--row-resizable',
+            on: {
+              mousedown: (evnt: MouseEvent) => $xeTable.handleRowResizeMousedownEvent(evnt, cellParams),
+              dblclick: (evnt: MouseEvent) => $xeTable.handleRowResizeDblclickEvent(evnt, cellParams)
+            }
+          })
+        )
+      }
       return h('td', {
         key: $columnIndex,
         class: ['vxe-gantt-view--body-column', {
@@ -59,7 +98,7 @@ export default defineVxeComponent({
             $xeGantt.handleTaskCellDblclickEvent(evnt, { row, column })
           }
         }
-      })
+      }, tdVNs)
     },
     renderRows (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) {
       const _vm = this
@@ -69,7 +108,7 @@ export default defineVxeComponent({
       const tableProps = $xeTable
       const { treeConfig, stripe, highlightHoverRow, editConfig } = tableProps
       const tableReactData = $xeTable as unknown as TableReactData
-      const { treeExpandedFlag, selectRadioRow, pendingRowFlag } = tableReactData
+      const { treeExpandedFlag, selectRadioRow, pendingRowFlag, isRowGroupStatus } = tableReactData
       const tableInternalData = $xeTable as unknown as TableInternalData
       const { fullAllDataRowIdData, treeExpandedMaps, pendingRowMaps } = tableInternalData
       const radioOpts = $xeTable.computeRadioOpts
@@ -106,6 +145,12 @@ export default defineVxeComponent({
             $xeTable.clearHoverRow()
           }
         }
+        // 拖拽行事件
+        if (rowOpts.drag && !isRowGroupStatus && (!treeConfig || transform)) {
+          trOns.dragstart = $xeTable.handleRowDragDragstartEvent
+          trOns.dragend = $xeTable.handleRowDragDragendEvent
+          trOns.dragover = $xeTable.handleRowDragDragoverEvent
+        }
         trVNs.push(
           h('tr', {
             key: treeConfig ? rowid : $rowIndex,
@@ -120,7 +165,7 @@ export default defineVxeComponent({
               rowid
             },
             on: trOns
-          }, tableColumn.map((column, $columnIndex) => _vm.renderColumn(h, $xeTable, row, rowid, $rowIndex, column, $columnIndex)))
+          }, tableColumn.map((column, $columnIndex) => _vm.renderColumn(h, $xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex, column, $columnIndex)))
         )
         let isExpandTree = false
         let rowChildren: any[] = []

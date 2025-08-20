@@ -1871,6 +1871,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       const tableProps = $xeGantt.computeTableProps
       return h('div', {
+        ref: 'refTableWrapper',
         class: 'vxe-gantt--table-wrapper'
       }, [
         h(VxeTableComponent as Component, {
