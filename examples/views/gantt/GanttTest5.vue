@@ -18,20 +18,15 @@ interface RowVO {
 
 const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   border: true,
-  columnConfig: {
+  rowConfig: {
     resizable: true
   },
-  toolbarConfig: {
-    custom: true
+  resizableConfig: {
+    isAllRowDrag: true
   },
   taskBarConfig: {
     showProgress: true,
-    showContent: true,
-    barStyle: {
-      round: true,
-      bgColor: '#fca60b',
-      completedBgColor: '#65c16f'
-    }
+    showContent: true
   },
   taskViewConfig: {
     tableStyle: {
@@ -39,7 +34,6 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     }
   },
   columns: [
-    { type: 'seq', width: 70 },
     { field: 'title', title: '任务名称' },
     { field: 'start', title: '开始时间', width: 100 },
     { field: 'end', title: '结束时间', width: 100 }

@@ -21,8 +21,8 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   columnConfig: {
     resizable: true
   },
-  toolbarConfig: {
-    custom: true
+  rowConfig: {
+    resizable: true
   },
   taskBarConfig: {
     showProgress: true,
@@ -39,8 +39,7 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     }
   },
   columns: [
-    { type: 'seq', width: 70 },
-    { field: 'title', title: '任务名称' },
+    { field: 'title', title: '任务名称', rowResize: true },
     { field: 'start', title: '开始时间', width: 100 },
     { field: 'end', title: '结束时间', width: 100 }
   ],

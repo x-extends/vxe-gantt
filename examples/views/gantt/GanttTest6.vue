@@ -1,12 +1,13 @@
 <template>
   <div>
-    <vxe-gantt v-bind="ganttOptions"></vxe-gantt>
+    <vxe-button status="success" @click="resultEvent">获取数据</vxe-button>
+    <vxe-gantt ref="ganttRef" v-bind="ganttOptions"></vxe-gantt>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { reactive } from 'vue'
-import type { VxeGanttProps } from '../../../types'
+import { ref, reactive } from 'vue'
+import type { VxeGanttProps, VxeGanttInstance } from '../../../types'
 
 interface RowVO {
   id: number
@@ -16,13 +17,15 @@ interface RowVO {
   progress: number
 }
 
+const ganttRef = ref<VxeGanttInstance<RowVO>>()
+
 const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   border: true,
   columnConfig: {
-    resizable: true
+    drag: true
   },
-  toolbarConfig: {
-    custom: true
+  rowConfig: {
+    drag: true
   },
   taskBarConfig: {
     showProgress: true,
@@ -40,7 +43,7 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   },
   columns: [
     { type: 'seq', width: 70 },
-    { field: 'title', title: '任务名称' },
+    { field: 'title', title: '任务名称', dragSort: true },
     { field: 'start', title: '开始时间', width: 100 },
     { field: 'end', title: '结束时间', width: 100 }
   ],
@@ -57,4 +60,12 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     { id: 10010, title: '铁路修建计划', start: '2024-03-12', end: '2024-03-20', progress: 10 }
   ]
 })
+
+const resultEvent = () => {
+  const $gantt = ganttRef.value
+  if ($gantt) {
+    const tableData = $gantt.getFullData()
+    console.log(tableData)
+  }
+}
 </script>

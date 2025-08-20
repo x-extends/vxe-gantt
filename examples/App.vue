@@ -29,7 +29,10 @@ const navList = ref<VxeMenuPropTypes.Options>([
   { name: 'Home', icon: 'vxe-icon-user-fill', routerLink: { path: '/' } },
   { name: 'GanttTest1', routerLink: { name: 'GanttTest1' } },
   { name: 'GanttTest2', routerLink: { name: 'GanttTest2' } },
-  { name: 'GanttTest3', routerLink: { name: 'GanttTest3' } }
+  { name: 'GanttTest3', routerLink: { name: 'GanttTest3' } },
+  { name: 'GanttTest4', routerLink: { name: 'GanttTest4' } },
+  { name: 'GanttTest5', routerLink: { name: 'GanttTest5' } },
+  { name: 'GanttTest6', routerLink: { name: 'GanttTest6' } }
 ])
 
 const theme = ref((localStorage.getItem('VXE_THEME') as 'light' | 'dark') || 'light')
