@@ -36,6 +36,31 @@ const routes: Array<RouteConfig> = [
         path: 'test3',
         name: 'GanttTest3',
         component: () => import('../views/gantt/GanttTest3.vue')
+      },
+      {
+        path: 'test4',
+        name: 'GanttTest4',
+        component: () => import('../views/gantt/GanttTest4.vue')
+      },
+      {
+        path: 'test5',
+        name: 'GanttTest5',
+        component: () => import('../views/gantt/GanttTest5.vue')
+      },
+      {
+        path: 'test6',
+        name: 'GanttTest6',
+        component: () => import('../views/gantt/GanttTest6.vue')
+      },
+      {
+        path: 'test7',
+        name: 'GanttTest7',
+        component: () => import('../views/gantt/GanttTest7.vue')
+      },
+      {
+        path: 'test8',
+        name: 'GanttTest8',
+        component: () => import('../views/gantt/GanttTest8.vue')
       }
     ]
   }

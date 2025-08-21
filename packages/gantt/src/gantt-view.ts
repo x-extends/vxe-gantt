@@ -9,7 +9,7 @@ import GanttViewBodyComponent from './gantt-body'
 import GanttViewFooterComponent from './gantt-footer'
 
 import type { TableReactData, TableInternalData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
-import type { VxeGanttViewConstructor, GanttViewReactData, VxeGanttPropTypes, VxeGanttDefines, VxeGanttViewPrivateMethods, GanttViewInternalData, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
+import type { VxeGanttViewConstructor, GanttViewReactData, VxeGanttDefines, VxeGanttViewPrivateMethods, GanttViewInternalData, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 const { globalEvents } = VxeUI
 
@@ -59,92 +59,251 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
   const internalData = $xeGanttView.internalData
 
   const ganttProps = $xeGantt
+  const ganttReactData = $xeGantt.reactData
   const { treeConfig } = ganttProps
+  const { taskScaleList } = ganttReactData
   const { minViewDate, maxViewDate } = reactData
-  const taskViewOpts = $xeGantt.computeTaskViewOpts
-  const fullCols: VxeGanttPropTypes.Column[] = []
-  const groupCols: VxeGanttPropTypes.Column[][] = []
-  switch (taskViewOpts.mode) {
-    case 'year':
-      break
-    case 'quarter':
-      break
-    case 'month':
-      break
-    case 'week':
-      break
-    default: {
-      if (minViewDate && maxViewDate) {
-        const currTime = minViewDate.getTime()
-        const diffDayNum = maxViewDate.getTime() - minViewDate.getTime()
-        const countDayNum = Math.max(6, Math.floor(diffDayNum / 86400000) + 1)
-        const groupList: VxeGanttDefines.GroupHeaderColumn[] = []
-        const colList: VxeGanttPropTypes.Column[] = []
-        const groupMaps: Record<string, VxeGanttDefines.GroupHeaderColumn> = {}
-        for (let i = 0; i < countDayNum; i++) {
-          const itemDate = new Date(currTime + (i * 86400000))
-          const yyyyy = `${itemDate.getFullYear()}-${itemDate.getMonth() + 1}`
-          const mmDd = `${itemDate.getDate()}`
-          let groupCol = groupMaps[yyyyy]
-          const column = {
-            field: `${yyyyy}-${mmDd}`,
-            title: mmDd
-          }
-          if (groupCol) {
-            groupCol.children.push(column)
-            fullCols.push(groupCol)
-          } else {
-            groupCol = {
-              field: yyyyy,
-              title: yyyyy,
-              children: [column]
-            }
-            groupList.push(groupCol)
-            fullCols.push(groupCol)
-            groupMaps[yyyyy] = groupCol
-          }
-          colList.push(column)
+  const minScale = XEUtils.last(taskScaleList)
+  const fullCols: VxeGanttDefines.ViewColumn[] = []
+  const groupCols: VxeGanttDefines.HeaderColumn[] = []
+  if (minScale && minViewDate && maxViewDate) {
+    const minSType = minScale.type
+    const weekScale = taskScaleList.find(item => item.type === 'week')
+    let gapTime = 1000 * 60 * 60 * 24
+    switch (minScale.type) {
+      case 'hour':
+        gapTime = 1000 * 60 * 60
+        break
+      case 'minute':
+        gapTime = 1000 * 60
+        break
+      case 'second':
+        gapTime = 1000
+        break
+      default: {
+        break
+      }
+    }
+    const currTime = minViewDate.getTime()
+    const diffDayNum = maxViewDate.getTime() - minViewDate.getTime()
+    const countSize = Math.max(5, Math.floor(diffDayNum / gapTime) + 1)
+
+    switch (minScale.type) {
+      case 'day':
+      case 'date':
+        if (diffDayNum > (1000 * 60 * 60 * 24 * 366 * 3)) {
+          reactData.tableColumn = []
+          reactData.headerGroups = []
+          return
         }
-        groupCols.push(groupList, colList)
+        break
+      case 'hour':
+        if (diffDayNum > (1000 * 60 * 60 * 24 * 31 * 3)) {
+          reactData.tableColumn = []
+          reactData.headerGroups = []
+          return
+        }
+        break
+      case 'minute':
+        if (diffDayNum > (1000 * 60 * 60 * 24 * 3)) {
+          reactData.tableColumn = []
+          reactData.headerGroups = []
+          return
+        }
+        break
+      case 'second':
+        if (diffDayNum > (1000 * 60 * 60 * 3)) {
+          reactData.tableColumn = []
+          reactData.headerGroups = []
+          return
+        }
+        break
+    }
 
-        const $xeTable = internalData.xeTable
-        if ($xeTable) {
-          const startField = $xeGantt.computeStartField
-          const endField = $xeGantt.computeEndField
-          const tableInternalData = $xeTable as unknown as TableInternalData
-          const { afterFullData, afterTreeFullData } = tableInternalData
-          const treeOpts = $xeTable.computeTreeOpts
-          const { transform } = treeOpts
-          const childrenField = treeOpts.children || treeOpts.childrenField
+    const renderListMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn[]> = {
+      year: [],
+      quarter: [],
+      month: [],
+      week: [],
+      day: [],
+      date: [],
+      hour: [],
+      minute: [],
+      second: []
+    }
 
-          const ctMaps: Record<string, VxeGanttDefines.RowCacheItem> = {}
-          const handleParseRender = (row: any) => {
-            const rowid = $xeTable.getRowid(row)
-            const startValue = XEUtils.get(row, startField)
-            const endValue = XEUtils.get(row, endField)
-            if (startValue && endValue) {
-              const startDate = parseStringDate($xeGanttView, startValue)
-              const endDate = parseStringDate($xeGanttView, endValue)
-              const oLeftSize = Math.floor((startDate.getTime() - minViewDate.getTime()) / 86400000)
-              const oWidthSize = Math.floor((endDate.getTime() - startDate.getTime()) / 86400000) + 1
-              ctMaps[rowid] = {
-                row,
-                rowid,
-                oLeftSize,
-                oWidthSize
-              }
-            }
-          }
+    const tempTypeMaps: Record<VxeGanttDefines.ColumnScaleType, Record<string, VxeGanttDefines.ViewColumn>> = {
+      year: {},
+      quarter: {},
+      month: {},
+      week: {},
+      day: {},
+      date: {},
+      hour: {},
+      minute: {},
+      second: {}
+    }
 
-          if (treeConfig) {
-            XEUtils.eachTree(afterTreeFullData, handleParseRender, { children: transform ? treeOpts.mapChildrenField : childrenField })
-          } else {
-            afterFullData.forEach(handleParseRender)
-          }
-          internalData.chartMaps = ctMaps
+    const handleData = (type: VxeGanttDefines.ColumnScaleType, colMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn>, minCol: VxeGanttDefines.ViewColumn) => {
+      if (minSType === type) {
+        return
+      }
+      const currCol = colMaps[type]
+      const currKey = `${currCol.field}`
+      let currGpCol = tempTypeMaps[type][currKey]
+      if (!currGpCol) {
+        currGpCol = currCol
+        tempTypeMaps[type][currKey] = currGpCol
+        renderListMaps[type].push(currGpCol)
+      }
+      if (currGpCol) {
+        if (!currGpCol.children) {
+          currGpCol.children = []
+        }
+        currGpCol.children.push(minCol)
+      }
+    }
+
+    for (let i = 0; i < countSize; i++) {
+      const itemDate = new Date(currTime + (i * gapTime))
+      const [yyyy, MM, dd, HH, mm, ss] = XEUtils.toDateString(itemDate, 'yyyy-M-d-H-m-s').split('-')
+      const e = itemDate.getDay()
+      const E = e + 1
+      const q = Math.ceil((itemDate.getMonth() + 1) / 3)
+      const W = XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)
+      const dateObj: VxeGanttDefines.ScaleDateObj = { yy: yyyy, M: MM, d: dd, H: HH, m: mm, s: ss, q, W, E, e }
+      const colMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn> = {
+        year: {
+          field: yyyy,
+          title: yyyy,
+          params: dateObj
+        },
+        quarter: {
+          field: `${yyyy}_q${q}`,
+          title: q,
+          params: dateObj
+        },
+        month: {
+          field: `${yyyy}_${MM}`,
+          title: MM,
+          params: dateObj
+        },
+        week: {
+          field: `${yyyy}_W${W}`,
+          title: W,
+          params: dateObj
+        },
+        day: {
+          field: `${yyyy}_${MM}_${dd}_E${E}`,
+          title: E,
+          params: dateObj
+        },
+        date: {
+          field: `${yyyy}_${MM}_${dd}`,
+          title: dd,
+          params: dateObj
+        },
+        hour: {
+          field: `${yyyy}_${MM}_${dd}_${HH}`,
+          title: HH,
+          params: dateObj
+        },
+        minute: {
+          field: `${yyyy}_${MM}_${dd}_${HH}_${mm}`,
+          title: mm,
+          params: dateObj
+        },
+        second: {
+          field: `${yyyy}_${MM}_${dd}_${HH}_${mm}_${ss}`,
+          title: ss,
+          params: dateObj
         }
       }
-      break
+      const minCol = colMaps[minSType]
+      if (minScale.level < 19) {
+        handleData('year', colMaps, minCol)
+      }
+      if (minScale.level < 17) {
+        handleData('quarter', colMaps, minCol)
+      }
+      if (minScale.level < 14) {
+        handleData('month', colMaps, minCol)
+      }
+      if (minScale.level < 13) {
+        handleData('week', colMaps, minCol)
+      }
+      if (minScale.level < 11) {
+        handleData('day', colMaps, minCol)
+      }
+      if (minScale.level < 12) {
+        handleData('date', colMaps, minCol)
+      }
+      if (minScale.level < 7) {
+        handleData('hour', colMaps, minCol)
+      }
+      if (minScale.level < 5) {
+        handleData('minute', colMaps, minCol)
+      }
+
+      fullCols.push(minCol)
+    }
+
+    taskScaleList.forEach(scaleItem => {
+      if (scaleItem.type === minSType) {
+        groupCols.push({
+          scaleItem,
+          columns: fullCols
+        })
+        return
+      }
+      const list = renderListMaps[scaleItem.type] || []
+      if (list) {
+        list.forEach(item => {
+          item.childCount = item.children ? item.children.length : 0
+          item.children = undefined
+        })
+      }
+      groupCols.push({
+        scaleItem,
+        columns: list
+      })
+    })
+
+    const $xeTable = internalData.xeTable
+    if ($xeTable) {
+      const startField = $xeGantt.computeStartField
+      const endField = $xeGantt.computeEndField
+      const tableInternalData = $xeTable as unknown as TableInternalData
+      const { afterFullData, afterTreeFullData } = tableInternalData
+      const treeOpts = $xeTable.computeTreeOpts
+      const { transform } = treeOpts
+      const childrenField = treeOpts.children || treeOpts.childrenField
+
+      const ctMaps: Record<string, VxeGanttDefines.RowCacheItem> = {}
+      const handleParseRender = (row: any) => {
+        const rowid = $xeTable.getRowid(row)
+        const startValue = XEUtils.get(row, startField)
+        const endValue = XEUtils.get(row, endField)
+        if (startValue && endValue) {
+          const startDate = parseStringDate($xeGanttView, startValue)
+          const endDate = parseStringDate($xeGanttView, endValue)
+          const oLeftSize = Math.floor((startDate.getTime() - minViewDate.getTime()) / gapTime)
+          const oWidthSize = Math.floor((endDate.getTime() - startDate.getTime()) / gapTime) + 1
+          ctMaps[rowid] = {
+            row,
+            rowid,
+            oLeftSize,
+            oWidthSize
+          }
+        }
+      }
+
+      if (treeConfig) {
+        XEUtils.eachTree(afterTreeFullData, handleParseRender, { children: transform ? treeOpts.mapChildrenField : childrenField })
+      } else {
+        afterFullData.forEach(handleParseRender)
+      }
+      internalData.chartMaps = ctMaps
     }
   }
   reactData.tableColumn = fullCols
@@ -599,15 +758,7 @@ export default defineVxeComponent({
       tableColumn: [],
       headerGroups: [],
 
-      viewCellWidth: 40,
-
-      rowHeightStore: {
-        large: 52,
-        default: 48,
-        medium: 44,
-        small: 40,
-        mini: 36
-      }
+      viewCellWidth: 20
     }
 
     const internalData = createInternalData()
@@ -957,11 +1108,10 @@ export default defineVxeComponent({
       const reactData = $xeGanttView.reactData
 
       const { overflowX, overflowY, scrollXLoad, scrollYLoad } = reactData
-      const taskViewOpts = $xeGantt.computeTaskViewOpts
       const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
       return h('div', {
         ref: 'refElem',
-        class: ['vxe-gantt-view', `mode--${taskViewOpts.mode || 'day'}`, {
+        class: ['vxe-gantt-view', {
           'is--scroll-y': overflowY,
           'is--scroll-x': overflowX,
           'is--virtual-x': scrollXLoad,

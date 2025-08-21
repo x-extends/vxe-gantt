@@ -22,6 +22,22 @@ const propKeys = Object.keys(tableProps) as (keyof VxeTableProps)[]
 
 const defaultLayouts: VxeGanttPropTypes.Layouts = [['Form'], ['Toolbar', 'Top', 'Gantt', 'Bottom', 'Pager']]
 
+const viewTypeLevelMaps = {
+  year: 19,
+  quarter: 17,
+  month: 15,
+  week: 13,
+  day: 11,
+  date: 9,
+  hour: 7,
+  minute: 5,
+  second: 3
+}
+
+function getViewTypeLevel (type: VxeGanttDefines.ColumnScaleType) {
+  return viewTypeLevelMaps[type || 'date'] || viewTypeLevelMaps.date
+}
+
 function getTableOns ($xeGantt: VxeGanttConstructor) {
   const _vm = $xeGantt as any
   const $listeners = _vm.$listeners
@@ -99,6 +115,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
     layouts: Array as PropType<VxeGanttPropTypes.Layouts>,
     taskConfig: Object as PropType<VxeGanttPropTypes.TaskConfig>,
+    taskViewScaleConfs: Object as PropType<VxeGanttPropTypes.TaskViewScaleConfs>,
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
@@ -134,7 +151,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
         currentPage: 1
       },
       showLeftView: true,
-      showRightView: true
+      showRightView: true,
+      taskScaleList: []
     }
 
     const internalData = createInternalData()
@@ -197,6 +215,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       return Object.assign({}, getConfig().gantt.taskConfig, props.taskConfig)
     },
+    computeTaskViewScaleMapsOpts () {
+      const $xeGantt = this
+      const props = $xeGantt
+
+      return XEUtils.merge({}, getConfig().gantt.taskViewScaleConfs, props.taskViewScaleConfs)
+    },
     computeTaskViewOpts () {
       const $xeGantt = this
       const props = $xeGantt
@@ -214,6 +238,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskSplitConfig, props.taskSplitConfig)
+    },
+    computeTaskScaleConfs () {
+      const $xeGantt = this
+
+      const taskViewOpts = $xeGantt.computeTaskViewOpts as VxeGanttPropTypes.TaskViewConfig
+      const { scales } = taskViewOpts
+      return scales
     },
     computeTitleField () {
       const $xeGantt = this
@@ -472,6 +503,11 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const $xeGantt = this
 
       $xeGantt.initProxy()
+    },
+    computeTaskScaleConfs () {
+      const $xeGantt = this
+
+      $xeGantt.handleTaskScaleConfig()
     }
   },
   methods: {
@@ -480,6 +516,40 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const $xeGantt = this
 
       $xeGantt.$emit(type, createEvent(evnt, { $grid: null, $gantt: $xeGantt }, params))
+    },
+    handleTaskScaleConfig () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      const taskScaleConfs = $xeGantt.computeTaskScaleConfs
+      const taskViewScaleMapsOpts = $xeGantt.computeTaskViewScaleMapsOpts
+      const scaleConfs: VxeGanttDefines.ColumnScaleObj[] = []
+      if (taskScaleConfs) {
+        const keyMaps: Record<string, boolean> = {}
+        taskScaleConfs.forEach(conf => {
+          const sConf = !conf || XEUtils.isString(conf) ? { type: conf } : conf
+          const { type } = sConf
+          if (!type || !viewTypeLevelMaps[type]) {
+            errLog('vxe.error.errProp', [`type=${type}`, XEUtils.keys(viewTypeLevelMaps).join(',')])
+            return
+          }
+          if (keyMaps[type]) {
+            errLog('vxe.error.repeatProp', ['type', type])
+            return
+          }
+          keyMaps[type] = true
+          scaleConfs.push(Object.assign({}, type ? taskViewScaleMapsOpts[type] || {} : {}, sConf, {
+            level: getViewTypeLevel(type)
+          }))
+        })
+      }
+      if (!scaleConfs.length) {
+        scaleConfs.push(
+          { type: 'month', level: viewTypeLevelMaps.month },
+          { type: 'day', level: viewTypeLevelMaps.day }
+        )
+      }
+      reactData.taskScaleList = XEUtils.orderBy(scaleConfs, { field: 'level', order: 'desc' })
     },
     initToolbar () {
       const $xeGantt = this
@@ -2173,6 +2243,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
     })
 
+    $xeGantt.handleTaskScaleConfig()
     $xeGantt.initPages()
   },
   mounted () {
