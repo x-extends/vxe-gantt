@@ -54,6 +54,16 @@ const routes: Array<RouteRecordRaw> = [
         path: 'test6',
         name: 'GanttTest6',
         component: () => import('../views/gantt/GanttTest6.vue')
+      },
+      {
+        path: 'test7',
+        name: 'GanttTest7',
+        component: () => import('../views/gantt/GanttTest7.vue')
+      },
+      {
+        path: 'test8',
+        name: 'GanttTest8',
+        component: () => import('../views/gantt/GanttTest8.vue')
       }
     ]
   }

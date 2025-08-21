@@ -30,6 +30,22 @@ function createInternalData (): GanttInternalData {
   }
 }
 
+const viewTypeLevelMaps = {
+  year: 19,
+  quarter: 17,
+  month: 15,
+  week: 13,
+  day: 11,
+  date: 9,
+  hour: 7,
+  minute: 5,
+  second: 3
+}
+
+function getViewTypeLevel (type: VxeGanttDefines.ColumnScaleType) {
+  return viewTypeLevelMaps[type || 'date'] || viewTypeLevelMaps.date
+}
+
 export default defineVxeComponent({
   name: 'VxeGantt',
   props: {
@@ -62,6 +78,7 @@ export default defineVxeComponent({
 
     layouts: Array as PropType<VxeGanttPropTypes.Layouts>,
     taskConfig: Object as PropType<VxeGanttPropTypes.TaskConfig>,
+    taskViewScaleConfs: Object as PropType<VxeGanttPropTypes.TaskViewScaleConfs>,
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
@@ -99,7 +116,8 @@ export default defineVxeComponent({
         currentPage: 1
       },
       showLeftView: true,
-      showRightView: true
+      showRightView: true,
+      taskScaleList: []
     })
 
     const internalData = createInternalData()
@@ -181,6 +199,10 @@ export default defineVxeComponent({
       return Object.assign({}, getConfig().gantt.taskConfig, props.taskConfig)
     })
 
+    const computeTaskViewScaleMapsOpts = computed(() => {
+      return XEUtils.merge({}, getConfig().gantt.taskViewScaleConfs, props.taskViewScaleConfs)
+    })
+
     const computeTaskViewOpts = computed(() => {
       return Object.assign({}, getConfig().gantt.taskViewConfig, props.taskViewConfig)
     })
@@ -191,6 +213,12 @@ export default defineVxeComponent({
 
     const computeTaskSplitOpts = computed(() => {
       return Object.assign({}, getConfig().gantt.taskSplitConfig, props.taskSplitConfig)
+    })
+
+    const computeTaskScaleConfs = computed(() => {
+      const taskViewOpts = computeTaskViewOpts.value
+      const { scales } = taskViewOpts
+      return scales
     })
 
     const computeTitleField = computed(() => {
@@ -401,9 +429,11 @@ export default defineVxeComponent({
       computeToolbarOpts,
       computeZoomOpts,
       computeTaskOpts,
+      computeTaskViewScaleMapsOpts,
       computeTaskViewOpts,
       computeTaskBarOpts,
       computeTaskSplitOpts,
+      computeTaskScaleConfs,
       computeTitleField,
       computeStartField,
       computeEndField,
@@ -422,6 +452,38 @@ export default defineVxeComponent({
       getRefMaps: () => refMaps,
       getComputeMaps: () => computeMaps
     } as VxeGanttConstructor & VxeGanttPrivateMethods
+
+    const handleTaskScaleConfig = () => {
+      const taskScaleConfs = computeTaskScaleConfs.value
+      const taskViewScaleMapsOpts = computeTaskViewScaleMapsOpts.value
+      const scaleConfs: VxeGanttDefines.ColumnScaleObj[] = []
+      if (taskScaleConfs) {
+        const keyMaps: Record<string, boolean> = {}
+        taskScaleConfs.forEach(conf => {
+          const sConf = !conf || XEUtils.isString(conf) ? { type: conf } : conf
+          const { type } = sConf
+          if (!type || !viewTypeLevelMaps[type]) {
+            errLog('vxe.error.errProp', [`type=${type}`, XEUtils.keys(viewTypeLevelMaps).join(',')])
+            return
+          }
+          if (keyMaps[type]) {
+            errLog('vxe.error.repeatProp', ['type', type])
+            return
+          }
+          keyMaps[type] = true
+          scaleConfs.push(Object.assign({}, type ? taskViewScaleMapsOpts[type] || {} : {}, sConf, {
+            level: getViewTypeLevel(type)
+          }))
+        })
+      }
+      if (!scaleConfs.length) {
+        scaleConfs.push(
+          { type: 'month', level: viewTypeLevelMaps.month },
+          { type: 'date', level: viewTypeLevelMaps.date }
+        )
+      }
+      reactData.taskScaleList = XEUtils.orderBy(scaleConfs, { field: 'level', order: 'desc' })
+    }
 
     const initToolbar = () => {
       const toolbarOpts = computeToolbarOpts.value
@@ -1978,6 +2040,10 @@ export default defineVxeComponent({
       initProxy()
     })
 
+    watch(computeTaskScaleConfs, () => {
+      handleTaskScaleConfig()
+    })
+
     hooks.forEach((options) => {
       const { setupGantt } = options
       if (setupGantt) {
@@ -1988,6 +2054,7 @@ export default defineVxeComponent({
       }
     })
 
+    handleTaskScaleConfig()
     initPages()
 
     onMounted(() => {

@@ -43,6 +43,11 @@ setConfig({
       // beforeSave: null,
       // afterSave: null
     },
+    taskViewScaleConfs: {
+      week: {
+        startDay: 1
+      }
+    },
     taskSplitConfig: {
       enabled: true,
       resize: true,

@@ -1,7 +1,10 @@
 import { h, inject, ref, Ref, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
+import { VxeUI } from '@vxe-ui/core'
 
-import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods } from '../../../types'
+import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttDefines } from '../../../types'
+
+const { getI18n } = VxeUI
 
 export default defineVxeComponent({
   name: 'VxeGanttViewHeader',
@@ -42,16 +45,29 @@ export default defineVxeComponent({
                 }
               })
             })),
-            h('thead', {}, headerGroups.map((cols, rIndex) => {
+            h('thead', {}, headerGroups.map(({ scaleItem, columns }, $rowIndex) => {
+              const { type, titleMethod } = scaleItem
               return h('tr', {
-                key: rIndex
-              }, cols.map((column, cIndex) => {
+                key: $rowIndex
+              }, columns.map((column, cIndex) => {
+                const dateObj: VxeGanttDefines.ScaleDateObj = column.params
+                let label = `${column.title}`
+                if ($rowIndex < headerGroups.length - 1) {
+                  if (scaleItem.type === 'day') {
+                    label = getI18n(`vxe.gantt.dayss.w${dateObj.e}`)
+                  } else {
+                    label = getI18n(`vxe.gantt.${!$rowIndex && headerGroups.length > 1 ? 'tFullFormat' : 'tSimpleFormat'}.${type}`, dateObj)
+                  }
+                }
+                if (titleMethod) {
+                  label = `${titleMethod({ scaleObj: scaleItem, title: label, dateObj: dateObj, $rowIndex })}`
+                }
                 return h('th', {
                   key: cIndex,
                   class: 'vxe-gantt-view--header-column',
-                  colspan: column.children ? column.children.length : null,
-                  title: `${column.field}`
-                }, column.title)
+                  colspan: column.childCount || null,
+                  title: label
+                }, label)
               }))
             }))
           ])

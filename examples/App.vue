@@ -32,7 +32,9 @@ const navList = ref<VxeMenuPropTypes.Options>([
   { name: 'GanttTest3', routerLink: { name: 'GanttTest3' } },
   { name: 'GanttTest4', routerLink: { name: 'GanttTest4' } },
   { name: 'GanttTest5', routerLink: { name: 'GanttTest5' } },
-  { name: 'GanttTest6', routerLink: { name: 'GanttTest6' } }
+  { name: 'GanttTest6', routerLink: { name: 'GanttTest6' } },
+  { name: 'GanttTest7', routerLink: { name: 'GanttTest7' } },
+  { name: 'GanttTest8', routerLink: { name: 'GanttTest8' } }
 ])
 
 const theme = ref((localStorage.getItem('VXE_THEME') as 'light' | 'dark') || 'light')

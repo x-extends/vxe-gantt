@@ -10,6 +10,13 @@ export function getRefElem (refEl: any) {
   return null
 }
 
+export function getCalcHeight (height: number | 'unset' | undefined | null) {
+  if (height === 'unset') {
+    return 0
+  }
+  return height || 0
+}
+
 export function getCellRestHeight (rowRest: VxeTableDefines.RowCacheItem, cellOpts: VxeTablePropTypes.CellConfig, rowOpts: VxeTablePropTypes.RowConfig, defaultRowHeight: number) {
   return rowRest.resizeHeight || cellOpts.height || rowOpts.height || rowRest.height || defaultRowHeight
 }
