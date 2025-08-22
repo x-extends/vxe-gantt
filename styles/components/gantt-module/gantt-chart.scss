@@ -6,6 +6,8 @@
 }
 .vxe-gantt-view--chart-row {
   position: relative;
+  width: 100%;
+  height: 0;
   &.is--round {
     & > .vxe-gantt-view--chart-bar,
     & > .vxe-gantt-view--chart-custom-bar {

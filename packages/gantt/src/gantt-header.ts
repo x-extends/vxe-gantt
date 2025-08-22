@@ -2,13 +2,15 @@ import { h, inject, ref, Ref, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
 
-import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttDefines } from '../../../types'
+import type { VxeComponentSlotType } from 'vxe-pc-ui'
+import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 const { getI18n } = VxeUI
 
 export default defineVxeComponent({
   name: 'VxeGanttViewHeader',
   setup () {
+    const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
     const { reactData, internalData } = $xeGanttView
@@ -46,11 +48,12 @@ export default defineVxeComponent({
               })
             })),
             h('thead', {}, headerGroups.map(({ scaleItem, columns }, $rowIndex) => {
-              const { type, titleMethod } = scaleItem
+              const { type, titleMethod, slots } = scaleItem
+              const titleSlot = slots ? slots.title : null
               return h('tr', {
                 key: $rowIndex
               }, columns.map((column, cIndex) => {
-                const dateObj: VxeGanttDefines.ScaleDateObj = column.params
+                const { childCount, dateObj } = column
                 let label = `${column.title}`
                 if ($rowIndex < headerGroups.length - 1) {
                   if (scaleItem.type === 'day') {
@@ -59,15 +62,19 @@ export default defineVxeComponent({
                     label = getI18n(`vxe.gantt.${!$rowIndex && headerGroups.length > 1 ? 'tFullFormat' : 'tSimpleFormat'}.${type}`, dateObj)
                   }
                 }
-                if (titleMethod) {
-                  label = `${titleMethod({ scaleObj: scaleItem, title: label, dateObj: dateObj, $rowIndex })}`
+                let cellVNs: string | VxeComponentSlotType[] = label
+                const ctParams = { scaleObj: scaleItem, title: label, dateObj: dateObj, $rowIndex }
+                if (titleSlot) {
+                  cellVNs = $xeGantt.callSlot(titleSlot, ctParams)
+                } else if (titleMethod) {
+                  cellVNs = `${titleMethod(ctParams)}`
                 }
                 return h('th', {
                   key: cIndex,
                   class: 'vxe-gantt-view--header-column',
-                  colspan: column.childCount || null,
-                  title: label
-                }, label)
+                  colspan: childCount || null,
+                  title: titleSlot ? null : label
+                }, cellVNs)
               }))
             }))
           ])

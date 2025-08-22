@@ -273,7 +273,7 @@ export default defineVxeComponent({
           stys.maxHeight = maxHeight === 'auto' || maxHeight === '100%' ? '100%' : toCssUnit(maxHeight)
         }
       }
-      if (barStyle) {
+      if (barStyle && !XEUtils.isFunction(barStyle)) {
         const { bgColor, completedBgColor } = barStyle
         if (bgColor) {
           stys['--vxe-ui-gantt-view-task-bar-background-color'] = bgColor
