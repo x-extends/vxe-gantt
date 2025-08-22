@@ -65,7 +65,7 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
   const { minViewDate, maxViewDate } = reactData
   const minScale = XEUtils.last(taskScaleList)
   const fullCols: VxeGanttDefines.ViewColumn[] = []
-  const groupCols: VxeGanttDefines.HeaderColumn[] = []
+  const groupCols: VxeGanttDefines.GroupColumn[] = []
   if (minScale && minViewDate && maxViewDate) {
     const minSType = minScale.type
     const weekScale = taskScaleList.find(item => item.type === 'week')
@@ -176,47 +176,47 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         year: {
           field: yyyy,
           title: yyyy,
-          params: dateObj
+          dateObj
         },
         quarter: {
           field: `${yyyy}_q${q}`,
-          title: q,
-          params: dateObj
+          title: `${q}`,
+          dateObj
         },
         month: {
           field: `${yyyy}_${MM}`,
           title: MM,
-          params: dateObj
+          dateObj
         },
         week: {
           field: `${yyyy}_W${W}`,
-          title: W,
-          params: dateObj
+          title: `${W}`,
+          dateObj
         },
         day: {
           field: `${yyyy}_${MM}_${dd}_E${E}`,
-          title: E,
-          params: dateObj
+          title: `${E}`,
+          dateObj
         },
         date: {
           field: `${yyyy}_${MM}_${dd}`,
           title: dd,
-          params: dateObj
+          dateObj
         },
         hour: {
           field: `${yyyy}_${MM}_${dd}_${HH}`,
           title: HH,
-          params: dateObj
+          dateObj
         },
         minute: {
           field: `${yyyy}_${MM}_${dd}_${HH}_${mm}`,
           title: mm,
-          params: dateObj
+          dateObj
         },
         second: {
           field: `${yyyy}_${MM}_${dd}_${HH}_${mm}_${ss}`,
           title: ss,
-          params: dateObj
+          dateObj
         }
       }
       const minCol = colMaps[minSType]

@@ -5,6 +5,7 @@ import XEUtils from 'xe-utils'
 import { getCellRestHeight } from './util'
 import { getStringValue } from '../../ui/src/utils'
 
+import type { VxeComponentStyleType } from 'vxe-pc-ui'
 import type { TableInternalData, TableReactData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
@@ -55,7 +56,9 @@ export default defineVxeComponent({
       const progressField = $xeGantt.computeProgressField
       const taskBarOpts = $xeGantt.computeTaskBarOpts
       const { showProgress, showContent, contentMethod, barStyle } = taskBarOpts
-      const { round } = barStyle || {}
+      const isBarRowStyle = XEUtils.isFunction(barStyle)
+      const barStyObj = (barStyle ? (isBarRowStyle ? barStyle({ row, $gantt: $xeGantt }) : barStyle) : {}) || {}
+      const { round } = barStyObj
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
       const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
@@ -64,6 +67,20 @@ export default defineVxeComponent({
 
       let title = getStringValue(XEUtils.get(row, titleField))
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
+
+      const vbStyle: VxeComponentStyleType = {}
+      const vpStyle: VxeComponentStyleType = {
+        width: `${progressValue || 0}%`
+      }
+      if (isBarRowStyle) {
+        const { bgColor, completedBgColor } = barStyObj
+        if (bgColor) {
+          vbStyle.backgroundColor = bgColor
+        }
+        if (completedBgColor) {
+          vpStyle.backgroundColor = completedBgColor
+        }
+      }
 
       if (contentMethod) {
         title = getStringValue(contentMethod({ row, title }))
@@ -83,6 +100,7 @@ export default defineVxeComponent({
       }, [
         h('div', {
           class: taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar',
+          style: vbStyle,
           attrs: {
             rowid
           },
@@ -100,9 +118,7 @@ export default defineVxeComponent({
               showProgress
                 ? h('div', {
                   class: 'vxe-gantt-view--chart-progress',
-                  style: {
-                    width: `${progressValue}%`
-                  }
+                  style: vpStyle
                 })
                 : renderEmptyElement($xeGantt),
               showContent
