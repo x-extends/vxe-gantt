@@ -16,6 +16,7 @@ const { globalEvents } = VxeUI
 function createInternalData (): GanttViewInternalData {
   return {
     xeTable: null,
+    visibleColumn: [],
     startMaps: {},
     endMaps: {},
     chartMaps: {},
@@ -30,16 +31,9 @@ function createInternalData (): GanttViewInternalData {
       startIndex: 0,
       endIndex: 0
     },
-    // 存放纵向 Y 虚拟滚动相关信息
-    scrollYStore: {
-      preloadSize: 0,
-      offsetSize: 0,
-      visibleSize: 0,
-      visibleStartIndex: 0,
-      visibleEndIndex: 0,
-      startIndex: 0,
-      endIndex: 0
-    }
+    // 最后滚动位置
+    lastScrollTop: 0,
+    lastScrollLeft: 0
   }
 }
 const maxYHeight = 5e6
@@ -63,9 +57,12 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
   const { treeConfig } = ganttProps
   const { taskScaleList } = ganttReactData
   const { minViewDate, maxViewDate } = reactData
+  const { scrollXStore } = internalData
   const minScale = XEUtils.last(taskScaleList)
   const fullCols: VxeGanttDefines.ViewColumn[] = []
   const groupCols: VxeGanttDefines.GroupColumn[] = []
+  scrollXStore.startIndex = 0
+  scrollXStore.endIndex = 1
   if (minScale && minViewDate && maxViewDate) {
     const minSType = minScale.type
     const weekScale = taskScaleList.find(item => item.type === 'week')
@@ -88,37 +85,37 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
     const diffDayNum = maxViewDate.getTime() - minViewDate.getTime()
     const countSize = Math.max(5, Math.floor(diffDayNum / gapTime) + 1)
 
-    switch (minScale.type) {
-      case 'day':
-      case 'date':
-        if (diffDayNum > (1000 * 60 * 60 * 24 * 366 * 3)) {
-          reactData.tableColumn = []
-          reactData.headerGroups = []
-          return
-        }
-        break
-      case 'hour':
-        if (diffDayNum > (1000 * 60 * 60 * 24 * 31 * 3)) {
-          reactData.tableColumn = []
-          reactData.headerGroups = []
-          return
-        }
-        break
-      case 'minute':
-        if (diffDayNum > (1000 * 60 * 60 * 24 * 3)) {
-          reactData.tableColumn = []
-          reactData.headerGroups = []
-          return
-        }
-        break
-      case 'second':
-        if (diffDayNum > (1000 * 60 * 60 * 3)) {
-          reactData.tableColumn = []
-          reactData.headerGroups = []
-          return
-        }
-        break
-    }
+    // switch (minScale.type) {
+    //   case 'day':
+    //   case 'date':
+    //     if (diffDayNum > (1000 * 60 * 60 * 24 * 366 * 3)) {
+    //       reactData.tableColumn = []
+    //       reactData.headerGroups = []
+    //       return
+    //     }
+    //     break
+    //   case 'hour':
+    //     if (diffDayNum > (1000 * 60 * 60 * 24 * 31 * 3)) {
+    //       reactData.tableColumn = []
+    //       reactData.headerGroups = []
+    //       return
+    //     }
+    //     break
+    //   case 'minute':
+    //     if (diffDayNum > (1000 * 60 * 60 * 24 * 3)) {
+    //       reactData.tableColumn = []
+    //       reactData.headerGroups = []
+    //       return
+    //     }
+    //     break
+    //   case 'second':
+    //     if (diffDayNum > (1000 * 60 * 60 * 3)) {
+    //       reactData.tableColumn = []
+    //       reactData.headerGroups = []
+    //       return
+    //     }
+    //     break
+    // }
 
     const renderListMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn[]> = {
       year: [],
@@ -163,7 +160,6 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         currGpCol.children.push(minCol)
       }
     }
-
     for (let i = 0; i < countSize; i++) {
       const itemDate = new Date(currTime + (i * gapTime))
       const [yyyy, MM, dd, HH, mm, ss] = XEUtils.toDateString(itemDate, 'yyyy-M-d-H-m-s').split('-')
@@ -306,8 +302,10 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
       internalData.chartMaps = ctMaps
     }
   }
-  reactData.tableColumn = fullCols
+  internalData.visibleColumn = fullCols
   reactData.headerGroups = groupCols
+  updateScrollXStatus($xeGanttView)
+  handleTableColumn($xeGanttView)
 }
 
 function handleUpdateData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
@@ -417,8 +415,8 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   const reactData = $xeGanttView.reactData
   const internalData = $xeGanttView.internalData
 
-  const { scrollbarWidth, scrollbarHeight, tableColumn, headerGroups } = reactData
-  const { elemStore } = internalData
+  const { scrollbarWidth, scrollbarHeight, headerGroups, tableColumn } = reactData
+  const { elemStore, visibleColumn } = internalData
   const $xeTable = internalData.xeTable
 
   const el = $xeGanttView.$refs.refElem as HTMLDivElement
@@ -509,25 +507,28 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   }
 
   const colInfoElem = $xeGanttView.$refs.refColInfoElem as HTMLDivElement
+  let viewCellWidth = 40
   if (colInfoElem) {
-    reactData.viewCellWidth = colInfoElem.clientWidth || 40
+    viewCellWidth = colInfoElem.clientWidth || 40
   }
-  let viewTableWidth = reactData.viewCellWidth * tableColumn.length
+  let viewTableWidth = viewCellWidth * visibleColumn.length
   if (bodyScrollElem) {
     const viewWidth = bodyScrollElem.clientWidth
     const remainWidth = viewWidth - viewTableWidth
     if (remainWidth > 0) {
-      reactData.viewCellWidth += Math.floor(remainWidth / tableColumn.length)
+      viewCellWidth += Math.floor(remainWidth / visibleColumn.length)
       viewTableWidth = viewWidth
     }
   }
+  reactData.viewCellWidth = viewCellWidth
   const headerTableElem = getRefElem(elemStore['main-header-table'])
   const bodyTableElem = getRefElem(elemStore['main-body-table'])
+  const vmTableWidth = viewCellWidth * tableColumn.length
   if (headerTableElem) {
     headerTableElem.style.width = `${viewTableWidth}px`
   }
   if (bodyTableElem) {
-    bodyTableElem.style.width = `${viewTableWidth}px`
+    bodyTableElem.style.width = `${vmTableWidth}px`
   }
 
   reactData.scrollXWidth = viewTableWidth
@@ -535,68 +536,191 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   return updateChart($xeGanttView)
 }
 
-function handleLazyRecalculate ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+function handleRecalculateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  const internalData = $xeGanttView.internalData
+
+  const el = $xeGanttView.$refs.refElem as HTMLDivElement
+  internalData.rceRunTime = Date.now()
+  if (!el || !el.clientWidth) {
+    return $xeGanttView.$nextTick()
+  }
   calcScrollbar($xeGanttView)
   updateStyle($xeGanttView)
   updateChart($xeGanttView)
+  return computeScrollLoad($xeGanttView)
+}
+
+function handleLazyRecalculate ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  const internalData = $xeGanttView.internalData
+
+  return new Promise<void>(resolve => {
+    const { rceTimeout, rceRunTime } = internalData
+    const $xeTable = internalData.xeTable
+    let refreshDelay = 50
+    if ($xeTable) {
+      const resizeOpts = $xeTable.computeResizeOpts
+      refreshDelay = resizeOpts.refreshDelay || 50
+    }
+    if (rceTimeout) {
+      clearTimeout(rceTimeout)
+      if (rceRunTime && rceRunTime + (refreshDelay - 5) < Date.now()) {
+        resolve(
+          handleRecalculateStyle($xeGanttView)
+        )
+      } else {
+        $xeGanttView.$nextTick(() => {
+          resolve()
+        })
+      }
+    } else {
+      resolve(
+        handleRecalculateStyle($xeGanttView)
+      )
+    }
+    internalData.rceTimeout = setTimeout(() => {
+      internalData.rceTimeout = undefined
+      handleRecalculateStyle($xeGanttView)
+    }, refreshDelay)
+  })
+}
+
+function computeScrollLoad ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  const reactData = $xeGanttView.reactData
+  const internalData = $xeGanttView.internalData
+
+  return $xeGanttView.$nextTick().then(() => {
+    const { scrollXLoad } = reactData
+    const { scrollXStore } = internalData
+    // 计算 X 逻辑
+    if (scrollXLoad) {
+      const { toVisibleIndex: toXVisibleIndex, visibleSize: visibleXSize } = handleVirtualXVisible($xeGanttView)
+      const offsetXSize = 2
+      scrollXStore.preloadSize = 1
+      scrollXStore.offsetSize = offsetXSize
+      scrollXStore.visibleSize = visibleXSize
+      scrollXStore.endIndex = Math.max(scrollXStore.startIndex + scrollXStore.visibleSize + offsetXSize, scrollXStore.endIndex)
+      scrollXStore.visibleStartIndex = Math.max(scrollXStore.startIndex, toXVisibleIndex)
+      scrollXStore.visibleEndIndex = Math.min(scrollXStore.endIndex, toXVisibleIndex + visibleXSize)
+      updateScrollXData($xeGanttView).then(() => {
+        loadScrollXData($xeGanttView)
+      })
+    } else {
+      updateScrollXSpace($xeGanttView)
+    }
+  })
+}
+
+function handleVirtualXVisible ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  const reactData = $xeGanttView.reactData
+  const internalData = $xeGanttView.internalData
+
+  const { viewCellWidth } = reactData
+  const { elemStore } = internalData
+  const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
+  if (bodyScrollElem) {
+    const clientWidth = bodyScrollElem.clientWidth
+    const scrollLeft = bodyScrollElem.scrollLeft
+    const toVisibleIndex = Math.floor(scrollLeft / viewCellWidth) - 1
+    const visibleSize = Math.ceil(clientWidth / viewCellWidth) + 1
+    return { toVisibleIndex: Math.max(0, toVisibleIndex), visibleSize: Math.max(1, visibleSize) }
+  }
+  return { toVisibleIndex: 0, visibleSize: 6 }
+}
+
+function loadScrollXData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  const reactData = $xeGanttView.reactData
+  const internalData = $xeGanttView.internalData
+
+  const { isScrollXBig } = reactData
+  const { scrollXStore } = internalData
+  const { preloadSize, startIndex, endIndex, offsetSize } = scrollXStore
+  const { toVisibleIndex, visibleSize } = handleVirtualXVisible($xeGanttView)
+  const offsetItem = {
+    startIndex: Math.max(0, isScrollXBig ? toVisibleIndex - 1 : toVisibleIndex - 1 - offsetSize - preloadSize),
+    endIndex: isScrollXBig ? toVisibleIndex + visibleSize : toVisibleIndex + visibleSize + offsetSize + preloadSize
+  }
+  scrollXStore.visibleStartIndex = toVisibleIndex - 1
+  scrollXStore.visibleEndIndex = toVisibleIndex + visibleSize + 1
+  const { startIndex: offsetStartIndex, endIndex: offsetEndIndex } = offsetItem
+  if (toVisibleIndex <= startIndex || toVisibleIndex >= endIndex - visibleSize - 1) {
+    if (startIndex !== offsetStartIndex || endIndex !== offsetEndIndex) {
+      scrollXStore.startIndex = offsetStartIndex
+      scrollXStore.endIndex = offsetEndIndex
+      updateScrollXData($xeGanttView)
+    }
+  }
+}
+
+function updateScrollXData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  handleTableColumn($xeGanttView)
+  updateScrollXSpace($xeGanttView)
   return $xeGanttView.$nextTick()
 }
 
-// function updateScrollXSpace ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
-//   const reactData = $xeGanttView.reactData
-//   const internalData = $xeGanttView.internalData
+function updateScrollXStatus ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  const reactData = $xeGanttView.reactData
 
-//   const { scrollXLoad, scrollXWidth } = reactData
-//   const { elemStore } = internalData
-//   const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
-//   const bodyTableElem = getRefElem(elemStore['main-body-table'])
+  const scrollXLoad = true
+  reactData.scrollXLoad = scrollXLoad
+  return scrollXLoad
+}
 
-//   let xSpaceLeft = 0
+function handleTableColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  const reactData = $xeGanttView.reactData
+  const internalData = $xeGanttView.internalData
 
-//   let clientWidth = 0
-//   if (bodyScrollElem) {
-//     clientWidth = bodyScrollElem.clientWidth
-//   }
-//   // 虚拟渲染
-//   let isScrollXBig = false
-//   let ySpaceWidth = scrollXWidth
-//   if (scrollXWidth > maxXWidth) {
-//     // 触右
-//     if (bodyScrollElem && bodyTableElem && bodyScrollElem.scrollLeft + clientWidth >= maxXWidth) {
-//       xSpaceLeft = maxXWidth - bodyTableElem.clientWidth
-//     } else {
-//       xSpaceLeft = (maxXWidth - clientWidth) * (xSpaceLeft / (scrollXWidth - clientWidth))
-//     }
-//     ySpaceWidth = maxXWidth
-//     isScrollXBig = true
-//   }
+  const { scrollXLoad } = reactData
+  const { visibleColumn, scrollXStore } = internalData
+  const tableColumn = scrollXLoad ? visibleColumn.slice(scrollXStore.startIndex, scrollXStore.endIndex) : visibleColumn.slice(0)
+  reactData.tableColumn = tableColumn
+}
 
-//   if (bodyTableElem) {
-//     bodyTableElem.style.transform = `translate(${xSpaceLeft}px, ${reactData.scrollYTop || 0}px)`
-//   }
+function updateScrollXSpace ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  const reactData = $xeGanttView.reactData
+  const internalData = $xeGanttView.internalData
 
-//   const layoutList = ['header', 'body', 'footer']
-//   layoutList.forEach(layout => {
-//     const xSpaceElem = getRefElem(elemStore[`main-${layout}-xSpace`])
-//     if (xSpaceElem) {
-//       xSpaceElem.style.width = scrollXLoad ? `${ySpaceWidth}px` : ''
-//     }
-//   })
+  const { scrollXLoad, scrollXWidth, viewCellWidth } = reactData
+  const { elemStore, scrollXStore } = internalData
+  const bodyTableElem = getRefElem(elemStore['main-body-table'])
+  // const headerTableElem = getRefElem(elemStore['main-header-table'])
+  // const footerTableElem = getRefElem(elemStore['main-footer-table'])
 
-//   reactData.scrollXLeft = xSpaceLeft
-//   reactData.scrollXWidth = ySpaceWidth
-//   reactData.isScrollXBig = isScrollXBig
+  const { startIndex } = scrollXStore
+  let xSpaceLeft = 0
+  if (scrollXLoad) {
+    xSpaceLeft = Math.max(0, startIndex * viewCellWidth)
+  }
 
-//   const scrollXSpaceEl = $xeGanttView.$refs.refScrollXSpaceElem as HTMLDivElement
-//   if (scrollXSpaceEl) {
-//     scrollXSpaceEl.style.width = `${ySpaceWidth}px`
-//   }
+  // if (headerTableElem) {
+  //   headerTableElem.style.transform = `translate(${xSpaceLeft}px, 0px)`
+  // }
+  if (bodyTableElem) {
+    bodyTableElem.style.transform = `translate(${xSpaceLeft}px, ${reactData.scrollYTop || 0}px)`
+  }
+  // if (footerTableElem) {
+  //   footerTableElem.style.transform = `translate(${xSpaceLeft}px, 0px)`
+  // }
 
-//   calcScrollbar($xeGanttView)
-//   return $xeGanttView.$nextTick().then(() => {
-//     updateStyle($xeGanttView)
-//   })
-// }
+  const layoutList = ['header', 'body', 'footer']
+  layoutList.forEach(layout => {
+    const xSpaceElem = getRefElem(elemStore[`main-${layout}-xSpace`])
+    if (xSpaceElem) {
+      xSpaceElem.style.width = scrollXLoad ? `${scrollXWidth}px` : ''
+    }
+  })
+
+  const scrollXSpaceEl = $xeGanttView.$refs.refScrollXSpaceElem as HTMLDivElement
+  if (scrollXSpaceEl) {
+    scrollXSpaceEl.style.width = `${scrollXWidth}px`
+  }
+
+  calcScrollbar($xeGanttView)
+  return $xeGanttView.$nextTick()
+}
+
+function triggerScrollXEvent ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  loadScrollXData($xeGanttView)
+}
 
 function updateScrollYSpace ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
   const reactData = $xeGanttView.reactData
@@ -742,6 +866,8 @@ export default defineVxeComponent({
       // 横向滚动条的高度
       scrollbarHeight: 0,
 
+      // 最后滚动时间戳
+      lastScrollTime: 0,
       lazScrollLoading: false,
 
       scrollVMLoading: false,
@@ -877,9 +1003,11 @@ export default defineVxeComponent({
     },
     triggerBodyScrollEvent (evnt: Event) {
       const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
       const internalData = $xeGanttView.internalData
 
-      const { elemStore, inVirtualScroll, inHeaderScroll, inFooterScroll } = internalData
+      const { scrollXLoad } = reactData
+      const { elemStore, inVirtualScroll, inHeaderScroll, inFooterScroll, lastScrollLeft, lastScrollTop } = internalData
       if (inVirtualScroll) {
         return
       }
@@ -890,42 +1018,51 @@ export default defineVxeComponent({
       const headerScrollElem = getRefElem(elemStore['main-header-scroll'])
       const xHandleEl = $xeGanttView.$refs.refScrollXHandleElem as HTMLDivElement
       const yHandleEl = $xeGanttView.$refs.refScrollYHandleElem as HTMLDivElement
-      if (headerScrollElem && wrapperEl) {
-        const isRollX = true
-        const isRollY = true
-        const currLeftNum = wrapperEl.scrollLeft
-        const currTopNum = wrapperEl.scrollTop
+      const scrollLeft = wrapperEl.scrollLeft
+      const scrollTop = wrapperEl.scrollTop
+      const isRollX = scrollLeft !== lastScrollLeft
+      const isRollY = scrollTop !== lastScrollTop
+      internalData.inBodyScroll = true
+      internalData.scrollRenderType = ''
+      if (isRollY) {
+        setScrollTop(yHandleEl, scrollTop)
+        syncTableScrollTop($xeGanttView, scrollTop)
+      }
+      if (isRollX) {
         internalData.inBodyScroll = true
-        setScrollLeft(xHandleEl, currLeftNum)
-        setScrollLeft(headerScrollElem, currLeftNum)
-        setScrollTop(yHandleEl, currTopNum)
-        syncTableScrollTop($xeGanttView, currTopNum)
-        handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
+        setScrollLeft(xHandleEl, scrollLeft)
+        setScrollLeft(headerScrollElem, scrollLeft)
+        if (scrollXLoad) {
+          triggerScrollXEvent($xeGanttView)
+        }
       }
+      handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, wrapperEl.scrollTop, scrollLeft)
     },
-    triggerFooterScrollEvent (evnt: Event) {
-      const $xeGanttView = this
-      const internalData = $xeGanttView.internalData
+    // triggerFooterScrollEvent (evnt: Event) {
+    //   const $xeGanttView = this
+    //   const internalData = $xeGanttView.internalData
 
-      const { inVirtualScroll, inHeaderScroll, inBodyScroll } = internalData
-      if (inVirtualScroll) {
-        return
-      }
-      if (inHeaderScroll || inBodyScroll) {
-        return
-      }
-      const wrapperEl = evnt.currentTarget as HTMLDivElement
-      if (wrapperEl) {
-        const isRollX = true
-        const isRollY = false
-        const currLeftNum = wrapperEl.scrollLeft
-        handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
-      }
-    },
+    //   const { inVirtualScroll, inHeaderScroll, inBodyScroll } = internalData
+    //   if (inVirtualScroll) {
+    //     return
+    //   }
+    //   if (inHeaderScroll || inBodyScroll) {
+    //     return
+    //   }
+    //   const wrapperEl = evnt.currentTarget as HTMLDivElement
+    //   if (wrapperEl) {
+    //     const isRollX = true
+    //     const isRollY = false
+    //     const currLeftNum = wrapperEl.scrollLeft
+    //     handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
+    //   }
+    // },
     triggerVirtualScrollXEvent (evnt: Event) {
       const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
       const internalData = $xeGanttView.internalData
 
+      const { scrollXLoad } = reactData
       const { elemStore, inHeaderScroll, inBodyScroll } = internalData
       if (inHeaderScroll || inBodyScroll) {
         return
@@ -940,6 +1077,9 @@ export default defineVxeComponent({
         internalData.inVirtualScroll = true
         setScrollLeft(headerScrollElem, currLeftNum)
         setScrollLeft(bodyScrollElem, currLeftNum)
+        if (scrollXLoad) {
+          triggerScrollXEvent($xeGanttView)
+        }
         handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
       }
     },
@@ -965,27 +1105,8 @@ export default defineVxeComponent({
     },
     handleUpdateSXSpace () {
       const $xeGanttView = this
-      const reactData = $xeGanttView.reactData
-      const internalData = $xeGanttView.internalData
 
-      const { scrollXLoad, scrollXWidth } = reactData
-      const { elemStore } = internalData
-
-      const layoutList = ['header', 'body', 'footer']
-      layoutList.forEach(layout => {
-        const xSpaceElem = getRefElem(elemStore[`main-${layout}-xSpace`])
-        if (xSpaceElem) {
-          xSpaceElem.style.width = scrollXLoad ? `${scrollXWidth}px` : ''
-        }
-      })
-
-      const scrollXSpaceEl = $xeGanttView.$refs.refScrollXSpaceElem as HTMLDivElement
-      if (scrollXSpaceEl) {
-        scrollXSpaceEl.style.width = `${scrollXWidth}px`
-      }
-
-      calcScrollbar($xeGanttView)
-      return $xeGanttView.$nextTick()
+      return updateScrollXSpace($xeGanttView)
     },
     handleUpdateSYSpace () {
       const $xeGanttView = this

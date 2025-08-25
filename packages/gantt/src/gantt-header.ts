@@ -31,9 +31,11 @@ export default defineVxeComponent({
       const _vm = this
       const $xeGantt = _vm.$xeGantt
       const $xeGanttView = _vm.$xeGanttView
-      const { reactData } = $xeGanttView
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
 
-      const { tableColumn, headerGroups, viewCellWidth } = reactData
+      const { headerGroups, viewCellWidth } = reactData
+      const { visibleColumn } = internalData
       return h('div', {
         ref: 'refElem',
         class: 'vxe-gantt-view--header-wrapper'
@@ -53,7 +55,7 @@ export default defineVxeComponent({
             ref: 'refHeaderTable',
             class: 'vxe-gantt-view--header-table'
           }, [
-            h('colgroup', {}, tableColumn.map((column, cIndex) => {
+            h('colgroup', {}, visibleColumn.map((column, cIndex) => {
               return h('col', {
                 key: cIndex,
                 style: {
