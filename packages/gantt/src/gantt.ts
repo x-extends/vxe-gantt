@@ -2085,9 +2085,6 @@ export default defineVxeComponent({
         if (props.expandConfig) {
           warnLog('vxe.error.notProp', ['expand-config'])
         }
-        if (props.aggregateConfig) {
-          warnLog('vxe.error.notProp', ['aggregate-config'])
-        }
 
         if (columns && columns.length) {
           $xeGantt.loadColumn(columns)

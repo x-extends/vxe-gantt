@@ -132,12 +132,9 @@ export default defineVxeComponent({
       const { treeConfig } = ganttProps
       const { taskScaleList } = ganttReactData
       const { minViewDate, maxViewDate } = reactData
-      const { scrollXStore } = internalData
       const minScale = XEUtils.last(taskScaleList)
       const fullCols: VxeGanttDefines.ViewColumn[] = []
       const groupCols: VxeGanttDefines.GroupColumn[] = []
-      scrollXStore.startIndex = 0
-      scrollXStore.endIndex = 1
       if (minScale && minViewDate && maxViewDate) {
         const minSType = minScale.type
         const weekScale = taskScaleList.find(item => item.type === 'week')
@@ -344,9 +341,12 @@ export default defineVxeComponent({
         if ($xeTable) {
           const startField = computeStartField.value
           const endField = computeEndField.value
-          const { computeTreeOpts } = $xeTable.getComputeMaps()
+          const { computeAggregateOpts, computeTreeOpts } = $xeTable.getComputeMaps()
+          const tableReactData = $xeTable.reactData
+          const { isRowGroupStatus } = tableReactData
           const tableInternalData = $xeTable.internalData
-          const { afterFullData, afterTreeFullData } = tableInternalData
+          const { afterFullData, afterTreeFullData, afterGroupFullData } = tableInternalData
+          const aggregateOpts = computeAggregateOpts.value
           const treeOpts = computeTreeOpts.value
           const { transform } = treeOpts
           const childrenField = treeOpts.children || treeOpts.childrenField
@@ -370,7 +370,14 @@ export default defineVxeComponent({
             }
           }
 
-          if (treeConfig) {
+          if (isRowGroupStatus) {
+            // 行分组
+            const mapChildrenField = aggregateOpts.mapChildrenField
+            if (mapChildrenField) {
+              XEUtils.eachTree(afterGroupFullData, handleParseRender, { children: mapChildrenField })
+            }
+          } else if (treeConfig) {
+            // 树结构
             XEUtils.eachTree(afterTreeFullData, handleParseRender, { children: transform ? treeOpts.mapChildrenField : childrenField })
           } else {
             afterFullData.forEach(handleParseRender)
@@ -387,6 +394,7 @@ export default defineVxeComponent({
     const handleUpdateData = () => {
       const ganttProps = $xeGantt.props
       const { treeConfig } = ganttProps
+      const { scrollXStore } = internalData
       const $xeTable = internalData.xeTable
       const sdMaps: Record<string, any> = {}
       const edMaps: Record<string, any> = {}
@@ -395,9 +403,12 @@ export default defineVxeComponent({
       if ($xeTable) {
         const startField = computeStartField.value
         const endField = computeEndField.value
-        const { computeTreeOpts } = $xeTable.getComputeMaps()
+        const { computeAggregateOpts, computeTreeOpts } = $xeTable.getComputeMaps()
+        const tableReactData = $xeTable.reactData
+        const { isRowGroupStatus } = tableReactData
         const tableInternalData = $xeTable.internalData
-        const { afterFullData, afterTreeFullData } = tableInternalData
+        const { afterFullData, afterTreeFullData, afterGroupFullData } = tableInternalData
+        const aggregateOpts = computeAggregateOpts.value
         const treeOpts = computeTreeOpts.value
         const { transform } = treeOpts
         const childrenField = treeOpts.children || treeOpts.childrenField
@@ -417,12 +428,21 @@ export default defineVxeComponent({
           }
         }
 
-        if (treeConfig) {
+        if (isRowGroupStatus) {
+          // 行分组
+          const mapChildrenField = aggregateOpts.mapChildrenField
+          if (mapChildrenField) {
+            XEUtils.eachTree(afterGroupFullData, handleMinMaxData, { children: mapChildrenField })
+          }
+        } else if (treeConfig) {
+          // 树结构
           XEUtils.eachTree(afterTreeFullData, handleMinMaxData, { children: transform ? treeOpts.mapChildrenField : childrenField })
         } else {
           afterFullData.forEach(handleMinMaxData)
         }
       }
+      scrollXStore.startIndex = 0
+      scrollXStore.endIndex = Math.max(1, scrollXStore.visibleSize)
       reactData.minViewDate = minDate
       reactData.maxViewDate = maxDate
       internalData.startMaps = sdMaps
@@ -467,10 +487,8 @@ export default defineVxeComponent({
           }
           const rowid = rowEl.getAttribute('rowid')
           const rowRest = rowid ? chartMaps[rowid] : null
-          if (rowRest) {
-            barEl.style.left = `${viewCellWidth * rowRest.oLeftSize}px`
-            barEl.style.width = `${viewCellWidth * rowRest.oWidthSize}px`
-          }
+          barEl.style.left = `${rowRest ? viewCellWidth * rowRest.oLeftSize : 0}px`
+          barEl.style.width = `${rowRest ? viewCellWidth * rowRest.oWidthSize : 0}px`
         })
       }
       return nextTick()
