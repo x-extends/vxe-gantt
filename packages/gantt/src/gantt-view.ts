@@ -57,12 +57,9 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
   const { treeConfig } = ganttProps
   const { taskScaleList } = ganttReactData
   const { minViewDate, maxViewDate } = reactData
-  const { scrollXStore } = internalData
   const minScale = XEUtils.last(taskScaleList)
   const fullCols: VxeGanttDefines.ViewColumn[] = []
   const groupCols: VxeGanttDefines.GroupColumn[] = []
-  scrollXStore.startIndex = 0
-  scrollXStore.endIndex = 1
   if (minScale && minViewDate && maxViewDate) {
     const minSType = minScale.type
     const weekScale = taskScaleList.find(item => item.type === 'week')
@@ -269,8 +266,11 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
     if ($xeTable) {
       const startField = $xeGantt.computeStartField
       const endField = $xeGantt.computeEndField
+      const tableReactData = $xeTable as unknown as TableReactData
+      const { isRowGroupStatus } = tableReactData
       const tableInternalData = $xeTable as unknown as TableInternalData
-      const { afterFullData, afterTreeFullData } = tableInternalData
+      const { afterFullData, afterTreeFullData, afterGroupFullData } = tableInternalData
+      const aggregateOpts = $xeTable.computeAggregateOpts
       const treeOpts = $xeTable.computeTreeOpts
       const { transform } = treeOpts
       const childrenField = treeOpts.children || treeOpts.childrenField
@@ -294,7 +294,14 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         }
       }
 
-      if (treeConfig) {
+      if (isRowGroupStatus) {
+      // 行分组
+        const mapChildrenField = aggregateOpts.mapChildrenField
+        if (mapChildrenField) {
+          XEUtils.eachTree(afterGroupFullData, handleParseRender, { children: mapChildrenField })
+        }
+      } else if (treeConfig) {
+      // 树结构
         XEUtils.eachTree(afterTreeFullData, handleParseRender, { children: transform ? treeOpts.mapChildrenField : childrenField })
       } else {
         afterFullData.forEach(handleParseRender)
@@ -315,6 +322,7 @@ function handleUpdateData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewP
 
   const ganttProps = $xeGantt
   const { treeConfig } = ganttProps
+  const { scrollXStore } = internalData
   const $xeTable = internalData.xeTable
   const sdMaps: Record<string, any> = {}
   const edMaps: Record<string, any> = {}
@@ -323,8 +331,11 @@ function handleUpdateData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewP
   if ($xeTable) {
     const startField = $xeGantt.computeStartField
     const endField = $xeGantt.computeEndField
+    const tableReactData = $xeTable as unknown as TableReactData
+    const { isRowGroupStatus } = tableReactData
     const tableInternalData = $xeTable as unknown as TableInternalData
-    const { afterFullData, afterTreeFullData } = tableInternalData
+    const { afterFullData, afterTreeFullData, afterGroupFullData } = tableInternalData
+    const aggregateOpts = $xeTable.computeAggregateOpts
     const treeOpts = $xeTable.computeTreeOpts
     const { transform } = treeOpts
     const childrenField = treeOpts.children || treeOpts.childrenField
@@ -344,12 +355,21 @@ function handleUpdateData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewP
       }
     }
 
-    if (treeConfig) {
+    if (isRowGroupStatus) {
+      // 行分组
+      const mapChildrenField = aggregateOpts.mapChildrenField
+      if (mapChildrenField) {
+        XEUtils.eachTree(afterGroupFullData, handleMinMaxData, { children: mapChildrenField })
+      }
+    } else if (treeConfig) {
+      // 树结构
       XEUtils.eachTree(afterTreeFullData, handleMinMaxData, { children: transform ? treeOpts.mapChildrenField : childrenField })
     } else {
       afterFullData.forEach(handleMinMaxData)
     }
   }
+  scrollXStore.startIndex = 0
+  scrollXStore.endIndex = Math.max(1, scrollXStore.visibleSize)
   reactData.minViewDate = minDate
   reactData.maxViewDate = maxDate
   internalData.startMaps = sdMaps
@@ -401,10 +421,8 @@ function updateChart ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
       }
       const rowid = rowEl.getAttribute('rowid')
       const rowRest = rowid ? chartMaps[rowid] : null
-      if (rowRest) {
-        barEl.style.left = `${viewCellWidth * rowRest.oLeftSize}px`
-        barEl.style.width = `${viewCellWidth * rowRest.oWidthSize}px`
-      }
+      barEl.style.left = `${rowRest ? viewCellWidth * rowRest.oLeftSize : 0}px`
+      barEl.style.width = `${rowRest ? viewCellWidth * rowRest.oWidthSize : 0}px`
     })
   }
   return $xeGanttView.$nextTick()

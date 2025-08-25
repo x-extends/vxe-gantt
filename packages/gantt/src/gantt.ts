@@ -2221,9 +2221,6 @@ export default /* define-vxe-component start */ defineVxeComponent({
     if (props.expandConfig) {
       warnLog('vxe.error.notProp', ['expand-config'])
     }
-    if (props.aggregateConfig) {
-      warnLog('vxe.error.notProp', ['aggregate-config'])
-    }
 
     $xeGantt.$nextTick(() => {
       if (props.formConfig) {
