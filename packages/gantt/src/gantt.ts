@@ -794,20 +794,20 @@ export default defineVxeComponent({
         let tipHeight = 0
         if (rsNumLeftEl) {
           if (offsetLeft < 0) {
+            rsNumLeftEl.style.display = 'none'
+          } else {
             rsNumLeftEl.textContent = `${targetTableWidth}px`
             rsNumLeftEl.style.display = 'block'
             tipHeight = rsNumLeftEl.offsetHeight
-          } else {
-            rsNumLeftEl.style.display = 'none'
           }
         }
         if (rsNumRightEl) {
           if (offsetLeft < 0) {
-            rsNumRightEl.style.display = 'none'
-          } else {
             rsNumRightEl.textContent = `${Math.floor(containerRect.width - targetTableWidth)}px`
             rsNumRightEl.style.display = 'block'
             tipHeight = rsNumRightEl.offsetHeight
+          } else {
+            rsNumRightEl.style.display = 'none'
           }
         }
         const tipTop = evnt.clientY - containerRect.top - tipHeight / 2
@@ -1929,10 +1929,10 @@ export default defineVxeComponent({
                   }, [
                     h('div', {
                       class: 'vxe-gantt--resizable-split-number-left'
-                    }, '10px'),
+                    }),
                     h('div', {
                       class: 'vxe-gantt--resizable-split-number-right'
-                    }, '20px')
+                    })
                   ])
                 ]),
                 h('div', {

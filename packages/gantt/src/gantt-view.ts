@@ -15,6 +15,7 @@ const { globalEvents } = VxeUI
 function createInternalData (): GanttViewInternalData {
   return {
     xeTable: null,
+    visibleColumn: [],
     startMaps: {},
     endMaps: {},
     chartMaps: {},
@@ -29,16 +30,9 @@ function createInternalData (): GanttViewInternalData {
       startIndex: 0,
       endIndex: 0
     },
-    // 存放纵向 Y 虚拟滚动相关信息
-    scrollYStore: {
-      preloadSize: 0,
-      offsetSize: 0,
-      visibleSize: 0,
-      visibleStartIndex: 0,
-      visibleEndIndex: 0,
-      startIndex: 0,
-      endIndex: 0
-    }
+    // 最后滚动位置
+    lastScrollTop: 0,
+    lastScrollLeft: 0
   }
 }
 
@@ -85,6 +79,8 @@ export default defineVxeComponent({
       // 横向滚动条的高度
       scrollbarHeight: 0,
 
+      // 最后滚动时间戳
+      lastScrollTime: 0,
       lazScrollLoading: false,
 
       scrollVMLoading: false,
@@ -136,9 +132,12 @@ export default defineVxeComponent({
       const { treeConfig } = ganttProps
       const { taskScaleList } = ganttReactData
       const { minViewDate, maxViewDate } = reactData
+      const { scrollXStore } = internalData
       const minScale = XEUtils.last(taskScaleList)
       const fullCols: VxeGanttDefines.ViewColumn[] = []
       const groupCols: VxeGanttDefines.GroupColumn[] = []
+      scrollXStore.startIndex = 0
+      scrollXStore.endIndex = 1
       if (minScale && minViewDate && maxViewDate) {
         const minSType = minScale.type
         const weekScale = taskScaleList.find(item => item.type === 'week')
@@ -161,37 +160,37 @@ export default defineVxeComponent({
         const diffDayNum = maxViewDate.getTime() - minViewDate.getTime()
         const countSize = Math.max(5, Math.floor(diffDayNum / gapTime) + 1)
 
-        switch (minScale.type) {
-          case 'day':
-          case 'date':
-            if (diffDayNum > (1000 * 60 * 60 * 24 * 366 * 3)) {
-              reactData.tableColumn = []
-              reactData.headerGroups = []
-              return
-            }
-            break
-          case 'hour':
-            if (diffDayNum > (1000 * 60 * 60 * 24 * 31 * 3)) {
-              reactData.tableColumn = []
-              reactData.headerGroups = []
-              return
-            }
-            break
-          case 'minute':
-            if (diffDayNum > (1000 * 60 * 60 * 24 * 3)) {
-              reactData.tableColumn = []
-              reactData.headerGroups = []
-              return
-            }
-            break
-          case 'second':
-            if (diffDayNum > (1000 * 60 * 60 * 3)) {
-              reactData.tableColumn = []
-              reactData.headerGroups = []
-              return
-            }
-            break
-        }
+        // switch (minScale.type) {
+        //   case 'day':
+        //   case 'date':
+        //     if (diffDayNum > (1000 * 60 * 60 * 24 * 366 * 3)) {
+        //       reactData.tableColumn = []
+        //       reactData.headerGroups = []
+        //       return
+        //     }
+        //     break
+        //   case 'hour':
+        //     if (diffDayNum > (1000 * 60 * 60 * 24 * 31 * 3)) {
+        //       reactData.tableColumn = []
+        //       reactData.headerGroups = []
+        //       return
+        //     }
+        //     break
+        //   case 'minute':
+        //     if (diffDayNum > (1000 * 60 * 60 * 24 * 3)) {
+        //       reactData.tableColumn = []
+        //       reactData.headerGroups = []
+        //       return
+        //     }
+        //     break
+        //   case 'second':
+        //     if (diffDayNum > (1000 * 60 * 60 * 3)) {
+        //       reactData.tableColumn = []
+        //       reactData.headerGroups = []
+        //       return
+        //     }
+        //     break
+        // }
 
         const renderListMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn[]> = {
           year: [],
@@ -379,8 +378,10 @@ export default defineVxeComponent({
           internalData.chartMaps = ctMaps
         }
       }
-      reactData.tableColumn = fullCols
+      internalData.visibleColumn = fullCols
       reactData.headerGroups = groupCols
+      updateScrollXStatus()
+      handleTableColumn()
     }
 
     const handleUpdateData = () => {
@@ -476,8 +477,8 @@ export default defineVxeComponent({
     }
 
     const updateStyle = () => {
-      const { scrollbarWidth, scrollbarHeight, tableColumn, headerGroups } = reactData
-      const { elemStore } = internalData
+      const { scrollbarWidth, scrollbarHeight, headerGroups, tableColumn } = reactData
+      const { elemStore, visibleColumn } = internalData
       const $xeTable = internalData.xeTable
 
       const el = refElem.value
@@ -568,25 +569,28 @@ export default defineVxeComponent({
       }
 
       const colInfoElem = refColInfoElem.value
+      let viewCellWidth = 40
       if (colInfoElem) {
-        reactData.viewCellWidth = colInfoElem.clientWidth || 40
+        viewCellWidth = colInfoElem.clientWidth || 40
       }
-      let viewTableWidth = reactData.viewCellWidth * tableColumn.length
+      let viewTableWidth = viewCellWidth * visibleColumn.length
       if (bodyScrollElem) {
         const viewWidth = bodyScrollElem.clientWidth
         const remainWidth = viewWidth - viewTableWidth
         if (remainWidth > 0) {
-          reactData.viewCellWidth += Math.floor(remainWidth / tableColumn.length)
+          viewCellWidth += Math.floor(remainWidth / visibleColumn.length)
           viewTableWidth = viewWidth
         }
       }
+      reactData.viewCellWidth = viewCellWidth
       const headerTableElem = getRefElem(elemStore['main-header-table'])
       const bodyTableElem = getRefElem(elemStore['main-body-table'])
+      const vmTableWidth = viewCellWidth * tableColumn.length
       if (headerTableElem) {
         headerTableElem.style.width = `${viewTableWidth}px`
       }
       if (bodyTableElem) {
-        bodyTableElem.style.width = `${viewTableWidth}px`
+        bodyTableElem.style.width = `${vmTableWidth}px`
       }
 
       reactData.scrollXWidth = viewTableWidth
@@ -594,16 +598,171 @@ export default defineVxeComponent({
       return updateChart()
     }
 
-    const handleLazyRecalculate = () => {
+    const handleRecalculateStyle = () => {
+      const el = refElem.value
+      internalData.rceRunTime = Date.now()
+      if (!el || !el.clientWidth) {
+        return nextTick()
+      }
       calcScrollbar()
       updateStyle()
       updateChart()
+      return computeScrollLoad()
+    }
+
+    const handleLazyRecalculate = () => {
+      return new Promise<void>(resolve => {
+        const { rceTimeout, rceRunTime } = internalData
+        const $xeTable = internalData.xeTable
+        let refreshDelay = 50
+        if ($xeTable) {
+          const { computeResizeOpts } = $xeTable.getComputeMaps()
+          const resizeOpts = computeResizeOpts.value
+          refreshDelay = resizeOpts.refreshDelay || 50
+        }
+        if (rceTimeout) {
+          clearTimeout(rceTimeout)
+          if (rceRunTime && rceRunTime + (refreshDelay - 5) < Date.now()) {
+            resolve(
+              handleRecalculateStyle()
+            )
+          } else {
+            nextTick(() => {
+              resolve()
+            })
+          }
+        } else {
+          resolve(
+            handleRecalculateStyle()
+          )
+        }
+        internalData.rceTimeout = setTimeout(() => {
+          internalData.rceTimeout = undefined
+          handleRecalculateStyle()
+        }, refreshDelay)
+      })
+    }
+
+    const computeScrollLoad = () => {
+      return nextTick().then(() => {
+        const { scrollXLoad } = reactData
+        const { scrollXStore } = internalData
+        // 计算 X 逻辑
+        if (scrollXLoad) {
+          const { toVisibleIndex: toXVisibleIndex, visibleSize: visibleXSize } = handleVirtualXVisible()
+          const offsetXSize = 2
+          scrollXStore.preloadSize = 1
+          scrollXStore.offsetSize = offsetXSize
+          scrollXStore.visibleSize = visibleXSize
+          scrollXStore.endIndex = Math.max(scrollXStore.startIndex + scrollXStore.visibleSize + offsetXSize, scrollXStore.endIndex)
+          scrollXStore.visibleStartIndex = Math.max(scrollXStore.startIndex, toXVisibleIndex)
+          scrollXStore.visibleEndIndex = Math.min(scrollXStore.endIndex, toXVisibleIndex + visibleXSize)
+          updateScrollXData().then(() => {
+            loadScrollXData()
+          })
+        } else {
+          updateScrollXSpace()
+        }
+      })
+    }
+
+    const handleVirtualXVisible = () => {
+      const { viewCellWidth } = reactData
+      const { elemStore } = internalData
+      const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
+      if (bodyScrollElem) {
+        const clientWidth = bodyScrollElem.clientWidth
+        const scrollLeft = bodyScrollElem.scrollLeft
+        const toVisibleIndex = Math.floor(scrollLeft / viewCellWidth) - 1
+        const visibleSize = Math.ceil(clientWidth / viewCellWidth) + 1
+        return { toVisibleIndex: Math.max(0, toVisibleIndex), visibleSize: Math.max(1, visibleSize) }
+      }
+      return { toVisibleIndex: 0, visibleSize: 6 }
+    }
+
+    const loadScrollXData = () => {
+      const { isScrollXBig } = reactData
+      const { scrollXStore } = internalData
+      const { preloadSize, startIndex, endIndex, offsetSize } = scrollXStore
+      const { toVisibleIndex, visibleSize } = handleVirtualXVisible()
+      const offsetItem = {
+        startIndex: Math.max(0, isScrollXBig ? toVisibleIndex - 1 : toVisibleIndex - 1 - offsetSize - preloadSize),
+        endIndex: isScrollXBig ? toVisibleIndex + visibleSize : toVisibleIndex + visibleSize + offsetSize + preloadSize
+      }
+      scrollXStore.visibleStartIndex = toVisibleIndex - 1
+      scrollXStore.visibleEndIndex = toVisibleIndex + visibleSize + 1
+      const { startIndex: offsetStartIndex, endIndex: offsetEndIndex } = offsetItem
+      if (toVisibleIndex <= startIndex || toVisibleIndex >= endIndex - visibleSize - 1) {
+        if (startIndex !== offsetStartIndex || endIndex !== offsetEndIndex) {
+          scrollXStore.startIndex = offsetStartIndex
+          scrollXStore.endIndex = offsetEndIndex
+          updateScrollXData()
+        }
+      }
+    }
+
+    const updateScrollXData = () => {
+      handleTableColumn()
+      updateScrollXSpace()
       return nextTick()
     }
 
-    // const updateScrollXSpace = () => {
+    const updateScrollXStatus = () => {
+      const scrollXLoad = true
+      reactData.scrollXLoad = scrollXLoad
+      return scrollXLoad
+    }
 
-    // }
+    const handleTableColumn = () => {
+      const { scrollXLoad } = reactData
+      const { visibleColumn, scrollXStore } = internalData
+      const tableColumn = scrollXLoad ? visibleColumn.slice(scrollXStore.startIndex, scrollXStore.endIndex) : visibleColumn.slice(0)
+      reactData.tableColumn = tableColumn
+    }
+
+    const updateScrollXSpace = () => {
+      const { scrollXLoad, scrollXWidth, viewCellWidth } = reactData
+      const { elemStore, scrollXStore } = internalData
+      const bodyTableElem = getRefElem(elemStore['main-body-table'])
+      // const headerTableElem = getRefElem(elemStore['main-header-table'])
+      // const footerTableElem = getRefElem(elemStore['main-footer-table'])
+
+      const { startIndex } = scrollXStore
+      let xSpaceLeft = 0
+      if (scrollXLoad) {
+        xSpaceLeft = Math.max(0, startIndex * viewCellWidth)
+      }
+
+      // if (headerTableElem) {
+      //   headerTableElem.style.transform = `translate(${xSpaceLeft}px, 0px)`
+      // }
+      if (bodyTableElem) {
+        bodyTableElem.style.transform = `translate(${xSpaceLeft}px, ${reactData.scrollYTop || 0}px)`
+      }
+      // if (footerTableElem) {
+      //   footerTableElem.style.transform = `translate(${xSpaceLeft}px, 0px)`
+      // }
+
+      const layoutList = ['header', 'body', 'footer']
+      layoutList.forEach(layout => {
+        const xSpaceElem = getRefElem(elemStore[`main-${layout}-xSpace`])
+        if (xSpaceElem) {
+          xSpaceElem.style.width = scrollXLoad ? `${scrollXWidth}px` : ''
+        }
+      })
+
+      const scrollXSpaceEl = refScrollXSpaceElem.value
+      if (scrollXSpaceEl) {
+        scrollXSpaceEl.style.width = `${scrollXWidth}px`
+      }
+
+      calcScrollbar()
+      return nextTick()
+    }
+
+    const triggerScrollXEvent = () => {
+      loadScrollXData()
+    }
 
     const updateScrollYSpace = () => {
       const { elemStore } = internalData
@@ -687,6 +846,13 @@ export default defineVxeComponent({
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleScrollEvent = (evnt: Event, isRollY: boolean, isRollX: boolean, scrollTop: number, scrollLeft: number) => {
+      if (isRollX) {
+        internalData.lastScrollLeft = scrollLeft
+      }
+      if (isRollY) {
+        internalData.lastScrollTop = scrollTop
+      }
+      reactData.lastScrollTime = Date.now()
       checkLastSyncScroll(isRollX, isRollY)
     }
 
@@ -780,7 +946,8 @@ export default defineVxeComponent({
         }
       },
       triggerBodyScrollEvent (evnt) {
-        const { elemStore, inVirtualScroll, inHeaderScroll, inFooterScroll } = internalData
+        const { scrollXLoad } = reactData
+        const { elemStore, inVirtualScroll, inHeaderScroll, inFooterScroll, lastScrollLeft, lastScrollTop } = internalData
         if (inVirtualScroll) {
           return
         }
@@ -791,36 +958,44 @@ export default defineVxeComponent({
         const headerScrollElem = getRefElem(elemStore['main-header-scroll'])
         const xHandleEl = refScrollXHandleElem.value
         const yHandleEl = refScrollYHandleElem.value
-        if (headerScrollElem && wrapperEl) {
-          const isRollX = true
-          const isRollY = true
-          const currLeftNum = wrapperEl.scrollLeft
-          const currTopNum = wrapperEl.scrollTop
+        const scrollLeft = wrapperEl.scrollLeft
+        const scrollTop = wrapperEl.scrollTop
+        const isRollX = scrollLeft !== lastScrollLeft
+        const isRollY = scrollTop !== lastScrollTop
+        internalData.inBodyScroll = true
+        internalData.scrollRenderType = ''
+        if (isRollY) {
+          setScrollTop(yHandleEl, scrollTop)
+          syncTableScrollTop(scrollTop)
+        }
+        if (isRollX) {
           internalData.inBodyScroll = true
-          setScrollLeft(xHandleEl, currLeftNum)
-          setScrollLeft(headerScrollElem, currLeftNum)
-          setScrollTop(yHandleEl, currTopNum)
-          syncTableScrollTop(currTopNum)
-          handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
+          setScrollLeft(xHandleEl, scrollLeft)
+          setScrollLeft(headerScrollElem, scrollLeft)
+          if (scrollXLoad) {
+            triggerScrollXEvent()
+          }
         }
+        handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, scrollLeft)
       },
-      triggerFooterScrollEvent (evnt) {
-        const { inVirtualScroll, inHeaderScroll, inBodyScroll } = internalData
-        if (inVirtualScroll) {
-          return
-        }
-        if (inHeaderScroll || inBodyScroll) {
-          return
-        }
-        const wrapperEl = evnt.currentTarget as HTMLDivElement
-        if (wrapperEl) {
-          const isRollX = true
-          const isRollY = false
-          const currLeftNum = wrapperEl.scrollLeft
-          handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
-        }
-      },
+      // triggerFooterScrollEvent (evnt) {
+      //   const { inVirtualScroll, inHeaderScroll, inBodyScroll } = internalData
+      //   if (inVirtualScroll) {
+      //     return
+      //   }
+      //   if (inHeaderScroll || inBodyScroll) {
+      //     return
+      //   }
+      //   const wrapperEl = evnt.currentTarget as HTMLDivElement
+      //   if (wrapperEl) {
+      //     const isRollX = true
+      //     const isRollY = false
+      //     const currLeftNum = wrapperEl.scrollLeft
+      //     handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
+      //   }
+      // },
       triggerVirtualScrollXEvent (evnt) {
+        const { scrollXLoad } = reactData
         const { elemStore, inHeaderScroll, inBodyScroll } = internalData
         if (inHeaderScroll || inBodyScroll) {
           return
@@ -835,6 +1010,9 @@ export default defineVxeComponent({
           internalData.inVirtualScroll = true
           setScrollLeft(headerScrollElem, currLeftNum)
           setScrollLeft(bodyScrollElem, currLeftNum)
+          if (scrollXLoad) {
+            triggerScrollXEvent()
+          }
           handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
         }
       },
@@ -856,26 +1034,11 @@ export default defineVxeComponent({
         }
       },
       handleUpdateSXSpace () {
-        const { scrollXLoad, scrollXWidth } = reactData
-        const { elemStore } = internalData
-
-        const layoutList = ['header', 'body', 'footer']
-        layoutList.forEach(layout => {
-          const xSpaceElem = getRefElem(elemStore[`main-${layout}-xSpace`])
-          if (xSpaceElem) {
-            xSpaceElem.style.width = scrollXLoad ? `${scrollXWidth}px` : ''
-          }
-        })
-
-        const scrollXSpaceEl = refScrollXSpaceElem.value
-        if (scrollXSpaceEl) {
-          scrollXSpaceEl.style.width = `${scrollXWidth}px`
-        }
-
-        calcScrollbar()
-        return nextTick()
+        return updateScrollXSpace()
       },
-      handleUpdateSYSpace: updateScrollYSpace,
+      handleUpdateSYSpace () {
+        return updateScrollYSpace()
+      },
       handleUpdateSYStatus (sYLoad) {
         reactData.scrollYLoad = sYLoad
       }

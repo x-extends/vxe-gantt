@@ -77,6 +77,10 @@
     flex-shrink: 0;
     width: var(--vxe-ui-gantt-view-split-bar-width);
     background-color: var(--vxe-ui-gantt-view-split-bar-background-color);
+    &:hover,
+    &:active {
+      background-color: var(--vxe-ui-gantt-view-split-bar-hover-background-color);
+    }
     &.is--resize {
       cursor: col-resize;
     }
@@ -326,7 +330,8 @@
   user-select: none;
   @include baseMixin.createAnimationTransition(all, 0.1s);
   &:hover {
-    background-color: var(--vxe-ui-font-primary-lighten-color);
+    color: #ffffff;
+    background-color: var(--vxe-ui-font-primary-color);
   }
   &:active {
     transform: scale(0.9);
