@@ -76,13 +76,15 @@
   .vxe-gantt--view-split-bar {
     flex-shrink: 0;
     width: var(--vxe-ui-gantt-view-split-bar-width);
+    &.is--resize {
+      cursor: col-resize;
+    }
+  }
+  .vxe-gantt--view-split-bar-handle {
     background-color: var(--vxe-ui-gantt-view-split-bar-background-color);
     &:hover,
     &:active {
       background-color: var(--vxe-ui-gantt-view-split-bar-hover-background-color);
-    }
-    &.is--resize {
-      cursor: col-resize;
     }
   }
   &.show--left {
