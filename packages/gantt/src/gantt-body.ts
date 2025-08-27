@@ -32,6 +32,12 @@ export default defineVxeComponent({
       const resizableOpts = computeResizableOpts.value
       const { isAllRowDrag } = resizableOpts
 
+      const { headerGroups } = reactData
+      const { todayDateMaps } = internalData
+      const { scaleItem } = headerGroups[headerGroups.length - 1] || {}
+      const { field } = column
+      const todayValue = scaleItem ? todayDateMaps[scaleItem.type] : null
+
       const rowRest = fullAllDataRowIdData[rowid] || {}
       const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
       const isRsHeight = resizeHeight > 0
@@ -75,6 +81,7 @@ export default defineVxeComponent({
       return h('td', {
         key: $columnIndex,
         class: ['vxe-gantt-view--body-column', {
+          'is--now': todayValue === field,
           'col--rs-height': isRsHeight
         }],
         style: {

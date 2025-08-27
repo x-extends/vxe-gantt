@@ -19,6 +19,7 @@ function createInternalData (): GanttViewInternalData {
     startMaps: {},
     endMaps: {},
     chartMaps: {},
+    todayDateMaps: {},
     elemStore: {},
     // 存放横向 X 虚拟滚动相关的信息
     scrollXStore: {
@@ -126,6 +127,29 @@ export default defineVxeComponent({
       return XEUtils.toStringDate(dateValue, dateFormat || null)
     }
 
+    const updateTodayData = () => {
+      const ganttReactData = $xeGantt.reactData
+      const { taskScaleList } = ganttReactData
+      const weekScale = taskScaleList.find(item => item.type === 'week')
+      const itemDate = new Date()
+      const [yyyy, MM, dd, HH, mm, ss] = XEUtils.toDateString(itemDate, 'yyyy-M-d-H-m-s').split('-')
+      const e = itemDate.getDay()
+      const E = e + 1
+      const q = Math.ceil((itemDate.getMonth() + 1) / 3)
+      const W = XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)
+      internalData.todayDateMaps = {
+        year: yyyy,
+        quarter: `${yyyy}_q${q}`,
+        month: `${yyyy}_${MM}`,
+        week: `${yyyy}_W${W}`,
+        day: `${yyyy}_${MM}_${dd}_E${E}`,
+        date: `${yyyy}_${MM}_${dd}`,
+        hour: `${yyyy}_${MM}_${dd}_${HH}`,
+        minute: `${yyyy}_${MM}_${dd}_${HH}_${mm}`,
+        second: `${yyyy}_${MM}_${dd}_${HH}_${mm}_${ss}`
+      }
+    }
+
     const handleParseColumn = () => {
       const ganttProps = $xeGantt.props
       const ganttReactData = $xeGantt.reactData
@@ -156,38 +180,6 @@ export default defineVxeComponent({
         const currTime = minViewDate.getTime()
         const diffDayNum = maxViewDate.getTime() - minViewDate.getTime()
         const countSize = Math.max(5, Math.floor(diffDayNum / gapTime) + 1)
-
-        // switch (minScale.type) {
-        //   case 'day':
-        //   case 'date':
-        //     if (diffDayNum > (1000 * 60 * 60 * 24 * 366 * 3)) {
-        //       reactData.tableColumn = []
-        //       reactData.headerGroups = []
-        //       return
-        //     }
-        //     break
-        //   case 'hour':
-        //     if (diffDayNum > (1000 * 60 * 60 * 24 * 31 * 3)) {
-        //       reactData.tableColumn = []
-        //       reactData.headerGroups = []
-        //       return
-        //     }
-        //     break
-        //   case 'minute':
-        //     if (diffDayNum > (1000 * 60 * 60 * 24 * 3)) {
-        //       reactData.tableColumn = []
-        //       reactData.headerGroups = []
-        //       return
-        //     }
-        //     break
-        //   case 'second':
-        //     if (diffDayNum > (1000 * 60 * 60 * 3)) {
-        //       reactData.tableColumn = []
-        //       reactData.headerGroups = []
-        //       return
-        //     }
-        //     break
-        // }
 
         const renderListMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn[]> = {
           year: [],
@@ -387,6 +379,7 @@ export default defineVxeComponent({
       }
       internalData.visibleColumn = fullCols
       reactData.headerGroups = groupCols
+      updateTodayData()
       updateScrollXStatus()
       handleTableColumn()
     }

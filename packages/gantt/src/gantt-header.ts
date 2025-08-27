@@ -1,6 +1,7 @@
 import { h, inject, ref, Ref, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
+import XEUtils from 'xe-utils'
 
 import type { VxeComponentSlotType } from 'vxe-pc-ui'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
@@ -22,7 +23,7 @@ export default defineVxeComponent({
 
     const renderVN = () => {
       const { headerGroups, viewCellWidth } = reactData
-      const { visibleColumn } = internalData
+      const { todayDateMaps, visibleColumn } = internalData
       return h('div', {
         ref: refElem,
         class: 'vxe-gantt-view--header-wrapper'
@@ -49,12 +50,13 @@ export default defineVxeComponent({
               })
             })),
             h('thead', {}, headerGroups.map(({ scaleItem, columns }, $rowIndex) => {
-              const { type, titleMethod, slots } = scaleItem
+              const { type, titleMethod, headerCellStyle, slots } = scaleItem
               const titleSlot = slots ? slots.title : null
+              const todayValue = $rowIndex === headerGroups.length - 1 ? todayDateMaps[type] : null
               return h('tr', {
                 key: $rowIndex
               }, columns.map((column, cIndex) => {
-                const { childCount, dateObj } = column
+                const { field, childCount, dateObj } = column
                 let label = `${column.title}`
                 if ($rowIndex < headerGroups.length - 1) {
                   if (scaleItem.type === 'day') {
@@ -70,11 +72,22 @@ export default defineVxeComponent({
                 } else if (titleMethod) {
                   cellVNs = `${titleMethod(ctParams)}`
                 }
+                let cellStys = {}
+                if (headerCellStyle) {
+                  if (XEUtils.isFunction(headerCellStyle)) {
+                    cellStys = headerCellStyle(ctParams)
+                  } else {
+                    cellStys = headerCellStyle
+                  }
+                }
                 return h('th', {
                   key: cIndex,
-                  class: 'vxe-gantt-view--header-column',
+                  class: ['vxe-gantt-view--header-column', {
+                    'is--now': todayValue && todayValue === field
+                  }],
                   colspan: childCount || null,
-                  title: titleSlot ? null : label
+                  title: titleSlot ? null : label,
+                  style: cellStys
                 }, cellVNs)
               }))
             }))

@@ -1,6 +1,6 @@
 {
   "name": "vxe-gantt",
-  "version": "4.0.8",
+  "version": "4.0.9",
   "description": "A vue based gantt component",
   "scripts": {
     "update": "npm install --legacy-peer-deps",
@@ -21,7 +21,7 @@
   "main": "lib/index.common.js",
   "module": "es/index.esm.js",
   "unpkg": "lib/index.umd.js",
-  "jsdelivr": "lib/index.umd.js",
+  "jsdelivr": "lib/ind89ex.umd.js",
   "style": "lib/style.css",
   "typings": "types/index.d.ts",
   "peerDependencies": {

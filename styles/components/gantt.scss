@@ -590,6 +590,22 @@
   text-align: center;
   font-size: 1em;
   height: var(--vxe-ui-gantt-view-cell-height, var(--vxe-ui-table-row-line-height));
+  &.is--now {
+    color: var(--vxe-ui-font-primary-color);
+  }
+}
+.vxe-gantt-view--body-column {
+  &.is--now {
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1px;
+      height: 100%;
+      background-color: var(--vxe-ui-font-primary-color);
+    }
+  }
 }
 .vxe-gantt-view--header-column,
 .vxe-gantt-view--body-column,
