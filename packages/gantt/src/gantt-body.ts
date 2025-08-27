@@ -28,7 +28,9 @@ export default defineVxeComponent({
     //
     renderColumn (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number, column: VxeGanttPropTypes.Column, $columnIndex: number) {
       const _vm = this
+      const $xeGanttView = _vm.$xeGanttView
       const $xeGantt = _vm.$xeGantt
+      const { reactData, internalData } = $xeGanttView
 
       const tableReactData = $xeTable as unknown as TableReactData
       const { resizeHeightFlag } = tableReactData
@@ -39,6 +41,12 @@ export default defineVxeComponent({
       const defaultRowHeight = $xeTable.computeDefaultRowHeight
       const resizableOpts = $xeTable.computeResizableOpts
       const { isAllRowDrag } = resizableOpts
+
+      const { headerGroups } = reactData
+      const { todayDateMaps } = internalData
+      const { scaleItem } = headerGroups[headerGroups.length - 1] || {}
+      const { field } = column
+      const todayValue = scaleItem ? todayDateMaps[scaleItem.type] : null
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
       const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
@@ -85,6 +93,7 @@ export default defineVxeComponent({
       return h('td', {
         key: $columnIndex,
         class: ['vxe-gantt-view--body-column', {
+          'is--now': todayValue === field,
           'col--rs-height': isRsHeight
         }],
         style: {
