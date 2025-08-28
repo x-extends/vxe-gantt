@@ -48,6 +48,9 @@ setConfig({
         startDay: 1
       }
     },
+    taskViewConfig: {
+      showNowLine: true
+    },
     taskSplitConfig: {
       enabled: true,
       resize: true,

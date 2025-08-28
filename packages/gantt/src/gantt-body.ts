@@ -44,9 +44,11 @@ export default defineVxeComponent({
 
       const { headerGroups } = reactData
       const { todayDateMaps } = internalData
+      const taskViewOpts = $xeGantt.computeTaskViewOpts
+      const { showNowLine } = taskViewOpts
       const { scaleItem } = headerGroups[headerGroups.length - 1] || {}
       const { field } = column
-      const todayValue = scaleItem ? todayDateMaps[scaleItem.type] : null
+      const todayValue = showNowLine && scaleItem ? todayDateMaps[scaleItem.type] : null
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
       const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
@@ -93,7 +95,7 @@ export default defineVxeComponent({
       return h('td', {
         key: $columnIndex,
         class: ['vxe-gantt-view--body-column', {
-          'is--now': todayValue === field,
+          'is--now': showNowLine && todayValue === field,
           'col--rs-height': isRsHeight
         }],
         style: {
