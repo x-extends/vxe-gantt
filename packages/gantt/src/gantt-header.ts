@@ -14,6 +14,7 @@ export default defineVxeComponent({
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
+    const { computeTaskViewOpts } = $xeGantt.getComputeMaps()
     const { reactData, internalData } = $xeGanttView
 
     const refElem = ref() as Ref<HTMLDivElement>
@@ -24,6 +25,8 @@ export default defineVxeComponent({
     const renderVN = () => {
       const { headerGroups, viewCellWidth } = reactData
       const { todayDateMaps, visibleColumn } = internalData
+      const taskViewOpts = computeTaskViewOpts.value
+      const { showNowLine } = taskViewOpts
       return h('div', {
         ref: refElem,
         class: 'vxe-gantt-view--header-wrapper'
@@ -52,7 +55,7 @@ export default defineVxeComponent({
             h('thead', {}, headerGroups.map(({ scaleItem, columns }, $rowIndex) => {
               const { type, titleMethod, headerCellStyle, slots } = scaleItem
               const titleSlot = slots ? slots.title : null
-              const todayValue = $rowIndex === headerGroups.length - 1 ? todayDateMaps[type] : null
+              const todayValue = showNowLine && $rowIndex === headerGroups.length - 1 ? todayDateMaps[type] : null
               return h('tr', {
                 key: $rowIndex
               }, columns.map((column, cIndex) => {
@@ -83,7 +86,7 @@ export default defineVxeComponent({
                 return h('th', {
                   key: cIndex,
                   class: ['vxe-gantt-view--header-column', {
-                    'is--now': todayValue && todayValue === field
+                    'is--now': showNowLine && todayValue && todayValue === field
                   }],
                   colspan: childCount || null,
                   title: titleSlot ? null : label,
