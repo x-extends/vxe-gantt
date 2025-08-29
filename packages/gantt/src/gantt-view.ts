@@ -1169,7 +1169,10 @@ export default defineVxeComponent({
               ref: 'refScrollXSpaceElem',
               class: 'vxe-gantt-view--scroll-x-space'
             })
-          ])
+          ]),
+          h('div', {
+            class: 'vxe-gantt-view--scroll-x-handle-appearance'
+          })
         ]),
         h('div', {
           ref: 'refScrollXRightCornerElem',
@@ -1203,7 +1206,10 @@ export default defineVxeComponent({
               ref: 'refScrollYSpaceElem',
               class: 'vxe-gantt-view--scroll-y-space'
             })
-          ])
+          ]),
+          h('div', {
+            class: 'vxe-gantt-view--scroll-y-handle-appearance'
+          })
         ]),
         h('div', {
           ref: 'refScrollYBottomCornerElem',
