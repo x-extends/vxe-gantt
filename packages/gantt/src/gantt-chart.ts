@@ -40,9 +40,10 @@ export default defineVxeComponent({
       const titleField = computeTitleField.value
       const progressField = computeProgressField.value
       const taskBarOpts = computeTaskBarOpts.value
+      const barParams = { $gantt: $xeGantt, row }
       const { showProgress, showContent, contentMethod, barStyle } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
-      const barStyObj = (barStyle ? (isBarRowStyle ? barStyle({ row, $gantt: $xeGantt }) : barStyle) : {}) || {}
+      const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
       const { round } = barStyObj
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
@@ -70,6 +71,7 @@ export default defineVxeComponent({
       if (contentMethod) {
         title = getStringValue(contentMethod({ row, title }))
       }
+
       return h('div', {
         key: treeConfig ? rowid : $rowIndex,
         rowid,
@@ -85,14 +87,19 @@ export default defineVxeComponent({
           class: taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar',
           style: vbStyle,
           rowid,
-          onClick (evnt) {
-            $xeGantt.handleTaskBarClickEvent(evnt, { row })
+          onClick (evnt: MouseEvent) {
+            $xeGantt.handleTaskBarClickEvent(evnt, barParams)
           },
-          onDblclick (evnt) {
-            $xeGantt.handleTaskBarDblclickEvent(evnt, { row })
+          onDblclick (evnt: MouseEvent) {
+            $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
+          },
+          onMousedown (evnt: MouseEvent) {
+            if ($xeGantt.handleTaskBarMousedownEvent) {
+              $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
+            }
           }
         }, taskBarSlot
-          ? $xeGantt.callSlot(taskBarSlot, { row })
+          ? $xeGantt.callSlot(taskBarSlot, barParams)
           : [
               showProgress
                 ? h('div', {

@@ -48,6 +48,7 @@ function getViewTypeLevel (type: VxeGanttDefines.ColumnScaleType) {
 
 export default defineVxeComponent({
   name: 'VxeGantt',
+  mixins: [],
   props: {
     ...(tableProps as {
       border: PropType<VxeTablePropTypes.Border>
@@ -82,6 +83,8 @@ export default defineVxeComponent({
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
+    taskResizeConfig: Object as PropType<VxeGanttPropTypes.TaskResizeConfig>,
+    taskDragConfig: Object as PropType<VxeGanttPropTypes.TaskDragConfig>,
     size: {
       type: String as PropType<VxeGridPropTypes.Size>,
       default: () => getConfig().gantt.size || getConfig().size
@@ -1743,6 +1746,9 @@ export default defineVxeComponent({
       const loadingSlot = slots.loading
       const rowDragIconSlot = slots.rowDragIcon || slots['row-drag-icon']
       const columnDragIconSlot = slots.columnDragIcon || slots['column-drag-icon']
+      const headerTooltipSlot = slots.headerTooltip || slots['header-tooltip']
+      const tooltipSlot = slots.tooltip
+      const footerTooltipSlot = slots.footerTooltip || slots['footer-tooltip']
       if (proxyConfig && isEnableConf(proxyOpts)) {
         if (proxyOpts.sort) {
           tableOns.onSortChange = sortChangeEvent
@@ -1758,6 +1764,9 @@ export default defineVxeComponent({
         loading?(params: any): any
         rowDragIcon?(params: any): any
         columnDragIcon?(params: any): any
+        headerTooltip?(params: any): any
+        tooltip?(params: any): any
+        footerTooltip?(params: any): any
       } = {}
       if (emptySlot) {
         slotObj.empty = emptySlot
@@ -1770,6 +1779,15 @@ export default defineVxeComponent({
       }
       if (columnDragIconSlot) {
         slotObj.columnDragIcon = columnDragIconSlot
+      }
+      if (headerTooltipSlot) {
+        slotObj.headerTooltip = headerTooltipSlot
+      }
+      if (tooltipSlot) {
+        slotObj.tooltip = tooltipSlot
+      }
+      if (footerTooltipSlot) {
+        slotObj.footerTooltip = footerTooltipSlot
       }
       return h('div', {
         ref: refTableWrapper,
