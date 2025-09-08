@@ -119,6 +119,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
+    taskResizeConfig: Object as PropType<VxeGanttPropTypes.TaskResizeConfig>,
+    taskDragConfig: Object as PropType<VxeGanttPropTypes.TaskDragConfig>,
     size: {
       type: String as PropType<VxeGridPropTypes.Size>,
       default: () => getConfig().gantt.size || getConfig().size
