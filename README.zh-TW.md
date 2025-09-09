@@ -14,7 +14,7 @@
 [![pull requests closed](https://img.shields.io/github/issues-pr-closed/x-extends/vxe-gantt.svg)](https://github.com/x-extends/vxe-gantt/pulls?q=is%3Apr+is%3Aclosed)
 [![npm license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
 
-一个基于 [Vxe UI](https://github.com/x-extends/vxe-pc-ui) 的基于 PC 端甘特图组件  
+一個基於 [Vxe UI](https://github.com/x-extends/vxe-pc-ui) 的企業級甘特圖組件  
 
 ## 浏览器支持
 

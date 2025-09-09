@@ -14,7 +14,7 @@
 [![pull requests closed](https://img.shields.io/github/issues-pr-closed/x-extends/vxe-gantt.svg)](https://github.com/x-extends/vxe-gantt/pulls?q=is%3Apr+is%3Aclosed)
 [![npm license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
 
-A PC-based Gantt chart component based on [Vxe UI](https://github.com/x-extends/  vxe-pc-ui).
+An enterprise-level Gantt chart component based on [Vxe UI](https://github.com/x-extends/vxe-pc-ui).
 
 ## Browser Support
 
