@@ -589,7 +589,7 @@ export default defineVxeComponent({
         const viewWidth = bodyScrollElem.clientWidth
         const remainWidth = viewWidth - viewTableWidth
         if (remainWidth > 0) {
-          viewCellWidth += Math.floor(remainWidth / visibleColumn.length)
+          viewCellWidth += remainWidth / visibleColumn.length
           viewTableWidth = viewWidth
         }
       }
