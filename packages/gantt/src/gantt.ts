@@ -134,6 +134,8 @@ export default defineVxeComponent({
     const refClassifyWrapperElem = ref<HTMLDivElement>()
     const refGanttView = ref<VxeGanttViewInstance>()
 
+    const refPopupContainerElem = ref<HTMLDivElement>()
+
     const refFormWrapper = ref<HTMLDivElement>()
     const refToolbarWrapper = ref<HTMLDivElement>()
     const refTopWrapper = ref<HTMLDivElement>()
@@ -422,7 +424,8 @@ export default defineVxeComponent({
       refToolbar,
       refPager,
       refGanttContainerElem,
-      refClassifyWrapperElem
+      refClassifyWrapperElem,
+      refPopupContainerElem
     }
 
     const computeMaps: VxeGanttPrivateComputed = {
@@ -2001,7 +2004,10 @@ export default defineVxeComponent({
         ]),
         h('div', {
           class: 'vxe-gantt--layout-footer-wrapper'
-        }, renderChildLayout(footKeys))
+        }, renderChildLayout(footKeys)),
+        h('div', {
+          ref: refPopupContainerElem
+        })
       ]
     }
 
