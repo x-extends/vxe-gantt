@@ -2171,7 +2171,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
         ]),
         h('div', {
           class: 'vxe-gantt--layout-footer-wrapper'
-        }, $xeGantt.renderChildLayout(h, footKeys))
+        }, $xeGantt.renderChildLayout(h, footKeys)),
+        h('div', {
+          ref: 'refPopupContainerElem'
+        })
       ]
     },
     renderVN (h: CreateElement): VNode {
