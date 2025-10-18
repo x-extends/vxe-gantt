@@ -1546,6 +1546,50 @@ export default defineVxeComponent({
       },
       handleTaskBarDblclickEvent (evnt, params) {
         $xeGantt.dispatchEvent('task-bar-dblclick', params, evnt)
+      },
+      handleTaskHeaderContextmenuEvent (evnt, params) {
+        const $xeTable = refTable.value
+        if ($xeTable) {
+          const tableProps = $xeTable.props
+          const { menuConfig } = tableProps
+          if (isEnableConf(menuConfig)) {
+            evnt.stopPropagation()
+            $xeTable.handleOpenMenuEvent(evnt, 'header', params)
+          }
+        }
+      },
+      handleTaskBodyContextmenuEvent (evnt, params) {
+        const $xeTable = refTable.value
+        if ($xeTable) {
+          const tableProps = $xeTable.props
+          const { menuConfig } = tableProps
+          if (isEnableConf(menuConfig)) {
+            evnt.stopPropagation()
+            $xeTable.handleOpenMenuEvent(evnt, 'body', params)
+          }
+        }
+      },
+      handleTaskFooterContextmenuEvent (evnt, params) {
+        const $xeTable = refTable.value
+        if ($xeTable) {
+          const tableProps = $xeTable.props
+          const { menuConfig } = tableProps
+          if (isEnableConf(menuConfig)) {
+            evnt.stopPropagation()
+            $xeTable.handleOpenMenuEvent(evnt, 'footer', params)
+          }
+        }
+      },
+      handleTaskBarContextmenuEvent (evnt, params) {
+        const $xeTable = refTable.value
+        if ($xeTable) {
+          const tableProps = $xeTable.props
+          const { menuConfig } = tableProps
+          if (isEnableConf(menuConfig)) {
+            evnt.stopPropagation()
+            $xeTable.handleOpenMenuEvent(evnt, 'body', params)
+          }
+        }
       }
     }
 

@@ -4,7 +4,10 @@ import { getCellRestHeight } from './util'
 import GanttViewChartComponent from './gantt-chart'
 
 import type { VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods, VxeTableDefines } from 'vxe-table'
-import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods, VxeGanttPropTypes } from '../../../types'
+import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods, VxeGanttDefines } from '../../../types'
+
+const sourceType = 'gantt'
+const viewType = 'body'
 
 export default defineVxeComponent({
   name: 'VxeGanttViewBody',
@@ -21,7 +24,7 @@ export default defineVxeComponent({
     const refBodyXSpace = ref() as Ref<HTMLDivElement>
     const refBodyYSpace = ref() as Ref<HTMLDivElement>
 
-    const renderColumn = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number, column: VxeGanttPropTypes.Column, $columnIndex: number) => {
+    const renderColumn = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number, column: VxeGanttDefines.ViewColumn, $columnIndex: number) => {
       const tableReactData = $xeTable.reactData
       const { resizeHeightFlag } = tableReactData
       const tableInternalData = $xeTable.internalData
@@ -63,7 +66,7 @@ export default defineVxeComponent({
           $columnIndex: 0,
           _columnIndex: 0,
           fixed: '',
-          type: '',
+          type: viewType,
           isHidden: false,
           isEdit: false,
           level: -1,
@@ -81,6 +84,7 @@ export default defineVxeComponent({
           })
         )
       }
+      const ctParams = { source: sourceType, type: viewType, row, column, $rowIndex, rowIndex, _rowIndex }
       return h('td', {
         key: $columnIndex,
         class: ['vxe-gantt-view--body-column', {
@@ -95,6 +99,9 @@ export default defineVxeComponent({
         },
         onDblclick (evnt) {
           $xeGantt.handleTaskCellDblclickEvent(evnt, { row, column })
+        },
+        onContextmenu (evnt) {
+          $xeGantt.handleTaskBodyContextmenuEvent(evnt, ctParams)
         }
       }, tdVNs)
     }
@@ -186,7 +193,10 @@ export default defineVxeComponent({
         h('div', {
           ref: refBodyScroll,
           class: 'vxe-gantt-view--body-inner-wrapper',
-          onScroll: $xeGanttView.triggerBodyScrollEvent
+          onScroll: $xeGanttView.triggerBodyScrollEvent,
+          onContextmenu (evnt) {
+            $xeGantt.handleTaskBodyContextmenuEvent(evnt, { source: sourceType, type: viewType, rowIndex: -1, $rowIndex: -1, _rowIndex: -1 })
+          }
         }, [
           h('div', {
             ref: refBodyXSpace,
