@@ -11,6 +11,9 @@ import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConst
 
 const { renderEmptyElement } = VxeUI
 
+const sourceType = 'gantt'
+const viewType = 'chart'
+
 export default defineVxeComponent({
   name: 'VxeGanttViewChart',
   inject: {
@@ -35,7 +38,7 @@ export default defineVxeComponent({
     //
     // Render
     //
-    renderTaskBar (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, $rowIndex: number) {
+    renderTaskBar (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number) {
       const _vm = this
       const $xeGantt = _vm.$xeGantt
 
@@ -87,6 +90,7 @@ export default defineVxeComponent({
         title = getStringValue(contentMethod({ row, title }))
       }
 
+      const ctParams = { source: sourceType, type: viewType, row, $rowIndex, rowIndex, _rowIndex }
       return h('div', {
         key: treeConfig ? rowid : $rowIndex,
         attrs: {
@@ -98,6 +102,11 @@ export default defineVxeComponent({
         }],
         style: {
           height: `${cellHeight}px`
+        },
+        on: {
+          contextmenu (evnt: Event) {
+            $xeGantt.handleTaskBarContextmenuEvent(evnt, ctParams)
+          }
         }
       }, [
         h('div', {
@@ -146,7 +155,7 @@ export default defineVxeComponent({
       const tableReactData = $xeTable as unknown as TableReactData
       const { treeExpandedFlag } = tableReactData
       const tableInternalData = $xeTable as unknown as TableInternalData
-      const { treeExpandedMaps } = tableInternalData
+      const { fullAllDataRowIdData, treeExpandedMaps } = tableInternalData
       const treeOpts = $xeTable.computeTreeOpts
       const { transform } = treeOpts
       const childrenField = treeOpts.children || treeOpts.childrenField
@@ -156,7 +165,14 @@ export default defineVxeComponent({
       const trVNs: VNode[] = []
       tableData.forEach((row, $rowIndex) => {
         const rowid = $xeTable ? $xeTable.getRowid(row) : ''
-        trVNs.push(_vm.renderTaskBar(h, $xeTable, row, rowid, $rowIndex))
+        const rowRest = fullAllDataRowIdData[rowid] || {}
+        let rowIndex = $rowIndex
+        let _rowIndex = -1
+        if (rowRest) {
+          rowIndex = rowRest.index
+          _rowIndex = rowRest._index
+        }
+        trVNs.push(_vm.renderTaskBar(h, $xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex))
         let isExpandTree = false
         let rowChildren: any[] = []
 

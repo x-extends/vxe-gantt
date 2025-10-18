@@ -1683,6 +1683,58 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       $xeGantt.dispatchEvent('task-bar-dblclick', params, evnt)
     },
+    handleTaskHeaderContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskHeaderContextmenuParams) {
+      const $xeGantt = this
+      const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
+
+      if ($xeTable) {
+        const tableProps = $xeTable
+        const { menuConfig } = tableProps
+        if (isEnableConf(menuConfig)) {
+          evnt.stopPropagation()
+          $xeTable.handleOpenMenuEvent(evnt, 'header', params)
+        }
+      }
+    },
+    handleTaskBodyContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskBodyContextmenuParams) {
+      const $xeGantt = this
+      const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
+
+      if ($xeTable) {
+        const tableProps = $xeTable
+        const { menuConfig } = tableProps
+        if (isEnableConf(menuConfig)) {
+          evnt.stopPropagation()
+          $xeTable.handleOpenMenuEvent(evnt, 'body', params)
+        }
+      }
+    },
+    handleTaskFooterContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskFooterContextmenuParams) {
+      const $xeGantt = this
+      const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
+
+      if ($xeTable) {
+        const tableProps = $xeTable
+        const { menuConfig } = tableProps
+        if (isEnableConf(menuConfig)) {
+          evnt.stopPropagation()
+          $xeTable.handleOpenMenuEvent(evnt, 'footer', params)
+        }
+      }
+    },
+    handleTaskBarContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskBarContextmenuParams) {
+      const $xeGantt = this
+      const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
+
+      if ($xeTable) {
+        const tableProps = $xeTable
+        const { menuConfig } = tableProps
+        if (isEnableConf(menuConfig)) {
+          evnt.stopPropagation()
+          $xeTable.handleOpenMenuEvent(evnt, 'body', params)
+        }
+      }
+    },
     loadColumn (columns: any[]) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots

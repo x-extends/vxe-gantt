@@ -8,6 +8,9 @@ import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConst
 
 const { getI18n } = VxeUI
 
+const sourceType = 'gantt'
+const viewType = 'header'
+
 export default defineVxeComponent({
   name: 'VxeGanttViewHeader',
   inject: {
@@ -83,7 +86,7 @@ export default defineVxeComponent({
                   }
                 }
                 let cellVNs: string | VxeComponentSlotType[] = label
-                const ctParams = { scaleObj: scaleItem, title: label, dateObj: dateObj, $rowIndex }
+                const ctParams = { source: sourceType, type: viewType, column, scaleObj: scaleItem, title: label, dateObj: dateObj, $rowIndex }
                 if (titleSlot) {
                   cellVNs = $xeGantt.callSlot(titleSlot, ctParams, h)
                 } else if (titleMethod) {
@@ -106,7 +109,12 @@ export default defineVxeComponent({
                     colspan: childCount || null,
                     title: titleSlot ? null : label
                   },
-                  style: cellStys
+                  style: cellStys,
+                  on: {
+                    contextmenu (evnt: Event) {
+                      $xeGantt.handleTaskHeaderContextmenuEvent(evnt, ctParams)
+                    }
+                  }
                 }, cellVNs)
               }))
             }))

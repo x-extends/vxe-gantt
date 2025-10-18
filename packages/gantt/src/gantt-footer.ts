@@ -3,6 +3,9 @@ import { defineVxeComponent } from '../../ui/src/comp'
 
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
+const sourceType = 'gantt'
+const viewType = 'footer'
+
 export default defineVxeComponent({
   name: 'VxeGanttViewHeader',
   inject: {
@@ -25,13 +28,21 @@ export default defineVxeComponent({
     // Render
     //
     renderVN (h: CreateElement) {
+      const _vm = this
+      const $xeGantt = _vm.$xeGantt
+
       return h('div', {
         ref: 'refElem',
         class: 'vxe-gantt-view--footer-wrapper'
       }, [
         h('div', {
           ref: 'refHeaderScroll',
-          class: 'vxe-gantt-view--footer-inner-wrapper'
+          class: 'vxe-gantt-view--footer-inner-wrapper',
+          on: {
+            contextmenu (evnt: Event) {
+              $xeGantt.handleTaskFooterContextmenuEvent(evnt, { source: sourceType, type: viewType, $rowIndex: -1 })
+            }
+          }
         }, [])
       ])
     }
