@@ -75,6 +75,7 @@ export default defineVxeComponent({
           $columnIndex: 0,
           _columnIndex: 0,
           fixed: '',
+          source: sourceType,
           type: viewType,
           isHidden: false,
           isEdit: false,

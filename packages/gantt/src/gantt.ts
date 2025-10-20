@@ -1459,6 +1459,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
         $pager.endPageByEvent(evnt)
       }
     },
+    getCurrentPage () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      const { tablePage } = reactData
+      return tablePage.currentPage
+    },
     setCurrentPage (currentPage: number | string | null | undefined) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
@@ -1475,6 +1482,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if ($pager) {
         $pager.setCurrentPageByEvent(evnt, currentPage)
       }
+    },
+    getPageSize () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      const { tablePage } = reactData
+      return tablePage.pageSize
     },
     setPageSize (pageSize: number | string | null | undefined) {
       const $xeGantt = this
