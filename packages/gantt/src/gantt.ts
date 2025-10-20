@@ -1360,6 +1360,10 @@ export default defineVxeComponent({
           $pager.endPageByEvent(evnt)
         }
       },
+      getCurrentPage () {
+        const { tablePage } = reactData
+        return tablePage.currentPage
+      },
       setCurrentPage (currentPage) {
         const { tablePage } = reactData
         const pageCount = computePageCount.value
@@ -1371,6 +1375,10 @@ export default defineVxeComponent({
         if ($pager) {
           $pager.setCurrentPageByEvent(evnt, currentPage)
         }
+      },
+      getPageSize () {
+        const { tablePage } = reactData
+        return tablePage.pageSize
       },
       setPageSize (pageSize) {
         const { tablePage } = reactData
