@@ -6,7 +6,7 @@ import i18n from './i18n'
 import './styles/index.scss'
 
 // 引入组件库
-import VxeUIAll, { VxeUI } from 'vxe-pc-ui'
+import VxeUIBase, { VxeUI } from 'vxe-pc-ui'
 import 'vxe-pc-ui/lib/style.css'
 
 import VxeUITable from 'vxe-table'
@@ -38,7 +38,7 @@ VxeUI.setConfig({
 
 window.axios.defaults.baseURL = process.env.VUE_APP_SERVE_API_URL
 
-Vue.use(VxeUIAll)
+Vue.use(VxeUIBase)
 Vue.use(VxeUITable)
 Vue.use(VxeUIGantt)
 

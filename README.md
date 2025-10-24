@@ -27,7 +27,7 @@ npm install vxe-pc-ui@3 vxe-table@3 vxe-gantt@3
 ```javascript
 import Vue from 'vue'
 // ...
-import VxeUIAll from 'vxe-pc-ui'
+import VxeUIBase from 'vxe-pc-ui'
 import 'vxe-pc-ui/es/style.css'
 
 import VxeUITable from 'vxe-table'
@@ -37,7 +37,7 @@ import VxeUIGantt from 'vxe-gantt'
 import 'vxe-gantt/lib/style.css'
 // ...
 
-Vue.use(VxeUIAll)
+Vue.use(VxeUIBase)
 Vue.use(VxeUITable)
 Vue.use(VxeUIGantt)
 ```
