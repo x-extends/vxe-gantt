@@ -493,7 +493,7 @@ export default defineVxeComponent({
       const $xeTable = internalData.xeTable
 
       const el = refElem.value
-      if (!el || !el.clientHeight) {
+      if (!el) {
         return
       }
 
