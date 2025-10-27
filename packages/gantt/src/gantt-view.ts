@@ -434,7 +434,7 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   const $xeTable = internalData.xeTable
 
   const el = $xeGanttView.$refs.refElem as HTMLDivElement
-  if (!el || !el.clientHeight) {
+  if (!el) {
     return
   }
 
