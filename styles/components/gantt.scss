@@ -305,7 +305,6 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  font-size: 0.5em;
   height: var(--vxe-ui-gantt-view-split-bar-height);
   width: var(--vxe-ui-gantt-view-split-bar-width);
   color: var(--vxe-ui-layout-background-color);
@@ -322,6 +321,9 @@
   }
   &:active {
     transform: scale(0.9);
+  }
+  i {
+    font-size: 0.5em;
   }
 }
 .vxe-gantt--resizable-split-tip {
