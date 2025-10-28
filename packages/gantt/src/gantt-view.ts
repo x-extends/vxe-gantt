@@ -967,9 +967,8 @@ export default defineVxeComponent({
       if ($xeTable && el) {
         if (row) {
           const tableProps = $xeTable
-          const { highlightCurrentRow } = tableProps
           const rowOpts = $xeTable.computeRowOpts
-          if (rowOpts.isCurrent || highlightCurrentRow) {
+          if (rowOpts.isCurrent || tableProps.highlightCurrentRow) {
             XEUtils.arrayEach(el.querySelectorAll(`[rowid="${$xeTable.getRowid(row)}"]`), elem => addClass(elem, 'row--current'))
           }
         } else {
