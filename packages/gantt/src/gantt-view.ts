@@ -913,10 +913,9 @@ export default defineVxeComponent({
         if ($xeTable && el) {
           if (row) {
             const tableProps = $xeTable.props
-            const { highlightCurrentRow } = tableProps
             const { computeRowOpts } = $xeTable.getComputeMaps()
             const rowOpts = computeRowOpts.value
-            if (rowOpts.isCurrent || highlightCurrentRow) {
+            if (rowOpts.isCurrent || tableProps.highlightCurrentRow) {
               XEUtils.arrayEach(el.querySelectorAll(`.vxe-gantt-view--body-row[rowid="${$xeTable.getRowid(row)}"]`), elem => addClass(elem, 'row--current'))
             }
           } else {
