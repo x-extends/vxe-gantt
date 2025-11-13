@@ -37,7 +37,7 @@ Get on [unpkg](https://unpkg.com/vxe-gantt/) and [cdnjs](https://cdn.jsdelivr.ne
 
 ```javascript
 // ...
-import VxeUIAll from 'vxe-pc-ui'
+import VxeUIBase from 'vxe-pc-ui'
 import 'vxe-pc-ui/lib/style.css'
 
 import VxeUITable from 'vxe-table'
@@ -47,7 +47,7 @@ import VxeUIGantt from 'vxe-gantt'
 import 'vxe-gantt/lib/style.css'
 // ...
 
-createApp(App).use(VxeUIAll).use(VxeUITable).use(VxeUIGantt).mount('#app')
+createApp(App).use(VxeUIBase).use(VxeUITable).use(VxeUIGantt).mount('#app')
 ```
 
 ## 運行項目
