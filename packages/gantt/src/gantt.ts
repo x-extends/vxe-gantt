@@ -13,7 +13,7 @@ import { VxeTable as VxeTableComponent } from 'vxe-table'
 
 import type { VxeGanttConstructor, VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, GanttMethods, GanttPrivateMethods, VxeGanttPrivateMethods, GanttPrivateRef, VxeGanttProps, VxeGanttPrivateComputed, VxeGanttViewInstance, VxeGanttDefines } from '../../../types'
 import type { ValueOf, VxeFormEvents, VxeFormInstance, VxePagerEvents, VxeFormItemProps, VxePagerInstance, VxeComponentStyleType } from 'vxe-pc-ui'
-import type { VxeTableMethods, VxeToolbarPropTypes, VxeTableProps, VxeTablePropTypes, VxeTableConstructor, VxeTablePrivateMethods, VxeTableEvents, VxeTableDefines, VxeTableEventProps, VxeToolbarInstance, VxeGridPropTypes } from 'vxe-table'
+import type { VxeTableMethods, VxeToolbarPropTypes, VxeTableProps, VxeTablePropTypes, VxeTableConstructor, VxeTablePrivateMethods, VxeTableEvents, VxeTableDefines, VxeTableEventProps, VxeToolbarInstance, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
 
 const { getConfig, getIcon, getI18n, commands, hooks, useFns, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement } = VxeUI
 
@@ -26,6 +26,7 @@ const defaultLayouts: VxeGanttPropTypes.Layouts = [['Form'], ['Toolbar', 'Top', 
 
 function createInternalData (): GanttInternalData {
   return {
+    uFoot: false,
     resizeTableWidth: 0
   }
 }
@@ -67,6 +68,7 @@ export default defineVxeComponent({
       editRules: PropType<VxeTablePropTypes.EditRules>
       animat: PropType<VxeTablePropTypes.Animat>
       scrollbarConfig: PropType<VxeTablePropTypes.ScrollbarConfig>
+      showFooter: PropType<VxeTablePropTypes.ShowFooter>
       params: PropType<VxeTablePropTypes.Params>
     }),
 
@@ -112,6 +114,7 @@ export default defineVxeComponent({
       filterData: [],
       formData: {},
       sortData: [],
+      footerData: [],
       tZindex: 0,
       tablePage: {
         total: 0,
@@ -298,15 +301,18 @@ export default defineVxeComponent({
 
     const computeTableExtendProps = computed(() => {
       const rest: Record<string, any> = {}
+      const ganttProps: any = props
       tableComponentPropKeys.forEach((key) => {
-        rest[key] = (props as any)[key]
+        if (ganttProps[key] !== undefined) {
+          rest[key] = ganttProps[key]
+        }
       })
       return rest
     })
 
     const computeTableProps = computed(() => {
-      const { seqConfig, pagerConfig, editConfig, proxyConfig } = props
-      const { isZMax, tablePage } = reactData
+      const { showFooter, seqConfig, pagerConfig, editConfig, proxyConfig } = props
+      const { isZMax, tablePage, footerData } = reactData
       const taskViewOpts = computeTaskViewOpts.value
       const { tableStyle } = taskViewOpts
       const tableExtendProps = computeTableExtendProps.value
@@ -325,8 +331,15 @@ export default defineVxeComponent({
           tProps.border = border
         }
       }
+      if (showFooter && !tProps.footerData) {
+        // 如果未设置自己的标位数据，则使用代理的
+        tProps.footerData = footerData
+      } else if (proxyOpts.footer && footerData.length) {
+        // 如果代理标为数据，且未请求到数据，则用自己的
+        tProps.footerData = footerData
+      }
       if (isZMax) {
-        if (tableExtendProps.maxHeight) {
+        if (tProps.maxHeight) {
           tProps.maxHeight = '100%'
         } else {
           tProps.height = '100%'
@@ -659,9 +672,12 @@ export default defineVxeComponent({
         reactData.filterData = params.filterList
         if (proxyConfig && isEnableConf(proxyOpts)) {
           reactData.tablePage.currentPage = 1
+          internalData.uFoot = true
           $xeGantt.commitProxy('query').then((rest) => {
             $xeGantt.dispatchEvent('proxy-query', rest, params.$event)
           })
+          internalData.uFoot = false
+          updateQueryFooter()
         }
       }
     }
@@ -683,9 +699,12 @@ export default defineVxeComponent({
         return
       }
       if (proxyConfig && isEnableConf(proxyOpts)) {
+        internalData.uFoot = true
         $xeGantt.commitProxy('reload').then((rest) => {
           $xeGantt.dispatchEvent('proxy-query', { ...rest, isReload: true }, params.$event)
         })
+        internalData.uFoot = false
+        updateQueryFooter()
       }
       $xeGantt.dispatchEvent('form-submit', params, params.$event)
     }
@@ -699,9 +718,12 @@ export default defineVxeComponent({
         if ($xeTable) {
           $xeTable.clearScroll()
         }
+        internalData.uFoot = true
         $xeGantt.commitProxy('reload').then((rest) => {
           $xeGantt.dispatchEvent('proxy-query', { ...rest, isReload: true }, $event)
         })
+        internalData.uFoot = false
+        updateQueryFooter()
       }
       $xeGantt.dispatchEvent('form-reset', params, $event)
     }
@@ -865,11 +887,15 @@ export default defineVxeComponent({
           if (field) {
             let itemValue: any = null
             if (itemRender) {
-              const { defaultValue } = itemRender
+              const { startField, endField, defaultValue } = itemRender
               if (XEUtils.isFunction(defaultValue)) {
                 itemValue = defaultValue({ item })
               } else if (!XEUtils.isUndefined(defaultValue)) {
                 itemValue = defaultValue
+              }
+              if (startField && endField) {
+                XEUtils.set(fData, startField, null)
+                XEUtils.set(fData, endField, null)
               }
             }
             fData[field] = itemValue
@@ -892,11 +918,25 @@ export default defineVxeComponent({
         if (!proxyInited) {
           reactData.proxyInited = true
           if (proxyOpts.autoLoad !== false) {
-            nextTick().then(() => $xeGantt.commitProxy('initial')).then((rest) => {
+            nextTick().then(() => {
+              internalData.uFoot = true
+              const rest = $xeGantt.commitProxy('initial')
+              internalData.uFoot = false
+              updateQueryFooter()
+              return rest
+            }).then((rest) => {
               dispatchEvent('proxy-query', { ...rest, isInited: true }, new Event('initial'))
             })
           }
         }
+      }
+    }
+
+    const updateQueryFooter = () => {
+      const proxyOpts = computeProxyOpts.value
+      const { ajax } = proxyOpts
+      if (ajax && ajax.queryFooter) {
+        return $xeGantt.commitProxy('queryFooter')
       }
     }
 
@@ -922,15 +962,15 @@ export default defineVxeComponent({
        * @param {String/Object} code 字符串或对象
        */
       commitProxy (proxyTarget: string | VxeToolbarPropTypes.ButtonConfig, ...args: any[]) {
-        const { proxyConfig, toolbarConfig, pagerConfig, editRules, validConfig } = props
+        const { showFooter, proxyConfig, toolbarConfig, pagerConfig, editRules, validConfig } = props
         const { tablePage } = reactData
         const isActiveMsg = computeIsActiveMsg.value
         const isRespMsg = computeIsRespMsg.value
         const proxyOpts = computeProxyOpts.value
         const pagerOpts = computePagerOpts.value
         const toolbarOpts = computeToolbarOpts.value
-        const { beforeQuery, afterQuery, beforeDelete, afterDelete, beforeSave, afterSave, ajax = {} } = proxyOpts
-        const resConfigs = proxyOpts.response || proxyOpts.props || {}
+        const { beforeQuery, afterQuery, beforeQueryFooter, afterQueryFooter, beforeDelete, afterDelete, beforeSave, afterSave, ajax = {} } = proxyOpts
+        const resConfigs = (proxyOpts.response || proxyOpts.props || {}) as VxeGridDefines.ProxyConfigResponseConfig
         const $xeTable = refTable.value
         if (!$xeTable) {
           return nextTick()
@@ -981,15 +1021,16 @@ export default defineVxeComponent({
           case 'initial':
           case 'reload':
           case 'query': {
-            const ajaxMethods = ajax.query
-            const querySuccessMethods = ajax.querySuccess
-            const queryErrorMethods = ajax.queryError
-            if (ajaxMethods) {
+            const qMethods = ajax.query
+            const qsMethods = ajax.querySuccess
+            const qeMethods = ajax.queryError
+            if (qMethods) {
               const isInited = code === 'initial'
               const isReload = code === 'reload'
               if (!isInited && reactData.tableLoading) {
                 return nextTick()
               }
+              let operPromise = null
               let sortList: any[] = []
               let filterList: VxeTableDefines.FilterCheckedParams[] = []
               let pageParams: any = {}
@@ -1043,7 +1084,7 @@ export default defineVxeComponent({
               } else {
                 if ($xeTable) {
                   if (isReload) {
-                    $xeTable.clearAll()
+                    operPromise = $xeTable.clearAll()
                   } else {
                     sortList = $xeTable.getSortColumns()
                     filterList = $xeTable.getCheckedFilters()
@@ -1063,65 +1104,119 @@ export default defineVxeComponent({
                 sorts: sortList,
                 filters: filterList,
                 form: formData,
-                options: ajaxMethods
+                options: qMethods
               }
               reactData.sortData = sortList
               reactData.filterData = filterList
               reactData.tableLoading = true
-              return Promise.resolve((beforeQuery || ajaxMethods)(commitParams, ...args))
-                .then(rest => {
-                  let tableData: any[] = []
-                  reactData.tableLoading = false
-                  if (rest) {
-                    if (pagerConfig && isEnableConf(pagerOpts)) {
-                      const totalProp = resConfigs.total
-                      const total = (XEUtils.isFunction(totalProp) ? totalProp({ data: rest, $table: $xeTable, $grid: null, $gantt: $xeGantt }) : XEUtils.get(rest, totalProp || 'page.total')) || 0
-                      tablePage.total = XEUtils.toNumber(total)
-                      const resultProp = resConfigs.result
-                      tableData = (XEUtils.isFunction(resultProp) ? resultProp({ data: rest, $table: $xeTable, $grid: null, $gantt: $xeGantt }) : XEUtils.get(rest, resultProp || 'result')) || []
-                      // 检验当前页码，不能超出当前最大页数
-                      const pageCount = Math.max(Math.ceil(total / tablePage.pageSize), 1)
-                      if (tablePage.currentPage > pageCount) {
-                        tablePage.currentPage = pageCount
-                      }
-                    } else {
-                      const listProp = resConfigs.list
-                      tableData = (listProp ? (XEUtils.isFunction(listProp) ? listProp({ data: rest, $table: $xeTable, $grid: null, $gantt: $xeGantt }) : XEUtils.get(rest, listProp)) : rest) || []
+              return Promise.all([
+                Promise.resolve((beforeQuery || qMethods)(commitParams, ...args)),
+                operPromise
+              ]).then(([rest]) => {
+                let tableData: any[] = []
+                reactData.tableLoading = false
+                if (rest) {
+                  const reParams = { data: rest, $table: $xeTable, $grid: null, $gantt: $xeGantt }
+                  if (pagerConfig && isEnableConf(pagerOpts)) {
+                    const totalProp = resConfigs.total
+                    const total = (XEUtils.isFunction(totalProp) ? totalProp(reParams) : XEUtils.get(rest, totalProp || 'page.total')) || 0
+                    tablePage.total = XEUtils.toNumber(total)
+                    const resultProp = resConfigs.result
+                    tableData = (XEUtils.isFunction(resultProp) ? resultProp(reParams) : XEUtils.get(rest, resultProp || 'result')) || []
+                    // 检验当前页码，不能超出当前最大页数
+                    const pageCount = Math.max(Math.ceil(total / tablePage.pageSize), 1)
+                    if (tablePage.currentPage > pageCount) {
+                      tablePage.currentPage = pageCount
+                    }
+                  } else {
+                    const listProp = resConfigs.list
+                    if (XEUtils.isArray(rest)) {
+                      tableData = rest
+                    } else if (listProp) {
+                      tableData = (XEUtils.isFunction(listProp) ? listProp(reParams) : XEUtils.get(rest, listProp)) || []
                     }
                   }
-                  if ($xeTable as any) {
-                    $xeTable.loadData(tableData)
-                  } else {
-                    nextTick(() => {
-                      if ($xeTable) {
-                        $xeTable.loadData(tableData)
-                      }
-                    })
+                  if (showFooter) {
+                    const fdProp = resConfigs.footerData
+                    const footerList = fdProp ? (XEUtils.isFunction(fdProp) ? fdProp(reParams) : XEUtils.get(rest, fdProp)) : []
+                    if (XEUtils.isArray(footerList)) {
+                      reactData.footerData = footerList
+                    }
                   }
-                  if (afterQuery) {
-                    afterQuery(commitParams, ...args)
-                  }
-                  if (querySuccessMethods) {
-                    querySuccessMethods({ ...commitParams, response: rest })
-                  }
-                  return { status: true }
-                }).catch((rest) => {
-                  reactData.tableLoading = false
-                  if (queryErrorMethods) {
-                    queryErrorMethods({ ...commitParams, response: rest })
-                  }
-                  return { status: false }
-                })
+                }
+                if ($xeTable) {
+                  $xeTable.loadData(tableData)
+                } else {
+                  nextTick(() => {
+                    const $xeTable = refTable.value
+                    if ($xeTable) {
+                      $xeTable.loadData(tableData)
+                    }
+                  })
+                }
+                if (afterQuery) {
+                  afterQuery(commitParams, ...args)
+                }
+                if (qsMethods) {
+                  qsMethods({ ...commitParams, response: rest })
+                }
+                return { status: true }
+              }).catch((rest) => {
+                reactData.tableLoading = false
+                if (qeMethods) {
+                  qeMethods({ ...commitParams, response: rest })
+                }
+                return { status: false }
+              })
             } else {
-              errLog('vxe.error.notFunc', ['proxy-config.ajax.query'])
+              errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.query'])
+            }
+            break
+          }
+          case 'queryFooter': {
+            const qfMethods = ajax.queryFooter
+            const qfSuccessMethods = ajax.queryFooterSuccess
+            const qfErrorMethods = ajax.queryFooterError
+            if (qfMethods) {
+              let filterList: VxeTableDefines.FilterCheckedParams[] = []
+              if ($xeTable) {
+                filterList = $xeTable.getCheckedFilters()
+              }
+              const commitParams = {
+                $table: $xeTable,
+                $grid: null,
+                $gantt: $xeGantt,
+                code,
+                button,
+                filters: filterList,
+                form: formData,
+                options: qfMethods
+              }
+              return Promise.resolve((beforeQueryFooter || qfMethods)(commitParams, ...args)).then(rest => {
+                reactData.footerData = XEUtils.isArray(rest) ? rest : []
+                if (afterQueryFooter) {
+                  afterQueryFooter(commitParams, ...args)
+                }
+                if (qfSuccessMethods) {
+                  qfSuccessMethods({ ...commitParams, response: rest })
+                }
+                return { status: true }
+              }).catch((rest) => {
+                if (qfErrorMethods) {
+                  qfErrorMethods({ ...commitParams, response: rest })
+                }
+                return { status: false }
+              })
+            } else {
+              errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.queryFooter'])
             }
             break
           }
           case 'delete': {
-            const ajaxMethods = ajax.delete
+            const dMethods = ajax.delete
             const deleteSuccessMethods = ajax.deleteSuccess
             const deleteErrorMethods = ajax.deleteError
-            if (ajaxMethods) {
+            if (dMethods) {
               const selectRecords = $xeGantt.getCheckboxRecords()
               const removeRecords = selectRecords.filter(row => !$xeTable.isInsertByRow(row))
               const body = { removeRecords }
@@ -1133,7 +1228,7 @@ export default defineVxeComponent({
                 button,
                 body,
                 form: formData,
-                options: ajaxMethods
+                options: dMethods
               }
               if (selectRecords.length) {
                 return handleDeleteRow(code, 'vxe.grid.deleteSelectRecord', () => {
@@ -1141,7 +1236,7 @@ export default defineVxeComponent({
                     return $xeTable.remove(selectRecords)
                   }
                   reactData.tableLoading = true
-                  return Promise.resolve((beforeDelete || ajaxMethods)(commitParams, ...args))
+                  return Promise.resolve((beforeDelete || dMethods)(commitParams, ...args))
                     .then(rest => {
                       reactData.tableLoading = false
                       $xeTable.setPendingRow(removeRecords, false)
@@ -1153,7 +1248,10 @@ export default defineVxeComponent({
                       if (afterDelete) {
                         afterDelete(commitParams, ...args)
                       } else {
+                        internalData.uFoot = true
                         $xeGantt.commitProxy('query')
+                        internalData.uFoot = false
+                        updateQueryFooter()
                       }
                       if (deleteSuccessMethods) {
                         deleteSuccessMethods({ ...commitParams, response: rest })
@@ -1181,7 +1279,7 @@ export default defineVxeComponent({
                 }
               }
             } else {
-              errLog('vxe.error.notFunc', ['proxy-config.ajax.delete'])
+              errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.delete'])
             }
             break
           }
@@ -1234,7 +1332,10 @@ export default defineVxeComponent({
                       if (afterSave) {
                         afterSave(commitParams, ...args)
                       } else {
+                        internalData.uFoot = true
                         $xeGantt.commitProxy('query')
+                        internalData.uFoot = false
+                        updateQueryFooter()
                       }
                       if (saveSuccessMethods) {
                         saveSuccessMethods({ ...commitParams, response: rest })
@@ -1262,7 +1363,7 @@ export default defineVxeComponent({
                 }
               })
             } else {
-              errLog('vxe.error.notFunc', ['proxy-config.ajax.save'])
+              errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.save'])
             }
             break
           }
@@ -1273,7 +1374,7 @@ export default defineVxeComponent({
               if (tCommandMethod) {
                 tCommandMethod({ code, button, $table: $xeTable, $grid: null, $gantt: $xeGantt }, ...args)
               } else {
-                errLog('vxe.error.notCommands', [code])
+                errLog('vxe.error.notCommands', [`[grid] ${code}`])
               }
             }
           }
@@ -1473,6 +1574,7 @@ export default defineVxeComponent({
        * 获取需要排除的高度
        */
       getExcludeHeight () {
+        const { height } = props
         const { isZMax } = reactData
         const el = refElem.value
         if (el) {
@@ -1481,8 +1583,11 @@ export default defineVxeComponent({
           const topWrapper = refTopWrapper.value
           const bottomWrapper = refBottomWrapper.value
           const pagerWrapper = refPagerWrapper.value
-          const parentEl = el.parentElement as HTMLElement
-          const parentPaddingSize = isZMax ? 0 : (parentEl ? getPaddingTopBottomSize(parentEl) : 0)
+          const parentEl = el.parentElement
+          let parentPaddingSize = 0
+          if (parentEl && (height === '100%' || height === 'auto')) {
+            parentPaddingSize = isZMax ? 0 : getPaddingTopBottomSize(parentEl)
+          }
           return parentPaddingSize + getPaddingTopBottomSize(el) + getOffsetHeight(formWrapper) + getOffsetHeight(toolbarWrapper) + getOffsetHeight(topWrapper) + getOffsetHeight(bottomWrapper) + getOffsetHeight(pagerWrapper)
         }
         return 0
@@ -1497,11 +1602,23 @@ export default defineVxeComponent({
       },
       triggerToolbarCommitEvent (params, evnt) {
         const { code } = params
-        return $xeGantt.commitProxy(params, evnt).then((rest) => {
-          if (code && rest && rest.status && ['query', 'reload', 'delete', 'save'].includes(code)) {
-            $xeGantt.dispatchEvent(code === 'delete' || code === 'save' ? `proxy-${code as 'delete' | 'save'}` : 'proxy-query', { ...rest, isReload: code === 'reload' }, evnt)
+        if (code) {
+          const isUf = ['reload', 'delete', 'save'].includes(code)
+          if (isUf) {
+            internalData.uFoot = true
           }
-        })
+          const rest = $xeGantt.commitProxy(params, evnt).then((rest) => {
+            if (rest && rest.status && ['query', 'reload', 'delete', 'save'].includes(code)) {
+              $xeGantt.dispatchEvent(code === 'delete' || code === 'save' ? `proxy-${code as 'delete' | 'save'}` : 'proxy-query', { ...rest, isReload: code === 'reload' }, evnt)
+            }
+          })
+          internalData.uFoot = false
+          if (isUf) {
+            updateQueryFooter()
+          }
+          return rest
+        }
+        return nextTick()
       },
       triggerToolbarBtnEvent (button, evnt) {
         $xeGantt.triggerToolbarCommitEvent(button, evnt)
