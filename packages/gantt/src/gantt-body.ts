@@ -1,6 +1,8 @@
 import { h, inject, VNode, ref, Ref, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { getCellRestHeight } from './util'
+import { getClass } from '../../ui/src/utils'
+import XEUtils from 'xe-utils'
 import GanttViewChartComponent from './gantt-chart'
 
 import type { VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods, VxeTableDefines } from 'vxe-table'
@@ -39,9 +41,10 @@ export default defineVxeComponent({
       const { headerGroups } = reactData
       const { todayDateMaps } = internalData
       const taskViewOpts = computeTaskViewOpts.value
-      const { showNowLine } = taskViewOpts
+      const { showNowLine, viewStyle } = taskViewOpts
       const { scaleItem } = headerGroups[headerGroups.length - 1] || {}
-      const { field } = column
+      const { field, dateObj } = column
+      const { cellClassName, cellStyle } = viewStyle || {}
       const todayValue = showNowLine && scaleItem ? todayDateMaps[scaleItem.type] : null
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
@@ -85,16 +88,24 @@ export default defineVxeComponent({
           })
         )
       }
-      const ctParams = { source: sourceType, type: viewType, row, column, $rowIndex, rowIndex, _rowIndex }
+      const ctParams = { source: sourceType, type: viewType, dateObj, row, column, $rowIndex, rowIndex, _rowIndex }
       return h('td', {
         key: $columnIndex,
-        class: ['vxe-gantt-view--body-column', {
-          'is--now': showNowLine && todayValue === field,
-          'col--rs-height': isRsHeight
-        }],
-        style: {
-          height: `${cellHeight}px`
-        },
+        class: [
+          'vxe-gantt-view--body-column',
+          {
+            'is--now': showNowLine && todayValue === field,
+            'col--rs-height': isRsHeight
+          },
+          getClass(cellClassName, ctParams)
+        ],
+        style: cellStyle
+          ? Object.assign({}, XEUtils.isFunction(cellStyle) ? cellStyle(ctParams) : cellStyle, {
+            height: `${cellHeight}px`
+          })
+          : {
+              height: `${cellHeight}px`
+            },
         onClick (evnt) {
           $xeGantt.handleTaskCellClickEvent(evnt, { row, column })
         },
@@ -121,6 +132,10 @@ export default defineVxeComponent({
       const treeOpts = computeTreeOpts.value
       const { transform } = treeOpts
       const childrenField = treeOpts.children || treeOpts.childrenField
+
+      const taskViewOpts = computeTaskViewOpts.value
+      const { viewStyle } = taskViewOpts
+      const { rowClassName, rowStyle } = viewStyle || {}
 
       const { tableColumn, scrollYLoad } = reactData
 
@@ -155,17 +170,23 @@ export default defineVxeComponent({
           trOns.onDragend = $xeTable.handleRowDragDragendEvent
           trOns.onDragover = $xeTable.handleRowDragDragoverEvent
         }
+        const rowParams = { source: sourceType, type: viewType, row, rowIndex, $rowIndex, _rowIndex }
         trVNs.push(
           h('tr', {
             key: treeConfig ? rowid : $rowIndex,
-            class: ['vxe-gantt-view--body-row', {
-              'row--stripe': stripe && (_rowIndex + 1) % 2 === 0,
-              'is--new': isNewRow,
-              'row--radio': radioOpts.highlight && $xeTable.eqRow(selectRadioRow, row),
-              'row--checked': checkboxOpts.highlight && $xeTable.isCheckedByCheckboxRow(row),
-              'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid]
-            }],
+            class: [
+              'vxe-gantt-view--body-row',
+              {
+                'row--stripe': stripe && (_rowIndex + 1) % 2 === 0,
+                'is--new': isNewRow,
+                'row--radio': radioOpts.highlight && $xeTable.eqRow(selectRadioRow, row),
+                'row--checked': checkboxOpts.highlight && $xeTable.isCheckedByCheckboxRow(row),
+                'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid]
+              },
+              getClass(rowClassName, rowParams)
+            ],
             rowid,
+            style: rowStyle ? XEUtils.isFunction(rowStyle) ? rowStyle(rowParams) : rowStyle : undefined,
             ...trOns
           }, tableColumn.map((column, $columnIndex) => renderColumn($xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex, column, $columnIndex)))
         )

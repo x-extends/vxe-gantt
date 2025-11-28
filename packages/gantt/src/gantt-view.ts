@@ -12,6 +12,8 @@ import type { VxeGanttViewConstructor, GanttViewReactData, GanttViewPrivateRef, 
 
 const { globalEvents } = VxeUI
 
+const sourceType = 'gantt'
+
 function createInternalData (): GanttViewInternalData {
   return {
     xeTable: null,
@@ -855,8 +857,7 @@ export default defineVxeComponent({
       }, 200)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleScrollEvent = (evnt: Event, isRollY: boolean, isRollX: boolean, scrollTop: number, scrollLeft: number) => {
+    const handleScrollData = (isRollY: boolean, isRollX: boolean, scrollTop: number, scrollLeft: number) => {
       if (isRollX) {
         internalData.lastScrollLeft = scrollLeft
       }
@@ -865,6 +866,91 @@ export default defineVxeComponent({
       }
       reactData.lastScrollTime = Date.now()
       checkLastSyncScroll(isRollX, isRollY)
+    }
+
+    const handleScrollEvent = (evnt: Event, isRollY: boolean, isRollX: boolean, scrollTop: number, scrollLeft: number) => {
+      const $xeTable = internalData.xeTable
+
+      const { lastScrollLeft, lastScrollTop } = internalData
+      const xHandleEl = refScrollXHandleElem.value
+      const yHandleEl = refScrollYHandleElem.value
+      if (!xHandleEl || !yHandleEl) {
+        return
+      }
+      if (!$xeTable) {
+        return
+      }
+      const { computeScrollXThreshold, computeScrollYThreshold } = $xeTable.getComputeMaps()
+      const bodyHeight = yHandleEl.clientHeight
+      const bodyWidth = xHandleEl.clientWidth
+      const scrollHeight = yHandleEl.scrollHeight
+      const scrollWidth = xHandleEl.scrollWidth
+      let isTop = false
+      let isBottom = false
+      let isLeft = false
+      let isRight = false
+      let direction = ''
+      let isTopBoundary = false
+      let isBottomBoundary = false
+      let isLeftBoundary = false
+      let isRightBoundary = false
+      if (isRollX) {
+        const xThreshold = computeScrollXThreshold.value
+        isLeft = scrollLeft <= 0
+        if (!isLeft) {
+          isRight = scrollLeft + bodyWidth >= scrollWidth - 1
+        }
+        if (scrollLeft > lastScrollLeft) {
+          direction = 'right'
+          if (scrollLeft + bodyWidth >= scrollWidth - xThreshold) {
+            isRightBoundary = true
+          }
+        } else {
+          direction = 'left'
+          if (scrollLeft <= xThreshold) {
+            isLeftBoundary = true
+          }
+        }
+      }
+      if (isRollY) {
+        const yThreshold = computeScrollYThreshold.value
+        isTop = scrollTop <= 0
+        if (!isTop) {
+          isBottom = scrollTop + bodyHeight >= scrollHeight - 1
+        }
+        if (scrollTop > lastScrollTop) {
+          direction = 'bottom'
+          if (scrollTop + bodyHeight >= scrollHeight - yThreshold) {
+            isBottomBoundary = true
+          }
+        } else {
+          direction = 'top'
+          if (scrollTop <= yThreshold) {
+            isTopBoundary = true
+          }
+        }
+      }
+      handleScrollData(isRollY, isRollX, scrollTop, scrollLeft)
+      const evntParams = {
+        source: sourceType,
+        scrollTop,
+        scrollLeft,
+        bodyHeight,
+        bodyWidth,
+        scrollHeight,
+        scrollWidth,
+        isX: isRollX,
+        isY: isRollY,
+        isTop,
+        isBottom,
+        isLeft,
+        isRight,
+        direction
+      }
+      if (isBottomBoundary || isTopBoundary || isRightBoundary || isLeftBoundary) {
+        $xeGantt.dispatchEvent('scroll-boundary', evntParams, evnt)
+      }
+      $xeGantt.dispatchEvent('scroll', evntParams, evnt)
     }
 
     const ganttViewMethods: VxeGanttViewMethods = {
@@ -986,7 +1072,12 @@ export default defineVxeComponent({
             triggerScrollXEvent()
           }
         }
-        handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, scrollLeft)
+        if (isRollY) {
+          handleScrollData(isRollY, isRollX, wrapperEl.scrollTop, scrollLeft)
+        }
+        if (isRollX) {
+          handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, scrollLeft)
+        }
       },
       // triggerFooterScrollEvent (evnt) {
       //   const { inVirtualScroll, inHeaderScroll, inBodyScroll } = internalData
@@ -1040,7 +1131,7 @@ export default defineVxeComponent({
           internalData.inVirtualScroll = true
           setScrollTop(bodyScrollElem, currTopNum)
           syncTableScrollTop(currTopNum)
-          handleScrollEvent(evnt, isRollY, isRollX, currTopNum, wrapperEl.scrollLeft)
+          handleScrollData(isRollY, isRollX, currTopNum, wrapperEl.scrollLeft)
         }
       },
       handleUpdateSXSpace () {
