@@ -13,6 +13,8 @@ import type { VxeGanttViewConstructor, GanttViewReactData, VxeGanttDefines, VxeG
 
 const { globalEvents } = VxeUI
 
+const sourceType = 'gantt'
+
 function createInternalData (): GanttViewInternalData {
   return {
     xeTable: null,
@@ -826,9 +828,104 @@ function checkLastSyncScroll ($xeGanttView: VxeGanttViewConstructor & VxeGanttVi
   }, 200)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function handleScrollEvent ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods, evnt: Event, isRollY: boolean, isRollX: boolean, scrollTop: number, scrollLeft: number) {
+function handleScrollData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods, isRollY: boolean, isRollX: boolean, scrollTop: number, scrollLeft: number) {
+  const reactData = $xeGanttView.reactData
+  const internalData = $xeGanttView.internalData
+
+  if (isRollX) {
+    internalData.lastScrollLeft = scrollLeft
+  }
+  if (isRollY) {
+    internalData.lastScrollTop = scrollTop
+  }
+  reactData.lastScrollTime = Date.now()
   checkLastSyncScroll($xeGanttView, isRollX, isRollY)
+}
+
+function handleScrollEvent ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods, evnt: Event, isRollY: boolean, isRollX: boolean, scrollTop: number, scrollLeft: number) {
+  const $xeGantt = $xeGanttView.$xeGantt
+  const internalData = $xeGanttView.internalData
+  const $xeTable = internalData.xeTable
+
+  const { lastScrollLeft, lastScrollTop } = internalData
+  const xHandleEl = $xeGanttView.$refs.refScrollXHandleElem as HTMLDivElement
+  const yHandleEl = $xeGanttView.$refs.refScrollYHandleElem as HTMLDivElement
+  if (!xHandleEl || !yHandleEl) {
+    return
+  }
+  if (!$xeTable) {
+    return
+  }
+  const bodyHeight = yHandleEl.clientHeight
+  const bodyWidth = xHandleEl.clientWidth
+  const scrollHeight = yHandleEl.scrollHeight
+  const scrollWidth = xHandleEl.scrollWidth
+  let isTop = false
+  let isBottom = false
+  let isLeft = false
+  let isRight = false
+  let direction = ''
+  let isTopBoundary = false
+  let isBottomBoundary = false
+  let isLeftBoundary = false
+  let isRightBoundary = false
+  if (isRollX) {
+    const xThreshold = $xeTable.computeScrollXThreshold
+    isLeft = scrollLeft <= 0
+    if (!isLeft) {
+      isRight = scrollLeft + bodyWidth >= scrollWidth - 1
+    }
+    if (scrollLeft > lastScrollLeft) {
+      direction = 'right'
+      if (scrollLeft + bodyWidth >= scrollWidth - xThreshold) {
+        isRightBoundary = true
+      }
+    } else {
+      direction = 'left'
+      if (scrollLeft <= xThreshold) {
+        isLeftBoundary = true
+      }
+    }
+  }
+  if (isRollY) {
+    const yThreshold = $xeTable.computeScrollYThreshold
+    isTop = scrollTop <= 0
+    if (!isTop) {
+      isBottom = scrollTop + bodyHeight >= scrollHeight - 1
+    }
+    if (scrollTop > lastScrollTop) {
+      direction = 'bottom'
+      if (scrollTop + bodyHeight >= scrollHeight - yThreshold) {
+        isBottomBoundary = true
+      }
+    } else {
+      direction = 'top'
+      if (scrollTop <= yThreshold) {
+        isTopBoundary = true
+      }
+    }
+  }
+  handleScrollData($xeGanttView, isRollY, isRollX, scrollTop, scrollLeft)
+  const evntParams = {
+    source: sourceType,
+    scrollTop,
+    scrollLeft,
+    bodyHeight,
+    bodyWidth,
+    scrollHeight,
+    scrollWidth,
+    isX: isRollX,
+    isY: isRollY,
+    isTop,
+    isBottom,
+    isLeft,
+    isRight,
+    direction
+  }
+  if (isBottomBoundary || isTopBoundary || isRightBoundary || isLeftBoundary) {
+    $xeGantt.dispatchEvent('scroll-boundary', evntParams, evnt)
+  }
+  $xeGantt.dispatchEvent('scroll', evntParams, evnt)
 }
 
 /**

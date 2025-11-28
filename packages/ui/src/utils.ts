@@ -49,3 +49,7 @@ export function eqEmptyValue (cellValue: any) {
 export function getStringValue (cellValue: any) {
   return eqEmptyValue(cellValue) ? '' : cellValue
 }
+
+export function getClass (property: any, params: any) {
+  return property ? XEUtils.isFunction(property) ? property(params) : property : ''
+}
