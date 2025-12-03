@@ -59,7 +59,7 @@ export default defineVxeComponent({
       const progressField = $xeGantt.computeProgressField
       const taskBarOpts = $xeGantt.computeTaskBarOpts
       const barParams = { $gantt: $xeGantt, row }
-      const { showProgress, showContent, contentMethod, barStyle } = taskBarOpts
+      const { showProgress, showContent, contentMethod, barStyle, drag } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
       const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
       const { round } = barStyObj
@@ -98,6 +98,7 @@ export default defineVxeComponent({
         },
         class: ['vxe-gantt-view--chart-row', {
           'is--round': round,
+          'is--drag': drag,
           'col--rs-height': isRsHeight
         }],
         style: {
