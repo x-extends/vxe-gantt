@@ -19,6 +19,12 @@
       }
     }
   }
+  &.is--drag {
+    & > .vxe-gantt-view--chart-bar,
+    & > .vxe-gantt-view--chart-custom-bar {
+      user-select: none;
+    }
+  }
 }
 .vxe-gantt-view--chart-bar,
 .vxe-gantt-view--chart-custom-bar {

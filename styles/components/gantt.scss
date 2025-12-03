@@ -542,6 +542,9 @@
     width: var(--vxe-ui-gantt-view-default-cell-width);
   }
 }
+.vxe-gantt-view--body-table {
+  user-select: none;
+}
 .vxe-gantt-view--header-wrapper {
   background-color: var(--vxe-ui-table-header-background-color);
 }

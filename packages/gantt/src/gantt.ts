@@ -85,8 +85,8 @@ export default defineVxeComponent({
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
-    taskResizeConfig: Object as PropType<VxeGanttPropTypes.TaskResizeConfig>,
-    taskDragConfig: Object as PropType<VxeGanttPropTypes.TaskDragConfig>,
+    taskBarResizeConfig: Object as PropType<VxeGanttPropTypes.TaskBarResizeConfig>,
+    taskBarDragConfig: Object as PropType<VxeGanttPropTypes.TaskBarDragConfig>,
     size: {
       type: String as PropType<VxeGridPropTypes.Size>,
       default: () => getConfig().gantt.size || getConfig().size
@@ -217,6 +217,14 @@ export default defineVxeComponent({
 
     const computeTaskBarOpts = computed(() => {
       return Object.assign({}, getConfig().gantt.taskBarConfig, props.taskBarConfig)
+    })
+
+    const computeTaskBarDragOpts = computed(() => {
+      return Object.assign({}, getConfig().gantt.taskBarDragConfig, props.taskBarDragConfig)
+    })
+
+    const computeTaskBarResizeOpts = computed(() => {
+      return Object.assign({}, getConfig().gantt.taskBarResizeConfig, props.taskBarResizeConfig)
     })
 
     const computeTaskSplitOpts = computed(() => {
@@ -451,6 +459,8 @@ export default defineVxeComponent({
       computeTaskViewScaleMapsOpts,
       computeTaskViewOpts,
       computeTaskBarOpts,
+      computeTaskBarDragOpts,
+      computeTaskBarResizeOpts,
       computeTaskSplitOpts,
       computeTaskScaleConfs,
       computeTitleField,
