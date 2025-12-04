@@ -81,7 +81,7 @@ export default defineVxeComponent({
 
     layouts: Array as PropType<VxeGanttPropTypes.Layouts>,
     taskConfig: Object as PropType<VxeGanttPropTypes.TaskConfig>,
-    taskViewScaleConfs: Object as PropType<VxeGanttPropTypes.TaskViewScaleConfs>,
+    taskViewScaleConfig: Object as PropType<VxeGanttPropTypes.TaskViewScaleConfig>,
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
@@ -207,8 +207,8 @@ export default defineVxeComponent({
       return Object.assign({}, getConfig().gantt.taskConfig, props.taskConfig)
     })
 
-    const computeTaskViewScaleMapsOpts = computed(() => {
-      return XEUtils.merge({}, getConfig().gantt.taskViewScaleConfs, props.taskViewScaleConfs)
+    const computeTaskViewScaleOpts = computed(() => {
+      return XEUtils.merge({}, getConfig().gantt.taskViewScaleConfig, props.taskViewScaleConfig)
     })
 
     const computeTaskViewOpts = computed(() => {
@@ -456,7 +456,7 @@ export default defineVxeComponent({
       computeToolbarOpts,
       computeZoomOpts,
       computeTaskOpts,
-      computeTaskViewScaleMapsOpts,
+      computeTaskViewScaleOpts,
       computeTaskViewOpts,
       computeTaskBarOpts,
       computeTaskBarDragOpts,
@@ -484,7 +484,7 @@ export default defineVxeComponent({
 
     const handleTaskScaleConfig = () => {
       const taskScaleConfs = computeTaskScaleConfs.value
-      const taskViewScaleMapsOpts = computeTaskViewScaleMapsOpts.value
+      const taskViewScaleOpts = computeTaskViewScaleOpts.value
       const scaleConfs: VxeGanttDefines.ColumnScaleObj[] = []
       if (taskScaleConfs) {
         const keyMaps: Record<string, boolean> = {}
@@ -500,7 +500,7 @@ export default defineVxeComponent({
             return
           }
           keyMaps[type] = true
-          scaleConfs.push(Object.assign({}, type ? taskViewScaleMapsOpts[type] || {} : {}, sConf, {
+          scaleConfs.push(Object.assign({}, type ? taskViewScaleOpts[type] || {} : {}, sConf, {
             level: getViewTypeLevel(type)
           }))
         })
