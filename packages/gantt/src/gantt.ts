@@ -117,7 +117,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
     layouts: Array as PropType<VxeGanttPropTypes.Layouts>,
     taskConfig: Object as PropType<VxeGanttPropTypes.TaskConfig>,
-    taskViewScaleConfs: Object as PropType<VxeGanttPropTypes.TaskViewScaleConfs>,
+    taskViewScaleConfig: Object as PropType<VxeGanttPropTypes.TaskViewScaleConfig>,
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
@@ -220,11 +220,11 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       return Object.assign({}, getConfig().gantt.taskConfig, props.taskConfig)
     },
-    computeTaskViewScaleMapsOpts () {
+    computeTaskViewScaleOpts () {
       const $xeGantt = this
       const props = $xeGantt
 
-      return XEUtils.merge({}, getConfig().gantt.taskViewScaleConfs, props.taskViewScaleConfs)
+      return XEUtils.merge({}, getConfig().gantt.taskViewScaleConfig, props.taskViewScaleConfig)
     },
     computeTaskViewOpts () {
       const $xeGantt = this
@@ -548,7 +548,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const reactData = $xeGantt.reactData
 
       const taskScaleConfs = $xeGantt.computeTaskScaleConfs
-      const taskViewScaleMapsOpts = $xeGantt.computeTaskViewScaleMapsOpts
+      const taskViewScaleOpts = $xeGantt.computeTaskViewScaleOpts
       const scaleConfs: VxeGanttDefines.ColumnScaleObj[] = []
       if (taskScaleConfs) {
         const keyMaps: Record<string, boolean> = {}
@@ -564,7 +564,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
             return
           }
           keyMaps[type] = true
-          scaleConfs.push(Object.assign({}, type ? taskViewScaleMapsOpts[type] || {} : {}, sConf, {
+          scaleConfs.push(Object.assign({}, type ? taskViewScaleOpts[type] || {} : {}, sConf, {
             level: getViewTypeLevel(type)
           }))
         })

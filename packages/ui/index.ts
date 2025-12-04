@@ -43,7 +43,7 @@ setConfig({
       // beforeSave: null,
       // afterSave: null
     },
-    taskViewScaleConfs: {
+    taskViewScaleConfig: {
       week: {
         startDay: 1
       }
