@@ -37,7 +37,10 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     }
   },
   taskViewConfig: {
-    scales: ['week', 'day'],
+    scales: [
+      { type: 'week', titleFormat: 'MM/dd' },
+      { type: 'day' }
+    ],
     tableStyle: {
       width: 480
     }

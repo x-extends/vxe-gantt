@@ -231,6 +231,21 @@ export default defineVxeComponent({
       return Object.assign({}, getConfig().gantt.taskSplitConfig, props.taskSplitConfig)
     })
 
+    const computeScaleUnit = computed(() => {
+      const minScale = computeMinScale.value
+      return minScale ? minScale.type : 'date'
+    })
+
+    const computeMinScale = computed(() => {
+      const { taskScaleList } = reactData
+      return XEUtils.last(taskScaleList)
+    })
+
+    const computeWeekScale = computed(() => {
+      const { taskScaleList } = reactData
+      return taskScaleList.find(item => item.type === 'week')
+    })
+
     const computeTaskScaleConfs = computed(() => {
       const taskViewOpts = computeTaskViewOpts.value
       const { scales } = taskViewOpts
@@ -463,6 +478,9 @@ export default defineVxeComponent({
       computeTaskBarResizeOpts,
       computeTaskSplitOpts,
       computeTaskScaleConfs,
+      computeScaleUnit,
+      computeMinScale,
+      computeWeekScale,
       computeTitleField,
       computeStartField,
       computeEndField,
@@ -2245,6 +2263,7 @@ export default defineVxeComponent({
 
     watch(computeTaskScaleConfs, () => {
       handleTaskScaleConfig()
+      $xeGantt.refreshTaskView()
     })
 
     hooks.forEach((options) => {

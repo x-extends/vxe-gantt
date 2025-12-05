@@ -1,8 +1,8 @@
-import { h, ref, reactive, nextTick, inject, watch, provide, onMounted, onUnmounted } from 'vue'
+import { h, ref, reactive, nextTick, inject, watch, provide, computed, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { setScrollTop, setScrollLeft, removeClass, addClass } from '../../ui/src/dom'
 import { VxeUI } from '@vxe-ui/core'
-import { getRefElem } from './util'
+import { getRefElem, getStandardGapTime } from './util'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
@@ -13,6 +13,8 @@ import type { VxeGanttViewConstructor, GanttViewReactData, GanttViewPrivateRef, 
 const { globalEvents } = VxeUI
 
 const sourceType = 'gantt'
+const minuteMs = 1000 * 60
+const dayMs = minuteMs * 60 * 24
 
 function createInternalData (): GanttViewInternalData {
   return {
@@ -49,7 +51,7 @@ export default defineVxeComponent({
 
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
 
-    const { computeTaskOpts, computeStartField, computeEndField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft } = $xeGantt.getComputeMaps()
+    const { computeTaskOpts, computeStartField, computeEndField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft, computeScaleUnit, computeWeekScale, computeMinScale } = $xeGantt.getComputeMaps()
 
     const refElem = ref<HTMLDivElement>()
 
@@ -109,7 +111,73 @@ export default defineVxeComponent({
       refElem
     }
 
+    const computeScaleDateList = computed(() => {
+      const { minViewDate, maxViewDate } = reactData
+      const minScale = computeMinScale.value
+      const dateList: Date[] = []
+      if (!minViewDate || !maxViewDate) {
+        return dateList
+      }
+
+      const startTime = minViewDate.getTime()
+      const endTime = maxViewDate.getTime()
+      switch (minScale.type) {
+        case 'year': {
+          let currDate = XEUtils.getWhatYear(minViewDate, 0, 'first')
+          while (currDate <= maxViewDate) {
+            const itemDate = currDate
+            dateList.push(itemDate)
+            currDate = XEUtils.getWhatYear(currDate, 1)
+          }
+          break
+        }
+        case 'quarter': {
+          let currDate = XEUtils.getWhatQuarter(minViewDate, 0, 'first')
+          while (currDate <= maxViewDate) {
+            const itemDate = currDate
+            dateList.push(itemDate)
+            currDate = XEUtils.getWhatQuarter(currDate, 1)
+          }
+          break
+        }
+        case 'month': {
+          let currDate = XEUtils.getWhatMonth(minViewDate, 0, 'first')
+          while (currDate <= maxViewDate) {
+            const itemDate = currDate
+            dateList.push(itemDate)
+            currDate = XEUtils.getWhatMonth(currDate, 1)
+          }
+          break
+        }
+        case 'week': {
+          let currDate = XEUtils.getWhatWeek(minViewDate, 0, minScale.startDay, minScale.startDay)
+          while (currDate <= maxViewDate) {
+            const itemDate = currDate
+            dateList.push(itemDate)
+            currDate = XEUtils.getWhatWeek(currDate, 1)
+          }
+          break
+        }
+        case 'day':
+        case 'date':
+        case 'hour':
+        case 'minute':
+        case 'second': {
+          const gapTime = getStandardGapTime(minScale.type)
+          let currTime = startTime
+          while (currTime <= endTime) {
+            const itemDate = new Date(currTime)
+            dateList.push(itemDate)
+            currTime += gapTime
+          }
+          break
+        }
+      }
+      return dateList
+    })
+
     const computeMaps: GanttViewPrivateComputed = {
+      computeScaleDateList
     }
 
     const $xeGanttView = {
@@ -152,37 +220,17 @@ export default defineVxeComponent({
       }
     }
 
-    const handleParseColumn = () => {
-      const ganttProps = $xeGantt.props
+    const handleColumnHeader = () => {
       const ganttReactData = $xeGantt.reactData
-      const { treeConfig } = ganttProps
       const { taskScaleList } = ganttReactData
-      const { minViewDate, maxViewDate } = reactData
-      const minScale = XEUtils.last(taskScaleList)
+      const scaleUnit = computeScaleUnit.value
+      const minScale = computeMinScale.value
+      const weekScale = computeWeekScale.value
+      const scaleDateList = computeScaleDateList.value
       const fullCols: VxeGanttDefines.ViewColumn[] = []
       const groupCols: VxeGanttDefines.GroupColumn[] = []
-      if (minScale && minViewDate && maxViewDate) {
-        const minSType = minScale.type
-        const weekScale = taskScaleList.find(item => item.type === 'week')
-        let gapTime = 1000 * 60 * 60 * 24
-        switch (minScale.type) {
-          case 'hour':
-            gapTime = 1000 * 60 * 60
-            break
-          case 'minute':
-            gapTime = 1000 * 60
-            break
-          case 'second':
-            gapTime = 1000
-            break
-          default: {
-            break
-          }
-        }
-        const currTime = minViewDate.getTime()
-        const diffDayNum = maxViewDate.getTime() - minViewDate.getTime()
-        const countSize = Math.max(5, Math.floor(diffDayNum / gapTime) + 1)
 
+      if (minScale && scaleUnit && scaleDateList.length) {
         const renderListMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn[]> = {
           year: [],
           quarter: [],
@@ -208,7 +256,7 @@ export default defineVxeComponent({
         }
 
         const handleData = (type: VxeGanttDefines.ColumnScaleType, colMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn>, minCol: VxeGanttDefines.ViewColumn) => {
-          if (minSType === type) {
+          if (minScale.type === type) {
             return
           }
           const currCol = colMaps[type]
@@ -226,14 +274,15 @@ export default defineVxeComponent({
             currGpCol.children.push(minCol)
           }
         }
-        for (let i = 0; i < countSize; i++) {
-          const itemDate = new Date(currTime + (i * gapTime))
+
+        for (let i = 0; i < scaleDateList.length; i++) {
+          const itemDate = scaleDateList[i]
           const [yyyy, MM, dd, HH, mm, ss] = XEUtils.toDateString(itemDate, 'yyyy-M-d-H-m-s').split('-')
           const e = itemDate.getDay()
           const E = e + 1
           const q = Math.ceil((itemDate.getMonth() + 1) / 3)
           const W = XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)
-          const dateObj: VxeGanttDefines.ScaleDateObj = { yy: yyyy, M: MM, d: dd, H: HH, m: mm, s: ss, q, W, E, e }
+          const dateObj: VxeGanttDefines.ScaleDateObj = { date: itemDate, yy: yyyy, M: MM, d: dd, H: HH, m: mm, s: ss, q, W, E, e }
           const colMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn> = {
             year: {
               field: yyyy,
@@ -281,7 +330,7 @@ export default defineVxeComponent({
               dateObj
             }
           }
-          const minCol = colMaps[minSType]
+          const minCol = colMaps[minScale.type]
           if (minScale.level < 19) {
             handleData('year', colMaps, minCol)
           }
@@ -311,7 +360,7 @@ export default defineVxeComponent({
         }
 
         taskScaleList.forEach(scaleItem => {
-          if (scaleItem.type === minSType) {
+          if (scaleItem.type === minScale.type) {
             groupCols.push({
               scaleItem,
               columns: fullCols
@@ -330,7 +379,214 @@ export default defineVxeComponent({
             columns: list
           })
         })
+      }
 
+      return {
+        fullCols,
+        groupCols
+      }
+    }
+
+    const createChartRender = (fullCols: VxeGanttDefines.ViewColumn[]) => {
+      const { minViewDate } = reactData
+      const minScale = computeMinScale.value
+      const scaleUnit = computeScaleUnit.value
+      const weekScale = computeWeekScale.value
+      switch (scaleUnit) {
+        case 'year': {
+          const indexMaps: Record<string, number> = {}
+          fullCols.forEach(({ dateObj }, i) => {
+            const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy')
+            indexMaps[yyyyMM] = i
+          })
+          return (startValue: any, endValue: any) => {
+            const startDate = parseStringDate(startValue)
+            const endDate = parseStringDate(endValue)
+            const startStr = XEUtils.toDateString(startDate, 'yyyy')
+            const startFirstDate = XEUtils.getWhatYear(startDate, 0, 'first')
+            const endStr = XEUtils.toDateString(endDate, 'yyyy')
+            const endFirstDate = XEUtils.getWhatYear(endDate, 0, 'first')
+            const dateSize = Math.floor((XEUtils.getWhatYear(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
+            const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
+            const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
+            const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+            return {
+              offsetLeftSize,
+              offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            }
+          }
+        }
+        case 'quarter': {
+          const indexMaps: Record<string, number> = {}
+          fullCols.forEach(({ dateObj }, i) => {
+            const q = XEUtils.toDateString(dateObj.date, 'yyyy-q')
+            indexMaps[q] = i
+          })
+          return (startValue: any, endValue: any) => {
+            const startDate = parseStringDate(startValue)
+            const endDate = parseStringDate(endValue)
+            const startStr = XEUtils.toDateString(startDate, 'yyyy-q')
+            const startFirstDate = XEUtils.getWhatQuarter(startDate, 0, 'first')
+            const endStr = XEUtils.toDateString(endDate, 'yyyy-q')
+            const endFirstDate = XEUtils.getWhatQuarter(endDate, 0, 'first')
+            const dateSize = Math.floor((XEUtils.getWhatQuarter(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
+            const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
+            const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
+            const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+            return {
+              offsetLeftSize,
+              offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            }
+          }
+        }
+        case 'month': {
+          const indexMaps: Record<string, number> = {}
+          fullCols.forEach(({ dateObj }, i) => {
+            const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM')
+            indexMaps[yyyyMM] = i
+          })
+          return (startValue: any, endValue: any) => {
+            const startDate = parseStringDate(startValue)
+            const endDate = parseStringDate(endValue)
+            const startStr = XEUtils.toDateString(startDate, 'yyyy-MM')
+            const startFirstDate = XEUtils.getWhatMonth(startDate, 0, 'first')
+            const endStr = XEUtils.toDateString(endDate, 'yyyy-MM')
+            const endFirstDate = XEUtils.getWhatMonth(endDate, 0, 'first')
+            const dateSize = Math.floor((XEUtils.getWhatMonth(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
+            const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
+            const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
+            const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+            return {
+              offsetLeftSize,
+              offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            }
+          }
+        }
+        case 'week': {
+          const indexMaps: Record<string, number> = {}
+          fullCols.forEach(({ dateObj }, i) => {
+            const yyyyW = XEUtils.toDateString(dateObj.date, 'yyyy-W', { firstDay: weekScale ? weekScale.startDay : undefined })
+            indexMaps[yyyyW] = i
+          })
+          return (startValue: any, endValue: any) => {
+            const startDate = parseStringDate(startValue)
+            const endDate = parseStringDate(endValue)
+            const startStr = XEUtils.toDateString(startDate, 'yyyy-W', { firstDay: weekScale ? weekScale.startDay : undefined })
+            const startFirstDate = XEUtils.getWhatWeek(startDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
+            const endStr = XEUtils.toDateString(endDate, 'yyyy-W', { firstDay: weekScale ? weekScale.startDay : undefined })
+            const endFirstDate = XEUtils.getWhatWeek(endDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
+            const dateSize = Math.floor((XEUtils.getWhatWeek(endDate, 1, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined).getTime() - endFirstDate.getTime()) / dayMs)
+            const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
+            const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
+            const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+            return {
+              offsetLeftSize,
+              offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            }
+          }
+        }
+        case 'day':
+        case 'date': {
+          const indexMaps: Record<string, number> = {}
+          fullCols.forEach(({ dateObj }, i) => {
+            const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd')
+            indexMaps[yyyyMM] = i
+          })
+          return (startValue: any, endValue: any) => {
+            const startDate = parseStringDate(startValue)
+            const endDate = parseStringDate(endValue)
+            const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd')
+            const startFirstDate = XEUtils.getWhatDay(startDate, 0, 'first')
+            const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd')
+            const endFirstDate = XEUtils.getWhatDay(endDate, 0, 'first')
+            const minuteSize = Math.floor((XEUtils.getWhatDay(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
+            const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+            const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
+            const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+            return {
+              offsetLeftSize,
+              offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            }
+          }
+        }
+        case 'hour': {
+          const indexMaps: Record<string, number> = {}
+          fullCols.forEach(({ dateObj }, i) => {
+            const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd HH')
+            indexMaps[yyyyMM] = i
+          })
+          return (startValue: any, endValue: any) => {
+            const startDate = parseStringDate(startValue)
+            const endDate = parseStringDate(endValue)
+            const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd HH')
+            const startFirstDate = XEUtils.getWhatHours(startDate, 0, 'first')
+            const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd HH')
+            const endFirstDate = XEUtils.getWhatHours(endDate, 0, 'first')
+            const minuteSize = Math.floor((XEUtils.getWhatHours(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
+            const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+            const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
+            const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+            return {
+              offsetLeftSize,
+              offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            }
+          }
+        }
+        case 'minute': {
+          const indexMaps: Record<string, number> = {}
+          fullCols.forEach(({ dateObj }, i) => {
+            const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd HH:mm')
+            indexMaps[yyyyMM] = i
+          })
+          return (startValue: any, endValue: any) => {
+            const startDate = parseStringDate(startValue)
+            const endDate = parseStringDate(endValue)
+            const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd HH:mm')
+            const startFirstDate = XEUtils.getWhatMinutes(startDate, 0, 'first')
+            const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd HH:mm')
+            const endFirstDate = XEUtils.getWhatMinutes(endDate, 0, 'first')
+            const minuteSize = Math.floor((XEUtils.getWhatMinutes(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
+            const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+            const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
+            const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+            return {
+              offsetLeftSize,
+              offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            }
+          }
+        }
+        case 'second': {
+          const gapTime = getStandardGapTime(minScale.type)
+          return (startValue: any, endValue: any) => {
+            const startDate = parseStringDate(startValue)
+            const endDate = parseStringDate(endValue)
+            let offsetLeftSize = 0
+            let offsetWidthSize = 0
+            if (minViewDate) {
+              offsetLeftSize = (startDate.getTime() - minViewDate.getTime()) / gapTime
+              offsetWidthSize = ((endDate.getTime() - startDate.getTime()) / gapTime) + 1
+            }
+            return {
+              offsetLeftSize,
+              offsetWidthSize
+            }
+          }
+        }
+      }
+      return () => {
+        return {
+          offsetLeftSize: 0,
+          offsetWidthSize: 0
+        }
+      }
+    }
+
+    const handleParseColumn = () => {
+      const ganttProps = $xeGantt.props
+      const { treeConfig } = ganttProps
+      const { minViewDate, maxViewDate } = reactData
+      const { fullCols, groupCols } = handleColumnHeader()
+      if (minViewDate && maxViewDate && fullCols.length) {
         const $xeTable = internalData.xeTable
         if ($xeTable) {
           const startField = computeStartField.value
@@ -346,20 +602,18 @@ export default defineVxeComponent({
           const childrenField = treeOpts.children || treeOpts.childrenField
 
           const ctMaps: Record<string, VxeGanttDefines.RowCacheItem> = {}
+          const renderFn = createChartRender(fullCols)
           const handleParseRender = (row: any) => {
             const rowid = $xeTable.getRowid(row)
             const startValue = XEUtils.get(row, startField)
             const endValue = XEUtils.get(row, endField)
             if (startValue && endValue) {
-              const startDate = parseStringDate(startValue)
-              const endDate = parseStringDate(endValue)
-              const oLeftSize = Math.floor((startDate.getTime() - minViewDate.getTime()) / gapTime)
-              const oWidthSize = Math.floor((endDate.getTime() - startDate.getTime()) / gapTime) + 1
+              const { offsetLeftSize, offsetWidthSize } = renderFn(startValue, endValue)
               ctMaps[rowid] = {
                 row,
                 rowid,
-                oLeftSize,
-                oWidthSize
+                oLeftSize: offsetLeftSize,
+                oWidthSize: offsetWidthSize
               }
             }
           }
@@ -627,11 +881,11 @@ export default defineVxeComponent({
       return new Promise<void>(resolve => {
         const { rceTimeout, rceRunTime } = internalData
         const $xeTable = internalData.xeTable
-        let refreshDelay = 50
+        let refreshDelay = 30
         if ($xeTable) {
           const { computeResizeOpts } = $xeTable.getComputeMaps()
           const resizeOpts = computeResizeOpts.value
-          refreshDelay = resizeOpts.refreshDelay || 50
+          refreshDelay = resizeOpts.refreshDelay || refreshDelay
         }
         if (rceTimeout) {
           clearTimeout(rceTimeout)
@@ -956,7 +1210,14 @@ export default defineVxeComponent({
     const ganttViewMethods: VxeGanttViewMethods = {
       refreshData () {
         handleUpdateData()
-        return handleLazyRecalculate()
+        handleRecalculateStyle()
+        return nextTick().then(() => {
+          const $xeTable = internalData.xeTable
+          handleRecalculateStyle()
+          if ($xeTable) {
+            return $xeTable.recalculate()
+          }
+        })
       },
       updateViewData () {
         const $xeTable = internalData.xeTable
