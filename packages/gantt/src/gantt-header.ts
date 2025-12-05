@@ -70,9 +70,10 @@ export default defineVxeComponent({
               })
             })),
             h('thead', {}, headerGroups.map(({ scaleItem, columns }, $rowIndex) => {
-              const { type, titleMethod, headerCellStyle, slots } = scaleItem
+              const { type, titleFormat, titleMethod, headerCellStyle, slots } = scaleItem
               const titleSlot = slots ? slots.title : null
-              const todayValue = showNowLine && $rowIndex === headerGroups.length - 1 ? todayDateMaps[type] : null
+              const isLast = $rowIndex === headerGroups.length - 1
+              const todayValue = isLast && showNowLine ? todayDateMaps[type] : null
               return h('tr', {
                 key: $rowIndex
               }, columns.map((column, cIndex) => {
@@ -84,6 +85,10 @@ export default defineVxeComponent({
                   } else {
                     label = getI18n(`vxe.gantt.${!$rowIndex && headerGroups.length > 1 ? 'tFullFormat' : 'tSimpleFormat'}.${type}`, dateObj)
                   }
+                } else {
+                  if (isLast && scaleItem.type === 'week') {
+                    label = getI18n(`vxe.gantt.tSimpleFormat.${type}`, dateObj)
+                  }
                 }
                 let cellVNs: string | VxeComponentSlotType[] = label
                 const ctParams = { source: sourceType, type: viewType, column, scaleObj: scaleItem, title: label, dateObj: dateObj, $rowIndex }
@@ -91,6 +96,8 @@ export default defineVxeComponent({
                   cellVNs = $xeGantt.callSlot(titleSlot, ctParams, h)
                 } else if (titleMethod) {
                   cellVNs = `${titleMethod(ctParams)}`
+                } else if (titleFormat) {
+                  cellVNs = XEUtils.toDateString(dateObj.date, titleFormat)
                 }
                 let cellStys = {}
                 if (headerCellStyle) {

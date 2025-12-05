@@ -256,6 +256,26 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       return Object.assign({}, getConfig().gantt.taskSplitConfig, props.taskSplitConfig)
     },
+    computeScaleUnit () {
+      const $xeGantt = this
+
+      const minScale = $xeGantt.computeMinScale as VxeGanttDefines.ColumnScaleObj
+      return minScale ? minScale.type : 'date'
+    },
+    computeMinScale () {
+      const $xeGantt = this
+      const reactData = ($xeGantt as any).reactData as GanttReactData
+
+      const { taskScaleList } = reactData
+      return XEUtils.last(taskScaleList)
+    },
+    computeWeekScale () {
+      const $xeGantt = this
+      const reactData = ($xeGantt as any).reactData as GanttReactData
+
+      const { taskScaleList } = reactData
+      return taskScaleList.find(item => item.type === 'week')
+    },
     computeTaskScaleConfs () {
       const $xeGantt = this
 
@@ -534,6 +554,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const $xeGantt = this
 
       $xeGantt.handleTaskScaleConfig()
+      $xeGantt.refreshTaskView()
     }
   },
   methods: {
