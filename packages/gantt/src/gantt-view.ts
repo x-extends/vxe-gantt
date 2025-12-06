@@ -197,7 +197,7 @@ function handleColumnHeader ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
       if (minScale.level < 17) {
         handleData('quarter', colMaps, minCol)
       }
-      if (minScale.level < 14) {
+      if (minScale.level < 15) {
         handleData('month', colMaps, minCol)
       }
       if (minScale.level < 13) {
@@ -206,7 +206,7 @@ function handleColumnHeader ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
       if (minScale.level < 11) {
         handleData('day', colMaps, minCol)
       }
-      if (minScale.level < 12) {
+      if (minScale.level < 9) {
         handleData('date', colMaps, minCol)
       }
       if (minScale.level < 7) {
@@ -214,6 +214,9 @@ function handleColumnHeader ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
       }
       if (minScale.level < 5) {
         handleData('minute', colMaps, minCol)
+      }
+      if (minScale.level < 3) {
+        handleData('second', colMaps, minCol)
       }
 
       fullCols.push(minCol)

@@ -59,7 +59,7 @@ export default defineVxeComponent({
       const progressField = $xeGantt.computeProgressField
       const taskBarOpts = $xeGantt.computeTaskBarOpts
       const barParams = { $gantt: $xeGantt, row }
-      const { showProgress, showContent, contentMethod, barStyle, drag } = taskBarOpts
+      const { showProgress, showContent, contentMethod, barStyle, drag, showTooltip } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
       const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
       const { round } = barStyObj
@@ -90,7 +90,34 @@ export default defineVxeComponent({
         title = getStringValue(contentMethod({ row, title }))
       }
 
-      const ctParams = { source: sourceType, type: viewType, row, $rowIndex, rowIndex, _rowIndex }
+      const ctParams = { source: sourceType, type: viewType, row, $rowIndex, rowIndex, _rowIndex, $gantt: $xeGantt }
+      const ons: {
+        click: any
+        dblclick: any
+        mousedown: any
+        mouseover?: any
+        mouseleave?: any
+      } = {
+        click (evnt: MouseEvent) {
+          $xeGantt.handleTaskBarClickEvent(evnt, barParams)
+        },
+        dblclick (evnt: MouseEvent) {
+          $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
+        },
+        mousedown (evnt: MouseEvent) {
+          if ($xeGantt.handleTaskBarMousedownEvent) {
+            $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
+          }
+        }
+      }
+      if (showTooltip) {
+        ons.mouseover = (evnt: MouseEvent) => {
+          $xeGantt.triggerTaskBarTooltipEvent(evnt, Object.assign({ $event: evnt }, ctParams))
+        }
+        ons.mouseleave = (evnt: MouseEvent) => {
+          $xeGantt.handleTaskBarTooltipLeaveEvent(evnt, Object.assign({ $event: evnt }, ctParams))
+        }
+      }
       return h('div', {
         key: treeConfig ? rowid : $rowIndex,
         attrs: {
@@ -116,19 +143,7 @@ export default defineVxeComponent({
           attrs: {
             rowid
           },
-          on: {
-            click (evnt: MouseEvent) {
-              $xeGantt.handleTaskBarClickEvent(evnt, barParams)
-            },
-            dblclick (evnt: MouseEvent) {
-              $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
-            },
-            mousedown (evnt: MouseEvent) {
-              if ($xeGantt.handleTaskBarMousedownEvent) {
-                $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
-              }
-            }
-          }
+          on: ons
         }, taskBarSlot
           ? $xeGantt.callSlot(taskBarSlot, barParams, h)
           : [

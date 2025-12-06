@@ -2,7 +2,7 @@ import { PropType, VNode, CreateElement, Component } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
 import XEUtils from 'xe-utils'
-import { getLastZIndex, nextZIndex, isEnableConf } from '../../ui/src/utils'
+import { getLastZIndex, nextZIndex, isEnableConf, formatText } from '../../ui/src/utils'
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
 import { warnLog, errLog } from '../../ui/src/log'
@@ -10,7 +10,7 @@ import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
 
 import type { ValueOf, VxeFormInstance, VxeFormItemProps, VxePagerInstance, VxePagerDefines, VxeComponentStyleType, VxeComponentSizeType, VxeFormDefines, VxeFormItemPropTypes } from 'vxe-pc-ui'
-import type { VxeTableMethods, VxeToolbarPropTypes, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableDefines, TableReactData, VxeToolbarInstance, TableInternalData, VxeTablePropTypes, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
+import type { VxeTableMethods, VxeToolbarPropTypes, VxeTooltipInstance, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableDefines, TableReactData, VxeToolbarInstance, TableInternalData, VxeTablePropTypes, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
 import type { VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, VxeGanttViewInstance, VxeGanttDefines, VxeGanttConstructor } from '../../../types'
 
 const { getConfig, getIcon, getI18n, commands, globalMixins, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement } = VxeUI
@@ -78,6 +78,7 @@ function createInternalData (): GanttInternalData {
   return {
     uFoot: false,
     resizeTableWidth: 0
+    // barTipTimeout: undefined
   }
 }
 
@@ -120,6 +121,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     taskViewScaleConfig: Object as PropType<VxeGanttPropTypes.TaskViewScaleConfig>,
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
+    taskBarTooltipConfig: Object as PropType<VxeGanttPropTypes.TaskBarTooltipConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
     taskBarResizeConfig: Object as PropType<VxeGanttPropTypes.TaskBarResizeConfig>,
     taskBarDragConfig: Object as PropType<VxeGanttPropTypes.TaskBarDragConfig>,
@@ -157,7 +159,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
       },
       showLeftView: true,
       showRightView: true,
-      taskScaleList: []
+      taskScaleList: [],
+
+      barTipStore: {
+        row: null,
+        content: '',
+        visible: false,
+        params: null
+      }
     }
 
     const internalData = createInternalData()
@@ -256,6 +265,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       return Object.assign({}, getConfig().gantt.taskSplitConfig, props.taskSplitConfig)
     },
+    computeTaskBarTooltipOpts () {
+      const $xeGantt = this
+      const props = $xeGantt
+
+      return Object.assign({}, getConfig().gantt.taskBarTooltipConfig, props.taskBarTooltipConfig)
+    },
     computeScaleUnit () {
       const $xeGantt = this
 
@@ -276,12 +291,19 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const { taskScaleList } = reactData
       return taskScaleList.find(item => item.type === 'week')
     },
-    computeTaskScaleConfs () {
+    computeTaskViewScales () {
       const $xeGantt = this
 
       const taskViewOpts = $xeGantt.computeTaskViewOpts as VxeGanttPropTypes.TaskViewConfig
       const { scales } = taskViewOpts
       return scales
+    },
+    /**
+     * 已废弃，保留兼容
+     * @deprecated
+     */
+    computeTaskScaleConfs () {
+      return this.computeTaskViewScales
     },
     computeTitleField () {
       const $xeGantt = this
@@ -550,7 +572,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       $xeGantt.initProxy()
     },
-    computeTaskScaleConfs () {
+    computeTaskViewScales () {
       const $xeGantt = this
 
       $xeGantt.handleTaskScaleConfig()
@@ -568,7 +590,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
-      const taskScaleConfs = $xeGantt.computeTaskScaleConfs
+      const taskScaleConfs = $xeGantt.computeTaskViewScales
       const taskViewScaleOpts = $xeGantt.computeTaskViewScaleOpts
       const scaleConfs: VxeGanttDefines.ColumnScaleObj[] = []
       if (taskScaleConfs) {
@@ -1712,6 +1734,28 @@ export default /* define-vxe-component start */ defineVxeComponent({
       reactData.showRightView = false
       return $xeGantt.$nextTick()
     },
+    /**
+       * 关闭 bar tooltip
+       */
+    closeTaskBarTooltip () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      const { barTipStore } = reactData
+      const $tooltip = $xeGantt.$refs.refTooltip as VxeTooltipInstance
+      if (barTipStore.visible) {
+        Object.assign(barTipStore, {
+          row: null,
+          content: null,
+          visible: false,
+          params: {}
+        })
+        if ($tooltip && $tooltip.close) {
+          $tooltip.close()
+        }
+      }
+      return $xeGantt.$nextTick()
+    },
     callSlot (slotFunc: any, params: any, h: CreateElement) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
@@ -1845,6 +1889,72 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const $xeGantt = this
 
       $xeGantt.dispatchEvent('task-bar-dblclick', params, evnt)
+    },
+    triggerTaskBarTooltipEvent (evnt: MouseEvent, params: VxeGanttDefines.TaskBarMouseoverParams) {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      const { barTipStore } = reactData
+      const taskBarTooltipOpts = $xeGantt.computeTaskBarTooltipOpts
+      const titleField = $xeGantt.computeTitleField
+      const { contentMethod } = taskBarTooltipOpts
+      const { row } = params
+      let content = formatText(XEUtils.get(row, titleField))
+      if (contentMethod) {
+        content = formatText(contentMethod(params))
+      }
+      $xeGantt.handleTargetEnterEvent(barTipStore.row !== row)
+      const tipContent = formatText(content)
+      Object.assign(barTipStore, {
+        row,
+        visible: true,
+        content: tipContent,
+        params
+      })
+      $xeGantt.$nextTick(() => {
+        const $tooltip = $xeGantt.$refs.refTooltip as VxeTooltipInstance
+        if ($tooltip) {
+          if ($tooltip.openByEvent) {
+            $tooltip.openByEvent(evnt, evnt.currentTarget, tipContent)
+          } else if ($tooltip.open) {
+            $tooltip.open(evnt.currentTarget, tipContent)
+          }
+        }
+      })
+    },
+    handleTargetEnterEvent (isClear: boolean) {
+      const $xeGantt = this
+      const internalData = $xeGantt.internalData
+
+      const $tooltip = $xeGantt.$refs.refTooltip as VxeTooltipInstance
+      clearTimeout(internalData.barTipTimeout)
+      if (isClear) {
+        $xeGantt.closeTaskBarTooltip()
+      } else {
+        if ($tooltip && $tooltip.setActived) {
+          $tooltip.setActived(true)
+        }
+      }
+    },
+    handleTaskBarTooltipLeaveEvent () {
+      const $xeGantt = this
+      const internalData = $xeGantt.internalData
+
+      const taskBarTooltipOpts = $xeGantt.computeTaskBarTooltipOpts
+      let $tooltip = $xeGantt.$refs.refTooltip as VxeTooltipInstance
+      if ($tooltip && $tooltip.setActived) {
+        $tooltip.setActived(false)
+      }
+      if (taskBarTooltipOpts.enterable) {
+        internalData.barTipTimeout = setTimeout(() => {
+          $tooltip = $xeGantt.$refs.refTooltip as VxeTooltipInstance
+          if ($tooltip && $tooltip.isActived && !$tooltip.isActived()) {
+            $xeGantt.closeTaskBarTooltip()
+          }
+        }, taskBarTooltipOpts.leaveDelay)
+      } else {
+        $xeGantt.closeTaskBarTooltip()
+      }
     },
     handleTaskHeaderContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskHeaderContextmenuParams) {
       const $xeGantt = this
@@ -2356,13 +2466,19 @@ export default /* define-vxe-component start */ defineVxeComponent({
       return childVNs
     },
     renderLayout (h: CreateElement) {
+      const VxeUITooltipComponent = VxeUI.getComponent('VxeTooltip')
+
       const $xeGantt = this
+      const reactData = $xeGantt.reactData
       const slots = $xeGantt.$scopedSlots
 
+      const { barTipStore } = reactData
       const currLayoutConf = $xeGantt.computeCurrLayoutConf
       const { headKeys, bodyKeys, footKeys } = currLayoutConf
+      const taskBarTooltipOpts = $xeGantt.computeTaskBarTooltipOpts
       const asideLeftSlot = slots.asideLeft || slots['aside-left']
       const asideRightSlot = slots.asideRight || slots['aside-right']
+      const taskBarTooltipSlot = slots.taskBarTooltip || slots['task-bar-tooltip']
       return [
         h('div', {
           class: 'vxe-gantt--layout-header-wrapper'
@@ -2389,7 +2505,42 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }, $xeGantt.renderChildLayout(h, footKeys)),
         h('div', {
           ref: 'refPopupContainerElem'
-        })
+        }),
+        h('div', {}, [
+        /**
+          * 任务条提示
+          */
+          h(VxeUITooltipComponent, {
+            key: 'gtp',
+            ref: 'refTooltip',
+            props: {
+              theme: taskBarTooltipOpts.theme,
+              enterable: taskBarTooltipOpts.enterable,
+              enterDelay: taskBarTooltipOpts.enterDelay,
+              leaveDelay: taskBarTooltipOpts.leaveDelay,
+              useHTML: taskBarTooltipOpts.useHTML,
+              width: taskBarTooltipOpts.width,
+              height: taskBarTooltipOpts.height,
+              minWidth: taskBarTooltipOpts.minWidth,
+              minHeight: taskBarTooltipOpts.minHeight,
+              maxWidth: taskBarTooltipOpts.maxWidth,
+              maxHeight: taskBarTooltipOpts.maxHeight,
+              isArrow: false
+            },
+            scopedSlots: taskBarTooltipSlot
+              ? {
+                  content: () => {
+                    const { row, content: tooltipContent } = barTipStore
+                    if (row) {
+                      return h('div', {
+                      }, taskBarTooltipSlot(Object.assign({ tooltipContent, $gantt: $xeGantt }, barTipStore.params)))
+                    }
+                    return renderEmptyElement($xeGantt)
+                  }
+                }
+              : {}
+          })
+        ])
       ]
     },
     renderVN (h: CreateElement): VNode {

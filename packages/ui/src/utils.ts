@@ -8,6 +8,10 @@ export function isEnableConf (conf: any): boolean {
   return conf && conf.enabled !== false
 }
 
+export function isEmptyValue (cellValue: any) {
+  return cellValue === null || cellValue === undefined || cellValue === ''
+}
+
 export function nextZIndex () {
   return DomZIndex.getNext()
 }
@@ -37,6 +41,10 @@ export function getFuncText (content: string | number | boolean | null | undefin
     return XEUtils.toValueString(translate ? translate('' + content, args) : content)
   }
   return ''
+}
+
+export function formatText (value: any, placeholder?: any) {
+  return '' + (isEmptyValue(value) ? (placeholder ? VxeUI.getConfig().emptyCell : '') : value)
 }
 
 /**
