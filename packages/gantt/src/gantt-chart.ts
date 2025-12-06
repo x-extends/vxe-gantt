@@ -44,7 +44,7 @@ export default defineVxeComponent({
       const progressField = computeProgressField.value
       const taskBarOpts = computeTaskBarOpts.value
       const barParams = { $gantt: $xeGantt, row }
-      const { showProgress, showContent, contentMethod, barStyle, drag } = taskBarOpts
+      const { showProgress, showContent, contentMethod, barStyle, drag, showTooltip } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
       const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
       const { round } = barStyObj
@@ -75,7 +75,38 @@ export default defineVxeComponent({
         title = getStringValue(contentMethod({ row, title }))
       }
 
-      const ctParams = { source: sourceType, type: viewType, row, $rowIndex, rowIndex, _rowIndex }
+      const ctParams = { source: sourceType, type: viewType, row, $rowIndex, rowIndex, _rowIndex, $gantt: $xeGantt }
+      const ons: {
+        onClick: any
+        onDblclick: any
+        onMousedown: any
+        onMouseover?: any
+        onMouseleave?: any
+      } = {
+        onClick (evnt: MouseEvent) {
+          $xeGantt.handleTaskBarClickEvent(evnt, barParams)
+        },
+        onDblclick (evnt: MouseEvent) {
+          $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
+        },
+        onMousedown (evnt: MouseEvent) {
+          if ($xeGantt.handleTaskBarMousedownEvent) {
+            $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
+          }
+        }
+      }
+      if (showTooltip) {
+        ons.onMouseover = (evnt: MouseEvent) => {
+          const ttParams = Object.assign({ $event: evnt }, ctParams)
+          $xeGantt.triggerTaskBarTooltipEvent(evnt, ttParams)
+          $xeGantt.dispatchEvent('task-bar-mouseenter', ttParams, evnt)
+        }
+        ons.onMouseleave = (evnt: MouseEvent) => {
+          const ttParams = Object.assign({ $event: evnt }, ctParams)
+          $xeGantt.handleTaskBarTooltipLeaveEvent(evnt, ttParams)
+          $xeGantt.dispatchEvent('task-bar-mouseleave', ttParams, evnt)
+        }
+      }
       return h('div', {
         key: treeConfig ? rowid : $rowIndex,
         rowid,
@@ -95,17 +126,7 @@ export default defineVxeComponent({
           class: taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar',
           style: vbStyle,
           rowid,
-          onClick (evnt: MouseEvent) {
-            $xeGantt.handleTaskBarClickEvent(evnt, barParams)
-          },
-          onDblclick (evnt: MouseEvent) {
-            $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
-          },
-          onMousedown (evnt: MouseEvent) {
-            if ($xeGantt.handleTaskBarMousedownEvent) {
-              $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
-            }
-          }
+          ...ons
         }, taskBarSlot
           ? $xeGantt.callSlot(taskBarSlot, barParams)
           : [

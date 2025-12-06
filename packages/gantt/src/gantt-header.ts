@@ -65,15 +65,17 @@ export default defineVxeComponent({
               }, columns.map((column, cIndex) => {
                 const { field, childCount, dateObj } = column
                 let label = `${column.title}`
-                if ($rowIndex < headerGroups.length - 1) {
-                  if (scaleItem.type === 'day') {
-                    label = getI18n(`vxe.gantt.dayss.w${dateObj.e}`)
-                  } else {
-                    label = getI18n(`vxe.gantt.${!$rowIndex && headerGroups.length > 1 ? 'tFullFormat' : 'tSimpleFormat'}.${type}`, dateObj)
-                  }
+                if (scaleItem.type === 'day') {
+                  label = getI18n(`vxe.gantt.dayss.w${dateObj.e}`)
                 } else {
-                  if (isLast && scaleItem.type === 'week') {
+                  if ($rowIndex) {
                     label = getI18n(`vxe.gantt.tSimpleFormat.${type}`, dateObj)
+                  } else {
+                    if (isLast && scaleItem.type === 'week') {
+                      label = getI18n(`vxe.gantt.tSimpleFormat.${type}`, dateObj)
+                    } else {
+                      label = getI18n(`vxe.gantt.tFullFormat.${type}`, dateObj)
+                    }
                   }
                 }
                 let cellVNs: string | VxeComponentSlotType[] = label

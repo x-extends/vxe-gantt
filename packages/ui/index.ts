@@ -43,6 +43,9 @@ setConfig({
       // beforeSave: null,
       // afterSave: null
     },
+    taskBarTooltipConfig: {
+      enterable: true
+    },
     taskViewScaleConfig: {
       week: {
         startDay: 1
