@@ -21,7 +21,7 @@ export default defineVxeComponent({
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
     const { reactData, internalData } = $xeGanttView
-    const { computeProgressField, computeTitleField, computeTaskBarOpts } = $xeGantt.getComputeMaps()
+    const { computeProgressField, computeTitleField, computeTaskBarOpts, computeScaleUnit } = $xeGantt.getComputeMaps()
 
     const refElem = ref() as Ref<HTMLDivElement>
 
@@ -43,7 +43,8 @@ export default defineVxeComponent({
       const titleField = computeTitleField.value
       const progressField = computeProgressField.value
       const taskBarOpts = computeTaskBarOpts.value
-      const barParams = { $gantt: $xeGantt, row }
+      const scaleUnit = computeScaleUnit.value
+      const barParams = { $gantt: $xeGantt, row, scaleType: scaleUnit }
       const { showProgress, showContent, contentMethod, barStyle, drag, showTooltip } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
       const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
@@ -72,10 +73,19 @@ export default defineVxeComponent({
       }
 
       if (contentMethod) {
-        title = getStringValue(contentMethod({ row, title }))
+        title = getStringValue(contentMethod({ row, title, scaleType: scaleUnit }))
       }
 
-      const ctParams = { source: sourceType, type: viewType, row, $rowIndex, rowIndex, _rowIndex, $gantt: $xeGantt }
+      const ctParams = {
+        $gantt: $xeGantt,
+        source: sourceType,
+        type: viewType,
+        scaleType: scaleUnit,
+        row,
+        $rowIndex,
+        rowIndex,
+        _rowIndex
+      }
       const ons: {
         onClick: any
         onDblclick: any

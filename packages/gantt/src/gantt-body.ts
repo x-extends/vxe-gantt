@@ -17,7 +17,7 @@ export default defineVxeComponent({
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
-    const { computeTaskViewOpts } = $xeGantt.getComputeMaps()
+    const { computeTaskViewOpts, computeScaleUnit } = $xeGantt.getComputeMaps()
     const { reactData, internalData } = $xeGanttView
 
     const refElem = ref() as Ref<HTMLDivElement>
@@ -42,6 +42,7 @@ export default defineVxeComponent({
       const { todayDateMaps } = internalData
       const taskViewOpts = computeTaskViewOpts.value
       const { showNowLine, viewStyle } = taskViewOpts
+      const scaleUnit = computeScaleUnit.value
       const { scaleItem } = headerGroups[headerGroups.length - 1] || {}
       const { field, dateObj } = column
       const { cellClassName, cellStyle } = viewStyle || {}
@@ -88,7 +89,18 @@ export default defineVxeComponent({
           })
         )
       }
-      const ctParams = { source: sourceType, type: viewType, dateObj, row, column, $rowIndex, rowIndex, _rowIndex }
+      const ctParams = {
+        $gantt: $xeGantt,
+        source: sourceType,
+        type: viewType,
+        scaleType: scaleUnit,
+        dateObj,
+        row,
+        column,
+        $rowIndex,
+        rowIndex,
+        _rowIndex
+      }
       return h('td', {
         key: $columnIndex,
         class: [
@@ -133,6 +145,7 @@ export default defineVxeComponent({
       const { transform } = treeOpts
       const childrenField = treeOpts.children || treeOpts.childrenField
 
+      const scaleUnit = computeScaleUnit.value
       const taskViewOpts = computeTaskViewOpts.value
       const { viewStyle } = taskViewOpts
       const { rowClassName, rowStyle } = viewStyle || {}
@@ -170,7 +183,16 @@ export default defineVxeComponent({
           trOns.onDragend = $xeTable.handleRowDragDragendEvent
           trOns.onDragover = $xeTable.handleRowDragDragoverEvent
         }
-        const rowParams = { source: sourceType, type: viewType, row, rowIndex, $rowIndex, _rowIndex }
+        const rowParams = {
+          $gantt: $xeGantt,
+          source: sourceType,
+          type: viewType,
+          scaleType: scaleUnit,
+          row,
+          rowIndex,
+          $rowIndex,
+          _rowIndex
+        }
         trVNs.push(
           h('tr', {
             key: treeConfig ? rowid : $rowIndex,
