@@ -58,7 +58,8 @@ export default defineVxeComponent({
       const titleField = $xeGantt.computeTitleField
       const progressField = $xeGantt.computeProgressField
       const taskBarOpts = $xeGantt.computeTaskBarOpts
-      const barParams = { $gantt: $xeGantt, row }
+      const scaleUnit = $xeGantt.computeScaleUnit
+      const barParams = { $gantt: $xeGantt, row, scaleType: scaleUnit }
       const { showProgress, showContent, contentMethod, barStyle, drag, showTooltip } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
       const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
@@ -87,10 +88,19 @@ export default defineVxeComponent({
       }
 
       if (contentMethod) {
-        title = getStringValue(contentMethod({ row, title }))
+        title = getStringValue(contentMethod({ row, title, scaleType: scaleUnit }))
       }
 
-      const ctParams = { source: sourceType, type: viewType, row, $rowIndex, rowIndex, _rowIndex, $gantt: $xeGantt }
+      const ctParams = {
+        $gantt: $xeGantt,
+        source: sourceType,
+        type: viewType,
+        scaleType: scaleUnit,
+        row,
+        $rowIndex,
+        rowIndex,
+        _rowIndex
+      }
       const ons: {
         click: any
         dblclick: any

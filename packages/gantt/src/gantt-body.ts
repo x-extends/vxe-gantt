@@ -51,6 +51,7 @@ export default defineVxeComponent({
       const { todayDateMaps } = internalData
       const taskViewOpts = $xeGantt.computeTaskViewOpts
       const { showNowLine, viewStyle } = taskViewOpts
+      const scaleUnit = $xeGantt.computeScaleUnit
       const { scaleItem } = headerGroups[headerGroups.length - 1] || {}
       const { field, dateObj } = column
       const { cellClassName, cellStyle } = viewStyle || {}
@@ -99,7 +100,18 @@ export default defineVxeComponent({
           })
         )
       }
-      const ctParams = { source: sourceType, type: viewType, dateObj, row, column, $rowIndex, rowIndex, _rowIndex }
+      const ctParams = {
+        $gantt: $xeGantt,
+        source: sourceType,
+        type: viewType,
+        scaleType: scaleUnit,
+        dateObj,
+        row,
+        column,
+        $rowIndex,
+        rowIndex,
+        _rowIndex
+      }
       return h('td', {
         key: $columnIndex,
         class: [
@@ -149,6 +161,7 @@ export default defineVxeComponent({
       const { transform } = treeOpts
       const childrenField = treeOpts.children || treeOpts.childrenField
 
+      const scaleUnit = $xeGantt.computeScaleUnit
       const taskViewOpts = $xeGantt.computeTaskViewOpts
       const { viewStyle } = taskViewOpts
       const { rowClassName, rowStyle } = viewStyle || {}
@@ -186,7 +199,16 @@ export default defineVxeComponent({
           trOns.dragend = $xeTable.handleRowDragDragendEvent
           trOns.dragover = $xeTable.handleRowDragDragoverEvent
         }
-        const rowParams = { source: sourceType, type: viewType, row, rowIndex, $rowIndex, _rowIndex }
+        const rowParams = {
+          $gantt: $xeGantt,
+          source: sourceType,
+          type: viewType,
+          scaleType: scaleUnit,
+          row,
+          rowIndex,
+          $rowIndex,
+          _rowIndex
+        }
         trVNs.push(
           h('tr', {
             key: treeConfig ? rowid : $rowIndex,

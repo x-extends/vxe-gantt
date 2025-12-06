@@ -1901,7 +1901,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const { row } = params
       let content = formatText(XEUtils.get(row, titleField))
       if (contentMethod) {
-        content = formatText(contentMethod(params))
+        const customContnet = contentMethod(params)
+        if (!XEUtils.eqNull(customContnet)) {
+          content = `${customContnet}`
+        }
       }
       $xeGantt.handleTargetEnterEvent(barTipStore.row !== row)
       const tipContent = formatText(content)
