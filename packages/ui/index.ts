@@ -5,6 +5,9 @@ const { setConfig, setIcon, checkVersion } = VxeUI
 
 VxeUI.ganttVersion = process.env.VUE_APP_VXE_VERSION as string
 
+const ymdFormat = 'yyyy-MM-dd'
+const ymdhmsFormat = 'yyyy-MM-dd HH:mm:ss'
+
 setConfig({
   gantt: {
     // size: null,
@@ -47,8 +50,33 @@ setConfig({
       enterable: true
     },
     taskViewScaleConfig: {
+      year: {
+        valueFormat: ymdFormat
+      },
+      quarter: {
+        valueFormat: ymdFormat
+      },
+      month: {
+        valueFormat: ymdFormat
+      },
       week: {
-        startDay: 1
+        startDay: 1,
+        valueFormat: ymdFormat
+      },
+      day: {
+        valueFormat: ymdFormat
+      },
+      date: {
+        valueFormat: ymdFormat
+      },
+      hour: {
+        valueFormat: ymdhmsFormat
+      },
+      minute: {
+        valueFormat: ymdhmsFormat
+      },
+      second: {
+        valueFormat: ymdhmsFormat
       }
     },
     taskViewConfig: {

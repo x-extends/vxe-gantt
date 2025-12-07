@@ -475,6 +475,7 @@ export default defineVxeComponent({
       refForm,
       refToolbar,
       refPager,
+      refGanttView,
       refGanttContainerElem,
       refClassifyWrapperElem,
       refPopupContainerElem
@@ -527,31 +528,24 @@ export default defineVxeComponent({
       const taskScaleConfs = computeTaskViewScales.value
       const taskViewScaleOpts = computeTaskViewScaleOpts.value
       const scaleConfs: VxeGanttDefines.ColumnScaleObj[] = []
-      if (taskScaleConfs) {
-        const keyMaps: Record<string, boolean> = {}
-        taskScaleConfs.forEach(conf => {
-          const sConf = !conf || XEUtils.isString(conf) ? { type: conf } : conf
-          const { type } = sConf
-          if (!type || !viewTypeLevelMaps[type]) {
-            errLog('vxe.error.errProp', [`type=${type}`, XEUtils.keys(viewTypeLevelMaps).join(',')])
-            return
-          }
-          if (keyMaps[type]) {
-            errLog('vxe.error.repeatProp', ['type', type])
-            return
-          }
-          keyMaps[type] = true
-          scaleConfs.push(Object.assign({}, type ? taskViewScaleOpts[type] || {} : {}, sConf, {
-            level: getViewTypeLevel(type)
-          }))
-        })
-      }
-      if (!scaleConfs.length) {
-        scaleConfs.push(
-          { type: 'month', level: viewTypeLevelMaps.month },
-          { type: 'date', level: viewTypeLevelMaps.date }
-        )
-      }
+      const keyMaps: Record<string, boolean> = {}
+      const scaleList = (taskScaleConfs && taskScaleConfs.length ? taskScaleConfs : ['month', 'date'] as VxeGanttDefines.ColumnScaleType[])
+      scaleList.forEach(conf => {
+        const sConf = !conf || XEUtils.isString(conf) ? { type: conf } : conf
+        const { type } = sConf
+        if (!type || !viewTypeLevelMaps[type]) {
+          errLog('vxe.error.errProp', [`type=${type}`, XEUtils.keys(viewTypeLevelMaps).join(',')])
+          return
+        }
+        if (keyMaps[type]) {
+          errLog('vxe.error.repeatProp', ['type', type])
+          return
+        }
+        keyMaps[type] = true
+        scaleConfs.push(Object.assign({}, type ? taskViewScaleOpts[type] || {} : {}, sConf, {
+          level: getViewTypeLevel(type)
+        }))
+      })
       reactData.taskScaleList = XEUtils.orderBy(scaleConfs, { field: 'level', order: 'desc' })
     }
 
