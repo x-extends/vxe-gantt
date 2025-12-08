@@ -34,7 +34,7 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     showContent: true
   },
   taskViewConfig: {
-    scales: ['year', 'quarter', 'month', 'day'],
+    scales: ['year', 'quarter', 'month', 'date'],
     tableStyle: {
       width: 480
     }

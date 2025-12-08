@@ -38,7 +38,7 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     }
   },
   taskViewConfig: {
-    scales: ['year', 'month', 'date', 'hour'],
+    scales: ['year', 'month', 'date', 'hour', 'second'],
     tableStyle: {
       width: 480
     }
@@ -58,8 +58,8 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     { id: 10006, title: '一个小目标项目', start: '2024-03-01 08:00:00', end: '2024-03-01 12:00:00', progress: 5 },
     { id: 10007, title: '某某计划', start: '2024-03-01 08:30:00', end: '2024-03-01 14:30:00', progress: 70 },
     { id: 10008, title: '某某科技项目', start: '2024-03-01 09:00:00', end: '2024-03-01 15:00:00', progress: 50 },
-    { id: 10009, title: '地铁建设工程', start: '2024-03-01 11:00:00', end: '2024-03-01 16:30:00', progress: 5 },
-    { id: 10010, title: '铁路修建计划', start: '2024-03-01 12:00:00', end: '2024-03-01 18:00:00', progress: 10 }
+    { id: 10009, title: '地铁建设工程', start: '2024-03-01 11:00:02', end: '2024-03-01 16:30:50', progress: 5 },
+    { id: 10010, title: '铁路修建计划', start: '2024-03-01 12:00:10', end: '2024-03-01 18:00:20', progress: 10 }
   ]
 })
 

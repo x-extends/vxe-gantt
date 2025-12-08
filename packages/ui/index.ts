@@ -80,7 +80,11 @@ setConfig({
       }
     },
     taskViewConfig: {
-      showNowLine: true
+      showNowLine: true,
+      gridding: {
+        // leftSpacing: 0,
+        // rightSpacing: 0
+      }
     },
     taskSplitConfig: {
       enabled: true,

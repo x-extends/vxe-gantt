@@ -20,6 +20,7 @@ export default defineVxeComponent({
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
+    const { internalData: ganttInternalData } = $xeGantt
     const { reactData, internalData } = $xeGanttView
     const { computeProgressField, computeTitleField, computeTaskBarOpts, computeScaleUnit } = $xeGantt.getComputeMaps()
 
@@ -107,13 +108,19 @@ export default defineVxeComponent({
       }
       if (showTooltip) {
         ons.onMouseover = (evnt: MouseEvent) => {
+          const { dragBarRow } = ganttInternalData
           const ttParams = Object.assign({ $event: evnt }, ctParams)
-          $xeGantt.triggerTaskBarTooltipEvent(evnt, ttParams)
+          if (!dragBarRow) {
+            $xeGantt.triggerTaskBarTooltipEvent(evnt, ttParams)
+          }
           $xeGantt.dispatchEvent('task-bar-mouseenter', ttParams, evnt)
         }
         ons.onMouseleave = (evnt: MouseEvent) => {
+          const { dragBarRow } = ganttInternalData
           const ttParams = Object.assign({ $event: evnt }, ctParams)
-          $xeGantt.handleTaskBarTooltipLeaveEvent(evnt, ttParams)
+          if (!dragBarRow) {
+            $xeGantt.handleTaskBarTooltipLeaveEvent(evnt, ttParams)
+          }
           $xeGantt.dispatchEvent('task-bar-mouseleave', ttParams, evnt)
         }
       }
