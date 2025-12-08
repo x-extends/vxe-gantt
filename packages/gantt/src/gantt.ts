@@ -78,7 +78,8 @@ function createInternalData (): GanttInternalData {
   return {
     uFoot: false,
     resizeTableWidth: 0
-    // barTipTimeout: undefined
+    // barTipTimeout: null
+    // dragBarRow: null
   }
 }
 

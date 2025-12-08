@@ -1,7 +1,7 @@
 import { VNode, CreateElement } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
-import { setScrollTop, setScrollLeft, removeClass, addClass } from '../../ui/src/dom'
+import { setScrollTop, setScrollLeft, removeClass, addClass, hasClass } from '../../ui/src/dom'
 import { getRefElem, getStandardGapTime } from './util'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
@@ -137,12 +137,13 @@ function handleColumnHeader ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
 
     for (let i = 0; i < scaleDateList.length; i++) {
       const itemDate = scaleDateList[i]
-      const [yyyy, MM, dd, HH, mm, ss] = XEUtils.toDateString(itemDate, 'yyyy-M-d-H-m-s').split('-')
+      const [yy, yyyy, M, MM, d, dd, H, HH, m, mm, s, ss] = XEUtils.toDateString(itemDate, 'yy-yyyy-M-MM-d-dd-H-HH-m-mm-s-ss').split('-')
       const e = itemDate.getDay()
       const E = e + 1
       const q = Math.ceil((itemDate.getMonth() + 1) / 3)
-      const W = XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)
-      const dateObj: VxeGanttDefines.ScaleDateObj = { date: itemDate, yy: yyyy, M: MM, d: dd, H: HH, m: mm, s: ss, q, W, E, e }
+      const W = `${XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)}`
+      const WW = XEUtils.padStart(W, 2, '0')
+      const dateObj: VxeGanttDefines.ScaleDateObj = { date: itemDate, yy, yyyy, M, MM, d, dd, H, HH, m, mm, s, ss, q, W, WW, E, e }
       const colMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn> = {
         year: {
           field: yyyy,
@@ -278,7 +279,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
         }
       }
     }
@@ -301,7 +302,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
         }
       }
     }
@@ -324,7 +325,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
         }
       }
     }
@@ -347,7 +348,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
         }
       }
     }
@@ -371,7 +372,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
         }
       }
     }
@@ -394,7 +395,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
         }
       }
     }
@@ -417,7 +418,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
         }
       }
     }
@@ -610,7 +611,7 @@ function updateChart ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   if (chartWrapper) {
     XEUtils.arrayEach(chartWrapper.children, (rowEl) => {
       const barEl = rowEl.children[0] as HTMLDivElement
-      if (!barEl) {
+      if (!barEl || hasClass(barEl, 'is--drag')) {
         return
       }
       const rowid = rowEl.getAttribute('rowid')
@@ -1212,18 +1213,21 @@ export default defineVxeComponent({
       const reactData = $xeGanttView.reactData
 
       const { minViewDate, maxViewDate } = reactData
+      const taskViewOpts = $xeGantt.computeTaskViewOpts
       const minScale = $xeGantt.computeMinScale
+      const { gridding } = taskViewOpts
       const dateList: Date[] = []
       if (!minViewDate || !maxViewDate) {
         return dateList
       }
 
-      const startTime = minViewDate.getTime()
-      const endTime = maxViewDate.getTime()
+      const leftSize = -XEUtils.toNumber(gridding ? gridding.leftSpacing || 0 : 0)
+      const rightSize = XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
       switch (minScale.type) {
         case 'year': {
-          let currDate = XEUtils.getWhatYear(minViewDate, 0, 'first')
-          while (currDate <= maxViewDate) {
+          let currDate = XEUtils.getWhatYear(minViewDate, leftSize, 'first')
+          const endDate = XEUtils.getWhatYear(maxViewDate, rightSize, 'first')
+          while (currDate <= endDate) {
             const itemDate = currDate
             dateList.push(itemDate)
             currDate = XEUtils.getWhatYear(currDate, 1)
@@ -1231,8 +1235,9 @@ export default defineVxeComponent({
           break
         }
         case 'quarter': {
-          let currDate = XEUtils.getWhatQuarter(minViewDate, 0, 'first')
-          while (currDate <= maxViewDate) {
+          let currDate = XEUtils.getWhatQuarter(minViewDate, leftSize, 'first')
+          const endDate = XEUtils.getWhatQuarter(maxViewDate, rightSize, 'first')
+          while (currDate <= endDate) {
             const itemDate = currDate
             dateList.push(itemDate)
             currDate = XEUtils.getWhatQuarter(currDate, 1)
@@ -1240,8 +1245,9 @@ export default defineVxeComponent({
           break
         }
         case 'month': {
-          let currDate = XEUtils.getWhatMonth(minViewDate, 0, 'first')
-          while (currDate <= maxViewDate) {
+          let currDate = XEUtils.getWhatMonth(minViewDate, leftSize, 'first')
+          const endDate = XEUtils.getWhatMonth(maxViewDate, rightSize, 'first')
+          while (currDate <= endDate) {
             const itemDate = currDate
             dateList.push(itemDate)
             currDate = XEUtils.getWhatMonth(currDate, 1)
@@ -1249,8 +1255,9 @@ export default defineVxeComponent({
           break
         }
         case 'week': {
-          let currDate = XEUtils.getWhatWeek(minViewDate, 0, minScale.startDay, minScale.startDay)
-          while (currDate <= maxViewDate) {
+          let currDate = XEUtils.getWhatWeek(minViewDate, leftSize, minScale.startDay, minScale.startDay)
+          const endDate = XEUtils.getWhatWeek(maxViewDate, rightSize, minScale.startDay, minScale.startDay)
+          while (currDate <= endDate) {
             const itemDate = currDate
             dateList.push(itemDate)
             currDate = XEUtils.getWhatWeek(currDate, 1)
@@ -1258,12 +1265,22 @@ export default defineVxeComponent({
           break
         }
         case 'day':
-        case 'date':
+        case 'date': {
+          let currDate = XEUtils.getWhatDay(minViewDate, leftSize, 'first')
+          const endDate = XEUtils.getWhatDay(maxViewDate, rightSize, 'first')
+          while (currDate <= endDate) {
+            const itemDate = currDate
+            dateList.push(itemDate)
+            currDate = XEUtils.getWhatDay(currDate, 1)
+          }
+          break
+        }
         case 'hour':
         case 'minute':
         case 'second': {
           const gapTime = getStandardGapTime(minScale.type)
-          let currTime = startTime
+          let currTime = minViewDate.getTime() + (leftSize * gapTime)
+          const endTime = maxViewDate.getTime() + (rightSize * gapTime)
           while (currTime <= endTime) {
             const itemDate = new Date(currTime)
             dateList.push(itemDate)
