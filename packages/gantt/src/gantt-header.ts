@@ -101,10 +101,10 @@ export default defineVxeComponent({
                 } else if (titleFormat) {
                   cellVNs = XEUtils.toDateString(dateObj.date, titleFormat)
                 }
-                let cellStys = {}
+                let cellStys: Partial<CSSStyleDeclaration> | null = {}
                 if (headerCellStyle) {
                   if (XEUtils.isFunction(headerCellStyle)) {
-                    cellStys = headerCellStyle(ctParams)
+                    cellStys = headerCellStyle(ctParams) || null
                   } else {
                     cellStys = headerCellStyle
                   }
@@ -118,7 +118,7 @@ export default defineVxeComponent({
                     colspan: childCount || null,
                     title: titleSlot ? null : label
                   },
-                  style: cellStys,
+                  style: cellStys || undefined,
                   on: {
                     contextmenu (evnt: Event) {
                       $xeGantt.handleTaskHeaderContextmenuEvent(evnt, ctParams)
