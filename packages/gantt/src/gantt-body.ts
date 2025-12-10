@@ -208,7 +208,7 @@ export default defineVxeComponent({
               getClass(rowClassName, rowParams)
             ],
             rowid,
-            style: rowStyle ? XEUtils.isFunction(rowStyle) ? rowStyle(rowParams) : rowStyle : undefined,
+            style: rowStyle ? (XEUtils.isFunction(rowStyle) ? rowStyle(rowParams) || undefined : rowStyle) : undefined,
             ...trOns
           }, tableColumn.map((column, $columnIndex) => renderColumn($xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex, column, $columnIndex)))
         )
