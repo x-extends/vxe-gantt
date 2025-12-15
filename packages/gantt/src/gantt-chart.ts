@@ -46,7 +46,7 @@ export default defineVxeComponent({
       const taskBarOpts = computeTaskBarOpts.value
       const scaleUnit = computeScaleUnit.value
       const barParams = { $gantt: $xeGantt, row, scaleType: scaleUnit }
-      const { showProgress, showContent, contentMethod, barStyle, drag, showTooltip } = taskBarOpts
+      const { showProgress, showContent, contentMethod, barStyle, move, showTooltip } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
       const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
       const { round } = barStyObj
@@ -129,7 +129,7 @@ export default defineVxeComponent({
         rowid,
         class: ['vxe-gantt-view--chart-row', {
           'is--round': round,
-          'is--drag': drag,
+          'is--move': move,
           'col--rs-height': isRsHeight
         }],
         style: {
@@ -144,21 +144,34 @@ export default defineVxeComponent({
           style: vbStyle,
           rowid,
           ...ons
-        }, taskBarSlot
-          ? $xeGantt.callSlot(taskBarSlot, barParams)
-          : [
-              showProgress
-                ? h('div', {
-                  class: 'vxe-gantt-view--chart-progress',
-                  style: vpStyle
-                })
-                : renderEmptyElement($xeGantt),
-              showContent
-                ? h('div', {
-                  class: 'vxe-gantt-view--chart-content'
-                }, title)
-                : renderEmptyElement($xeGantt)
-            ])
+        }, $xeGantt.renderGanttTaskBarContent
+          ? $xeGantt.renderGanttTaskBarContent(ctParams, {
+            title,
+            vbStyle,
+            vpStyle
+          })
+          : (taskBarSlot
+              ? [
+                  h('div', {
+                    key: 'cbc',
+                    class: 'vxe-gantt-view--chart-custom-bar-content'
+                  }, $xeGantt.callSlot(taskBarSlot, barParams))
+                ]
+              : [
+                  showProgress
+                    ? h('div', {
+                      key: 'vcp',
+                      class: 'vxe-gantt-view--chart-progress',
+                      style: vpStyle
+                    })
+                    : renderEmptyElement($xeGantt),
+                  showContent
+                    ? h('div', {
+                      key: 'vcc',
+                      class: 'vxe-gantt-view--chart-content'
+                    }, title)
+                    : renderEmptyElement($xeGantt)
+                ]))
       ])
     }
 

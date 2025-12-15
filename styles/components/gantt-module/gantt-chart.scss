@@ -19,7 +19,7 @@
       }
     }
   }
-  &.is--drag {
+  &.is--move {
     & > .vxe-gantt-view--chart-bar,
     & > .vxe-gantt-view--chart-custom-bar {
       user-select: none;

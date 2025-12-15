@@ -12,5 +12,11 @@ export const ganttEmits: VxeGanttEmits = [
   'task-bar-click',
   'task-bar-dblclick',
   'task-view-cell-click',
-  'task-view-cell-dblclick'
+  'task-view-cell-dblclick',
+  'task-move-start',
+  'task-move-drag',
+  'task-move-end',
+  'task-resize-start',
+  'task-resize-drag',
+  'task-resize-end'
 ]

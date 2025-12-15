@@ -103,7 +103,7 @@ export default defineVxeComponent({
       tableColumn: [],
       headerGroups: [],
 
-      viewCellWidth: 20
+      viewCellWidth: 40
     })
 
     const internalData = createInternalData()
@@ -763,7 +763,7 @@ export default defineVxeComponent({
           }
           const rowRest = rowid ? chartMaps[rowid] : null
           barEl.style.left = `${rowRest ? viewCellWidth * rowRest.oLeftSize : 0}px`
-          barEl.style.width = `${rowRest ? viewCellWidth * rowRest.oWidthSize : 0}px`
+          barEl.style.width = `${Math.max(1, rowRest ? (Math.floor(viewCellWidth * rowRest.oWidthSize) - 1) : 0)}px`
         })
       }
       return nextTick()
