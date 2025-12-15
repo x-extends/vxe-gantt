@@ -125,7 +125,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     taskBarTooltipConfig: Object as PropType<VxeGanttPropTypes.TaskBarTooltipConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
     taskBarResizeConfig: Object as PropType<VxeGanttPropTypes.TaskBarResizeConfig>,
-    taskBarDragConfig: Object as PropType<VxeGanttPropTypes.TaskBarDragConfig>,
+    taskBarMoveConfig: Object as PropType<VxeGanttPropTypes.TaskBarMoveConfig>,
     size: {
       type: String as PropType<VxeGridPropTypes.Size>,
       default: () => getConfig().gantt.size || getConfig().size
@@ -248,11 +248,11 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       return Object.assign({}, getConfig().gantt.taskBarConfig, props.taskBarConfig)
     },
-    computeTaskBarDragOpts () {
+    computeTaskBarMoveOpts () {
       const $xeGantt = this
       const props = $xeGantt
 
-      return Object.assign({}, getConfig().gantt.taskBarDragConfig, props.taskBarDragConfig)
+      return Object.assign({}, getConfig().gantt.taskBarMoveConfig, props.taskBarMoveConfig)
     },
     computeTaskBarResizeOpts () {
       const $xeGantt = this

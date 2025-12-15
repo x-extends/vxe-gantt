@@ -1,5 +1,6 @@
 import { VueConstructor } from 'vue'
 import { VxeUI } from '@vxe-ui/core'
+import { checkDependVersion } from '../ui/src/depend'
 import VxeGanttComponent from './src/gantt'
 
 let isReg = false
@@ -18,6 +19,7 @@ export const VxeGantt = Object.assign({}, VxeGanttComponent, {
         VxeUI.dynamicApp.use(VxeGantt)
       }
     }
+    checkDependVersion()
     app.component(VxeGanttComponent.name as string, VxeGanttComponent)
   }
 })

@@ -1,7 +1,6 @@
 import { VxeUI } from '@vxe-ui/core'
-import { errLog } from './src/log'
 
-const { setConfig, setIcon, checkVersion } = VxeUI
+const { setConfig, setIcon } = VxeUI
 
 VxeUI.ganttVersion = process.env.VUE_APP_VXE_VERSION as string
 
@@ -104,16 +103,6 @@ setIcon({
   GANTT_VIEW_RIGHT_OPEN: iconPrefix + 'arrow-right',
   GANTT_VIEW_RIGHT_CLOSE: iconPrefix + 'arrow-left'
 })
-
-const pVersion = 3
-const sVersion = 18
-if (checkVersion) {
-  if (!checkVersion(VxeUI.tableVersion, pVersion, sVersion)) {
-    errLog('vxe.error.errorVersion', [`vxe-table@${VxeUI.tableVersion || '?'}`, `vxe-table v${pVersion}.${sVersion}+`])
-  }
-} else {
-  errLog(`Requires vxe-table v${pVersion}.${sVersion}+`)
-}
 
 export {
   VxeUI
