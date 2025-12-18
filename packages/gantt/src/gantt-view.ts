@@ -1,8 +1,8 @@
 import { VNode, CreateElement } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
-import { setScrollTop, setScrollLeft, removeClass, addClass, hasClass } from '../../ui/src/dom'
-import { getRefElem, getStandardGapTime } from './util'
+import { setScrollTop, setScrollLeft, removeClass, addClass } from '../../ui/src/dom'
+import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth } from './util'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
@@ -601,30 +601,37 @@ function calcScrollbar ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPriv
   }
 }
 
-function updateChart ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+function updateTaskChart ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+  const $xeGantt = $xeGanttView.$xeGantt
   const reactData = $xeGanttView.reactData
   const internalData = $xeGanttView.internalData
+  const ganttInternalData = $xeGantt.internalData
+  const $xeTable = internalData.xeTable
 
+  const { dragBarRow } = ganttInternalData
   const { viewCellWidth } = reactData
   const { elemStore, chartMaps } = internalData
-  const chartWrapper = getRefElem(elemStore['main-chart-wrapper'])
-  if (chartWrapper) {
+  const chartWrapper = getRefElem(elemStore['main-chart-task-wrapper'])
+  if (chartWrapper && $xeTable) {
     XEUtils.arrayEach(chartWrapper.children, (rowEl) => {
       const barEl = rowEl.children[0] as HTMLDivElement
-      if (!barEl || hasClass(barEl, 'is--drag')) {
+      if (!barEl) {
         return
       }
       const rowid = rowEl.getAttribute('rowid')
-      const rowRest = rowid ? chartMaps[rowid] : null
-      barEl.style.left = `${rowRest ? viewCellWidth * rowRest.oLeftSize : 0}px`
-      barEl.style.width = `${Math.max(1, rowRest ? (Math.floor(viewCellWidth * rowRest.oWidthSize) - 1) : 0)}px`
+      if (dragBarRow && $xeTable.getRowid(dragBarRow) === rowid) {
+        return
+      }
+      const chartRest = rowid ? chartMaps[rowid] : null
+      barEl.style.left = `${getTaskBarLeft(chartRest, viewCellWidth)}px`
+      barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
     })
   }
   return $xeGanttView.$nextTick()
 }
 
 function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
-  const $xeGantt = $xeGanttView.$xeGantt
+  const $xeGantt = $xeGanttView.$xeGantt as VxeGanttConstructor & VxeGanttPrivateMethods
   const reactData = $xeGanttView.reactData
   const internalData = $xeGanttView.internalData
 
@@ -634,6 +641,9 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
 
   const el = $xeGanttView.$refs.refElem as HTMLDivElement
   if (!el) {
+    return
+  }
+  if (!$xeGantt) {
     return
   }
 
@@ -746,20 +756,26 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
 
   reactData.scrollXWidth = viewTableWidth
 
-  return updateChart($xeGanttView)
+  return Promise.all([
+    updateTaskChart($xeGanttView),
+    $xeGantt.handleUpdateTaskLink ? $xeGantt.handleUpdateTaskLink($xeGanttView) : null
+  ])
 }
 
 function handleRecalculateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
   const internalData = $xeGanttView.internalData
+  const $xeGantt = $xeGanttView.$xeGantt
 
   const el = $xeGanttView.$refs.refElem as HTMLDivElement
   internalData.rceRunTime = Date.now()
   if (!el || !el.clientWidth) {
     return $xeGanttView.$nextTick()
   }
+  if (!$xeGantt) {
+    return $xeGanttView.$nextTick()
+  }
   calcScrollbar($xeGanttView)
   updateStyle($xeGanttView)
-  updateChart($xeGanttView)
   return computeScrollLoad($xeGanttView)
 }
 
@@ -975,7 +991,7 @@ function updateScrollYSpace ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
     scrollYTop = 0
   }
 
-  const bodyChartWrapperElem = getRefElem(elemStore['main-chart-wrapper'])
+  const bodyChartWrapperElem = getRefElem(elemStore['main-chart-task-wrapper'])
   if (bodyTableElem) {
     bodyTableElem.style.transform = `translate(${reactData.scrollXLeft || 0}px, ${scrollYTop}px)`
   }
@@ -992,6 +1008,13 @@ function updateScrollYSpace ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
   if (scrollYSpaceEl) {
     scrollYSpaceEl.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
   }
+
+  const lineWrapper = getRefElem(elemStore['main-chart-line-wrapper'])
+  const svgElem = lineWrapper ? lineWrapper.firstElementChild as HTMLDivElement : null
+  if (svgElem) {
+    svgElem.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
+  }
+
   reactData.scrollYTop = scrollYTop
   reactData.scrollYHeight = scrollYHeight
   reactData.isScrollYBig = isScrollYBig

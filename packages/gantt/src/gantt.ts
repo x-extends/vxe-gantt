@@ -5,13 +5,14 @@ import XEUtils from 'xe-utils'
 import { getLastZIndex, nextZIndex, isEnableConf, formatText } from '../../ui/src/utils'
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
+import { getTaskLinkKey } from './util'
 import { warnLog, errLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
 
 import type { ValueOf, VxeFormInstance, VxeFormItemProps, VxePagerInstance, VxePagerDefines, VxeComponentStyleType, VxeComponentSizeType, VxeFormDefines, VxeFormItemPropTypes } from 'vxe-pc-ui'
 import type { VxeTableMethods, VxeToolbarPropTypes, VxeTooltipInstance, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableDefines, TableReactData, VxeToolbarInstance, TableInternalData, VxeTablePropTypes, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
-import type { VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, VxeGanttViewInstance, VxeGanttDefines, VxeGanttConstructor } from '../../../types'
+import type { VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, VxeGanttViewInstance, VxeGanttDefines, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 const { getConfig, getIcon, getI18n, commands, globalMixins, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement } = VxeUI
 
@@ -74,8 +75,29 @@ XEUtils.each((VxeTableComponent as any).methods, (fn, name) => {
   }
 })
 
+function handleTaskAddLink (item: VxeGanttPropTypes.Link, linkConfs: VxeGanttDefines.LinkConfObj[], fromConfMaps: Record<string, VxeGanttDefines.LinkConfObj[]>, fromKeyMaps: Record<string, VxeGanttDefines.LinkConfObj>, uniqueMaps: Record<string, VxeGanttDefines.LinkConfObj>) {
+  if (item) {
+    const { type, from, to, lineStatus, lineColor, lineTyle, lineWidth, showArrow } = item
+    const tlKey = getTaskLinkKey(from, to)
+    if (from && to && !uniqueMaps[tlKey]) {
+      let confs = fromConfMaps[from]
+      if (!confs) {
+        confs = fromConfMaps[from] = []
+      }
+      const confObj: VxeGanttDefines.LinkConfObj = { type, from, to, lineStatus, lineColor, lineTyle, lineWidth, showArrow }
+      confs.push(confObj)
+      linkConfs.push(confObj)
+      fromKeyMaps[from] = confObj
+      uniqueMaps[tlKey] = confObj
+    }
+  }
+}
+
 function createInternalData (): GanttInternalData {
   return {
+    linkFromConfMaps: {},
+    linkFromKeyMaps: {},
+    linkUniqueMaps: {},
     uFoot: false,
     resizeTableWidth: 0
     // barTipTimeout: null
@@ -110,17 +132,19 @@ export default /* define-vxe-component start */ defineVxeComponent({
       params: PropType<VxeTablePropTypes.Params>
     }),
 
-    columns: Array as PropType<VxeGridPropTypes.Columns<any>>,
+    columns: Array as PropType<VxeGridPropTypes.Columns>,
     pagerConfig: Object as PropType<VxeGridPropTypes.PagerConfig>,
     proxyConfig: Object as PropType<VxeGridPropTypes.ProxyConfig<any>>,
     toolbarConfig: Object as PropType<VxeGridPropTypes.ToolbarConfig>,
     formConfig: Object as PropType<VxeGridPropTypes.FormConfig>,
     zoomConfig: Object as PropType<VxeGridPropTypes.ZoomConfig>,
 
+    links: Array as PropType<VxeGanttPropTypes.Links>,
     layouts: Array as PropType<VxeGanttPropTypes.Layouts>,
     taskConfig: Object as PropType<VxeGanttPropTypes.TaskConfig>,
     taskViewScaleConfig: Object as PropType<VxeGanttPropTypes.TaskViewScaleConfig>,
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
+    taskLinkConfig: Object as PropType<VxeGanttPropTypes.TaskLinkConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskBarTooltipConfig: Object as PropType<VxeGanttPropTypes.TaskBarTooltipConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
@@ -147,6 +171,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       tableLoading: false,
       proxyInited: false,
       isZMax: false,
+      tableLinks: [],
       tableData: [],
       filterData: [],
       formData: {},
@@ -167,7 +192,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
         content: '',
         visible: false,
         params: null
-      }
+      },
+
+      linkList: [],
+      upLinkFlag: 0
     }
 
     const internalData = createInternalData()
@@ -271,6 +299,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarTooltipConfig, props.taskBarTooltipConfig)
+    },
+    computeTaskLinkOpts () {
+      const $xeGantt = this
+      const props = $xeGantt
+
+      return Object.assign({}, getConfig().gantt.taskLinkConfig, props.taskLinkConfig)
     },
     computeScaleUnit () {
       const $xeGantt = this
@@ -679,7 +713,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
     },
     getRespMsg (rest: any, defaultMsg: string) {
-      const $xeGantt = this
+      const $xeGantt = this as unknown as VxeGanttConstructor & VxeGanttPrivateMethods
 
       const proxyOpts = $xeGantt.computeProxyOpts
       const resConfigs = proxyOpts.response || proxyOpts.props || {}
@@ -1187,7 +1221,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
             const commitParams = {
               $table: $xeTable,
               $grid: null,
-              $gantt: $xeGantt,
+              $gantt: $xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods,
               code,
               button,
               isInited,
@@ -1209,7 +1243,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
               let tableData: any[] = []
               reactData.tableLoading = false
               if (rest) {
-                const reParams = { data: rest, $table: $xeTable, $grid: null, $gantt: $xeGantt }
+                const reParams = { data: rest, $table: $xeTable, $grid: null, $gantt: $xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods }
                 if (pagerConfig && isEnableConf(pagerOpts)) {
                   const totalProp = resConfigs.total
                   const total = (XEUtils.isFunction(totalProp) ? totalProp(reParams) : XEUtils.get(rest, totalProp || 'page.total')) || 0
@@ -1278,7 +1312,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
             const commitParams = {
               $table: $xeTable,
               $grid: null,
-              $gantt: $xeGantt,
+              $gantt: $xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods,
               code,
               button,
               filters: filterList,
@@ -1316,7 +1350,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
             const commitParams = {
               $table: $xeTable,
               $grid: null,
-              $gantt: $xeGantt,
+              $gantt: $xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods,
               code,
               button,
               body,
@@ -1393,7 +1427,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
             const commitParams = {
               $table: $xeTable,
               $grid: null,
-              $gantt: $xeGantt,
+              $gantt: $xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods,
               code,
               button,
               body,
@@ -1479,7 +1513,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
           if (gCommandOpts) {
             const tCommandMethod = gCommandOpts.tableCommandMethod || gCommandOpts.commandMethod
             if (tCommandMethod) {
-              tCommandMethod({ code, button, $grid: null, $table: $xeTable, $gantt: $xeGantt }, ...args)
+              tCommandMethod({ code, button, $grid: null, $table: $xeTable, $gantt: $xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods }, ...args)
             } else {
               errLog('vxe.error.notCommands', [code])
             }
@@ -1729,8 +1763,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
       return $xeGantt.$nextTick()
     },
     /**
-       * 关闭 bar tooltip
-       */
+     * 关闭 bar tooltip
+     */
     closeTaskBarTooltip () {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
@@ -1952,6 +1986,33 @@ export default /* define-vxe-component start */ defineVxeComponent({
       } else {
         $xeGantt.closeTaskBarTooltip()
       }
+    },
+    handleTableLinks () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+
+      const { linkList } = reactData
+      reactData.tableLinks = linkList.slice(0)
+    },
+    handleTaskAddLink,
+    handleTaskUpdateLinks (links: VxeGanttPropTypes.Links) {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+      const internalData = $xeGantt.internalData
+
+      const linkConfs: VxeGanttDefines.LinkConfObj[] = []
+      const fromConfMaps: Record<string, VxeGanttDefines.LinkConfObj[]> = {}
+      const fromKeyMaps: Record<string, VxeGanttDefines.LinkConfObj> = {}
+      const uniqueMaps: Record<string, VxeGanttDefines.LinkConfObj> = {}
+      XEUtils.each(links || [], item => {
+        handleTaskAddLink(item, linkConfs, fromConfMaps, fromKeyMaps, uniqueMaps)
+      })
+      reactData.linkList = linkConfs
+      internalData.linkFromConfMaps = fromConfMaps
+      internalData.linkFromKeyMaps = fromKeyMaps
+      internalData.linkUniqueMaps = uniqueMaps
+      $xeGantt.handleTableLinks()
+      return $xeGantt.$nextTick()
     },
     handleTaskHeaderContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskHeaderContextmenuParams) {
       const $xeGantt = this
@@ -2260,7 +2321,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       return renderEmptyElement($xeGantt)
     },
     renderTable (h: CreateElement) {
-      const $xeGantt = this
+      const $xeGantt = this as unknown as VxeGanttConstructor & VxeGanttPrivateMethods
       const slots = $xeGantt.$scopedSlots
 
       const tableProps = $xeGantt.computeTableProps
@@ -2271,7 +2332,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         h(VxeTableComponent as Component, {
           key: 'table',
           props: tableProps,
-          on: getTableOns($xeGantt as VxeGanttConstructor),
+          on: getTableOns($xeGantt),
           scopedSlots: slots,
           ref: 'refTable'
         })
@@ -2590,6 +2651,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
       warnLog('vxe.error.notProp', ['expand-config'])
     }
 
+    if (!($xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods).handleUpdateTaskLink) {
+      if (props.taskLinkConfig) {
+        warnLog('vxe.error.notProp', ['task-link-config'])
+      }
+      if (props.links) {
+        errLog('vxe.error.notProp', ['links'])
+      }
+    }
     $xeGantt.$nextTick(() => {
       if (props.formConfig) {
         if (!VxeUIFormComponent) {
@@ -2608,6 +2677,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
     })
 
+    if (props.links) {
+      $xeGantt.handleTaskUpdateLinks(props.links)
+    }
     $xeGantt.handleTaskScaleConfig()
     $xeGantt.initPages()
   },

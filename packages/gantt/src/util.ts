@@ -23,3 +23,15 @@ export function getStandardGapTime (type: VxeGanttDefines.ColumnScaleType) {
   }
   return 1000 * 60 * 60 * 24
 }
+
+export function getTaskBarLeft (chartRest: VxeGanttDefines.RowCacheItem | null, viewCellWidth: number) {
+  return chartRest ? viewCellWidth * chartRest.oLeftSize : 0
+}
+
+export function getTaskBarWidth (chartRest: VxeGanttDefines.RowCacheItem | null, viewCellWidth: number) {
+  return Math.max(1, chartRest ? (Math.floor(viewCellWidth * chartRest.oWidthSize) - 1) : 0)
+}
+
+export function getTaskLinkKey (from: string | number, to: string | number) {
+  return `${from}_${to}`
+}

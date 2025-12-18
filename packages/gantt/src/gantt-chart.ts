@@ -3,7 +3,7 @@ import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
 import XEUtils from 'xe-utils'
 import { getCellRestHeight } from './util'
-import { getStringValue } from '../../ui/src/utils'
+import { getStringValue, isEnableConf } from '../../ui/src/utils'
 
 import type { VxeComponentStyleType } from 'vxe-pc-ui'
 import type { TableInternalData, TableReactData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
@@ -66,9 +66,7 @@ export default defineVxeComponent({
       const { round } = barStyObj
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
-      const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
-      const isRsHeight = resizeHeight > 0
-      const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
+      const cellHeight = resizeHeightFlag ? getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight) : 0
 
       let title = getStringValue(XEUtils.get(row, titleField))
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
@@ -135,8 +133,7 @@ export default defineVxeComponent({
         },
         class: ['vxe-gantt-view--chart-row', {
           'is--round': round,
-          'is--move': move,
-          'col--rs-height': isRsHeight
+          'is--move': move
         }],
         style: {
           height: `${cellHeight}px`
@@ -184,10 +181,10 @@ export default defineVxeComponent({
                 ]))
       ])
     },
-    renderRows (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) {
+    renderTaskRows (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) {
       const _vm = this
       const $xeGanttView = _vm.$xeGanttView
-      const { reactData } = $xeGanttView
+      const ganttViewReactData = $xeGanttView.reactData
 
       const tableProps = $xeTable
       const { treeConfig } = tableProps
@@ -199,11 +196,11 @@ export default defineVxeComponent({
       const { transform } = treeOpts
       const childrenField = treeOpts.children || treeOpts.childrenField
 
-      const { scrollYLoad } = reactData
+      const { scrollYLoad } = ganttViewReactData
 
       const trVNs: VNode[] = []
       tableData.forEach((row, $rowIndex) => {
-        const rowid = $xeTable ? $xeTable.getRowid(row) : ''
+        const rowid = $xeTable.getRowid(row)
         const rowRest = fullAllDataRowIdData[rowid] || {}
         let rowIndex = $rowIndex
         let _rowIndex = -1
@@ -221,43 +218,62 @@ export default defineVxeComponent({
         }
         // 如果是树形表格
         if (isExpandTree) {
-          trVNs.push(..._vm.renderRows(h, $xeTable, rowChildren))
+          trVNs.push(..._vm.renderTaskRows(h, $xeTable, rowChildren))
         }
       })
       return trVNs
     },
     renderVN (h: CreateElement): VNode {
       const _vm = this
+      const $xeGantt = _vm.$xeGantt
       const $xeGanttView = _vm.$xeGanttView
-      const { reactData } = $xeGanttView
+      const ganttViewInternalData = $xeGanttView.internalData
+      const ganttViewReactData = $xeGanttView.reactData
 
-      const $xeTable = $xeGanttView.internalData.xeTable
+      const $xeTable = ganttViewInternalData.xeTable
 
-      const { tableData } = reactData
+      const { tableData } = ganttViewReactData
+      const taskLinkOpts = $xeGantt.computeTaskLinkOpts
+      const { showArrow } = taskLinkOpts
 
       return h('div', {
         ref: 'refElem',
         class: 'vxe-gantt-view--chart-wrapper'
-      }, $xeTable ? _vm.renderRows(h, $xeTable, tableData) : [])
+      }, [
+        $xeGantt.renderGanttTaskLines
+          ? h('div', {
+            ref: 'reflineWrapperElem',
+            class: ['vxe-gantt-view--chart-line-wrapper', {
+              'show-arrow': showArrow
+            }]
+          }, $xeTable && isEnableConf(taskLinkOpts) ? $xeGantt.renderGanttTaskLines(h) : [])
+          : renderEmptyElement($xeGantt),
+        h('div', {
+          ref: 'refTaskWrapperElem',
+          class: 'vxe-gantt-view--chart-task-wrapper'
+        }, $xeTable ? _vm.renderTaskRows(h, $xeTable, tableData) : [])
+      ])
     }
   },
   mounted () {
     const _vm = this
     const $xeGanttView = _vm.$xeGanttView
-    const { internalData } = $xeGanttView
+    const ganttViewInternalData = $xeGanttView.internalData
 
-    const { elemStore } = internalData
+    const { elemStore } = ganttViewInternalData
     const prefix = 'main-chart-'
-    elemStore[`${prefix}wrapper`] = _vm.$refs.refElem as HTMLDivElement
+    elemStore[`${prefix}task-wrapper`] = _vm.$refs.refTaskWrapperElem as HTMLDivElement
+    elemStore[`${prefix}line-wrapper`] = _vm.$refs.reflineWrapperElem as HTMLDivElement
   },
   destroyed () {
     const _vm = this
     const $xeGanttView = _vm.$xeGanttView
-    const { internalData } = $xeGanttView
+    const ganttViewInternalData = $xeGanttView.internalData
 
-    const { elemStore } = internalData
+    const { elemStore } = ganttViewInternalData
     const prefix = 'main-chart-'
-    elemStore[`${prefix}wrapper`] = null
+    elemStore[`${prefix}task-wrapper`] = null
+    elemStore[`${prefix}line-wrapper`] = null
   },
   render (this: any, h) {
     return this.renderVN(h)

@@ -26,5 +26,7 @@ export const VxeGantt = Object.assign({}, VxeGanttComponent, {
 
 VxeUI.component(VxeGanttComponent)
 
+export * from './src/static'
+
 export const Gantt = VxeGantt
 export default VxeGantt
