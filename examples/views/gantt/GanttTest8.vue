@@ -7,7 +7,6 @@
 <script lang="ts" setup>
 import { ref, reactive } from 'vue'
 import { VxeUI } from 'vxe-pc-ui'
-import { VxeGanttDependencyType } from '../../../packages'
 import type { VxeGanttInstance, VxeGanttProps, VxeGanttListeners } from '../../../types'
 
 interface RowVO {
@@ -40,18 +39,6 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
       width: 480
     }
   },
-  links: [
-    { from: '10001', to: '10002', type: VxeGanttDependencyType.FinishToFinish },
-    { from: '10002', to: '10003', type: VxeGanttDependencyType.FinishToFinish, lineTyle: 'dashed' },
-    { from: '10003', to: '10004', type: VxeGanttDependencyType.FinishToFinish, lineTyle: 'flowDashed' },
-    { from: '10006', to: '10005', type: VxeGanttDependencyType.FinishToFinish },
-    { from: '10008', to: '10007', type: VxeGanttDependencyType.FinishToFinish },
-
-    { from: '10009', to: '10010', type: VxeGanttDependencyType.StartToStart },
-    { from: '10010', to: '10011', type: VxeGanttDependencyType.StartToStart },
-    { from: '10013', to: '10012', type: VxeGanttDependencyType.StartToStart },
-    { from: '10017', to: '10014', type: VxeGanttDependencyType.StartToStart }
-  ],
   taskViewScaleConfig: {
     // scaleUnit: 'week'
   },

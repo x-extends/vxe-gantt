@@ -12,7 +12,7 @@ import { warnLog, errLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
 
-import type { VxeGanttConstructor, VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, GanttMethods, GanttPrivateMethods, VxeGanttPrivateMethods, GanttPrivateRef, VxeGanttProps, VxeGanttPrivateComputed, VxeGanttViewInstance, VxeGanttDefines } from '../../../types'
+import type { VxeGanttConstructor, VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, GanttMethods, GanttPrivateMethods, VxeGanttPrivateMethods, GanttPrivateRef, VxeGanttProps, VxeGanttPrivateComputed, VxeGanttViewInstance, VxeGanttDefines, VxeGanttViewPrivateMethods } from '../../../types'
 import type { ValueOf, VxeFormEvents, VxeFormInstance, VxeTooltipInstance, VxePagerEvents, VxeFormItemProps, VxePagerInstance, VxeComponentStyleType } from 'vxe-pc-ui'
 import type { VxeTableMethods, VxeToolbarPropTypes, VxeTableProps, VxeTablePropTypes, VxeTableConstructor, VxeTablePrivateMethods, VxeTableEvents, VxeTableDefines, VxeTableEventProps, VxeToolbarInstance, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
 
@@ -156,7 +156,7 @@ export default defineVxeComponent({
     const refPager = ref<VxePagerInstance>()
     const refGanttContainerElem = ref<HTMLDivElement>()
     const refClassifyWrapperElem = ref<HTMLDivElement>()
-    const refGanttView = ref<VxeGanttViewInstance>()
+    const refGanttView = ref<VxeGanttViewInstance & VxeGanttViewPrivateMethods>()
 
     const refPopupContainerElem = ref<HTMLDivElement>()
 
@@ -940,14 +940,14 @@ export default defineVxeComponent({
 
     const handleTaskAddLink = (item: VxeGanttPropTypes.Link, linkConfs: VxeGanttDefines.LinkConfObj[], fromConfMaps: Record<string, VxeGanttDefines.LinkConfObj[]>, fromKeyMaps: Record<string, VxeGanttDefines.LinkConfObj>, uniqueMaps: Record<string, VxeGanttDefines.LinkConfObj>) => {
       if (item) {
-        const { type, from, to, lineStatus, lineColor, lineTyle, lineWidth, showArrow } = item
+        const { type, from, to, lineStatus, lineColor, lineType, lineWidth, showArrow } = item
         const tlKey = getTaskLinkKey(from, to)
         if (from && to && !uniqueMaps[tlKey]) {
           let confs = fromConfMaps[from]
           if (!confs) {
             confs = fromConfMaps[from] = []
           }
-          const confObj: VxeGanttDefines.LinkConfObj = { type, from, to, lineStatus, lineColor, lineTyle, lineWidth, showArrow }
+          const confObj: VxeGanttDefines.LinkConfObj = { type, from, to, lineStatus, lineColor, lineType, lineWidth, showArrow }
           confs.push(confObj)
           linkConfs.push(confObj)
           fromKeyMaps[from] = confObj
