@@ -7,6 +7,7 @@
 <script lang="ts" setup>
 import { ref, reactive } from 'vue'
 import { VxeUI } from 'vxe-pc-ui'
+import { VxeGanttDependencyType } from '../../../packages'
 import type { VxeGanttInstance, VxeGanttProps, VxeGanttListeners } from '../../../types'
 
 interface RowVO {
@@ -22,8 +23,8 @@ const ganttRef = ref<VxeGanttInstance<RowVO>>()
 const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   border: true,
   showFooter: true,
-  height: 400,
   rowConfig: {
+    keyField: 'id',
     isCurrent: true
   },
   columnConfig: {
@@ -39,10 +40,23 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
       width: 480
     }
   },
+  links: [
+    { from: '10001', to: '10002', type: VxeGanttDependencyType.FinishToFinish },
+    { from: '10002', to: '10003', type: VxeGanttDependencyType.FinishToFinish, lineTyle: 'dashed' },
+    { from: '10003', to: '10004', type: VxeGanttDependencyType.FinishToFinish, lineTyle: 'flowDashed' },
+    { from: '10006', to: '10005', type: VxeGanttDependencyType.FinishToFinish },
+    { from: '10008', to: '10007', type: VxeGanttDependencyType.FinishToFinish },
+
+    { from: '10009', to: '10010', type: VxeGanttDependencyType.StartToStart },
+    { from: '10010', to: '10011', type: VxeGanttDependencyType.StartToStart },
+    { from: '10013', to: '10012', type: VxeGanttDependencyType.StartToStart },
+    { from: '10017', to: '10014', type: VxeGanttDependencyType.StartToStart }
+  ],
   taskViewScaleConfig: {
     // scaleUnit: 'week'
   },
   columns: [
+    { type: 'seq' },
     { field: 'title', title: '任务名称' },
     { field: 'start', title: '开始时间', width: 100 },
     { field: 'end', title: '结束时间', width: 100 }
@@ -51,54 +65,23 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     { id: 10001, title: 'A项目', start: '2024-03-01', end: '2024-03-04', progress: 3 },
     { id: 10002, title: '城市道路修理进度', start: '2024-03-03', end: '2024-03-08', progress: 10 },
     { id: 10003, title: 'B大工程', start: '2024-03-03', end: '2024-03-11', progress: 90 },
-    { id: 10004, title: '超级大工程', start: '2024-03-05', end: '2024-03-11', progress: 15 },
-    { id: 10005, title: '地球净化项目', start: '2024-03-08', end: '2024-03-15', progress: 100 },
-    { id: 10006, title: '一个小目标项目', start: '2024-05-10', end: '2024-07-21', progress: 5 },
-    { id: 10007, title: '某某计划', start: '2024-03-15', end: '2024-03-24', progress: 70 },
-    { id: 10008, title: '某某科技项目', start: '2024-04-20', end: '2024-06-29', progress: 50 },
-    { id: 10009, title: '地铁建设工程', start: '2024-03-19', end: '2024-03-20', progress: 5 },
-    { id: 10010, title: '铁路修建计划', start: '2024-04-12', end: '2024-05-20', progress: 10 }
+    { id: 10004, title: '超级大工程', start: '2024-02-26 07:30:00', end: '2024-02-28 09:00:00', progress: 15 },
+    { id: 10005, title: '地球净化项目', start: '2024-03-01', end: '2024-03-05', progress: 100 },
+    { id: 10006, title: '一个小目标项目', start: '2024-03-04', end: '2024-03-08', progress: 5 },
+    { id: 10007, title: '某某计划7', start: '2024-03-05', end: '2024-03-09', progress: 70 },
+    { id: 10008, title: '某某科技项目8', start: '2024-03-01', end: '2024-03-03', progress: 50 },
+    { id: 10009, title: '地铁建设工程9', start: '2024-03-02', end: '2024-03-04', progress: 5 },
+    { id: 10010, title: '铁路修建计划10', start: '2024-03-01', end: '2024-03-03', progress: 10 },
+    { id: 10011, title: '铁路修建计划11', start: '2024-03-04', end: '2024-03-08', progress: 10 },
+    { id: 10012, title: '铁路修建计划12', start: '2024-03-02', end: '2024-03-04', progress: 10 },
+    { id: 10013, title: '铁路修建计划13', start: '2024-03-08', end: '2024-03-12', progress: 10 },
+    { id: 10014, title: '铁路修建计划14', start: '2024-03-11', end: '2024-03-19', progress: 10 },
+    { id: 10015, title: '铁路修建计划15', start: '2024-03-01', end: '2024-03-03', progress: 10 },
+    { id: 10016, title: '铁路修建计划16', start: '2024-03-01', end: '2024-03-03', progress: 10 },
+    { id: 10017, title: '铁路修建计划17', start: '2024-03-01', end: '2024-03-03', progress: 10 },
+    { id: 10018, title: '铁路修建计划18', start: '2024-03-01', end: '2024-03-03', progress: 10 },
+    { id: 10019, title: '铁路修建计划19', start: '2024-03-01', end: '2024-03-03', progress: 10 }
   ],
-  menuConfig: {
-    header: {
-      options: [
-        [
-          { code: 'exportAll', name: '导出所有.csv', prefixConfig: { icon: 'vxe-icon-download' }, visible: true, disabled: false }
-        ]
-      ]
-    },
-    body: {
-      options: [
-        [
-          { code: 'copy', name: '复制内容（Ctrl+C）', prefixConfig: { icon: 'vxe-icon-copy' }, visible: true, disabled: false },
-          { code: 'clear', name: '清除内容', visible: true, disabled: false },
-          { code: 'reload', name: '刷新表格', visible: true, disabled: false }
-        ],
-        [
-          {
-            code: 'fixed',
-            name: '冻结列',
-            children: [
-              { code: 'cancelFixed', name: '取消冻结' },
-              { code: 'fixedLeft', name: '冻结在左侧', prefixConfig: { icon: 'vxe-icon-fixed-left' } },
-              { code: 'fixedRight', name: '冻结在右侧', prefixConfig: { icon: 'vxe-icon-fixed-right' } }
-            ]
-          }
-        ],
-        [
-          { code: 'myPrint', name: '打印（Ctrl+P）', prefixConfig: { icon: 'vxe-icon-print' }, visible: true, disabled: false },
-          { code: 'myExport', name: '导出.csv', prefixConfig: { icon: 'vxe-icon-download' }, visible: true, disabled: false }
-        ]
-      ]
-    },
-    footer: {
-      options: [
-        [
-          { code: 'exportAll', name: '导出所有.csv', prefixConfig: { icon: 'vxe-icon-download' }, visible: true, disabled: false }
-        ]
-      ]
-    }
-  },
   footerData: [
     { title: '合计', start: 111, end: 222 }
   ]

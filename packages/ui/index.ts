@@ -48,6 +48,10 @@ setConfig({
     taskBarTooltipConfig: {
       enterable: true
     },
+    taskLinkConfig: {
+      enabled: true,
+      showArrow: true
+    },
     taskViewScaleConfig: {
       year: {
         valueFormat: ymdFormat

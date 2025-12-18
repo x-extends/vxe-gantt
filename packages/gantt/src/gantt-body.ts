@@ -49,9 +49,7 @@ export default defineVxeComponent({
       const todayValue = showNowLine && scaleItem ? todayDateMaps[scaleItem.type] : null
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
-      const resizeHeight = resizeHeightFlag ? rowRest.resizeHeight : 0
-      const isRsHeight = resizeHeight > 0
-      const cellHeight = getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight)
+      const cellHeight = resizeHeightFlag ? getCellRestHeight(rowRest, cellOpts, rowOpts, defaultRowHeight) : 0
 
       const tdVNs: VNode[] = []
       if (isAllRowDrag && rowOpts.resizable) {
@@ -106,8 +104,7 @@ export default defineVxeComponent({
         class: [
           'vxe-gantt-view--body-column',
           {
-            'is--now': showNowLine && todayValue === field,
-            'col--rs-height': isRsHeight
+            'is--now': showNowLine && todayValue === field
           },
           getClass(cellClassName, ctParams)
         ],

@@ -2,7 +2,7 @@ import { h, ref, reactive, nextTick, inject, watch, provide, computed, onMounted
 import { defineVxeComponent } from '../../ui/src/comp'
 import { setScrollTop, setScrollLeft, removeClass, addClass } from '../../ui/src/dom'
 import { VxeUI } from '@vxe-ui/core'
-import { getRefElem, getStandardGapTime } from './util'
+import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth } from './util'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
@@ -745,12 +745,12 @@ export default defineVxeComponent({
       }
     }
 
-    const updateChart = () => {
+    const updateTaskChart = () => {
       const { dragBarRow } = ganttInternalData
       const { viewCellWidth } = reactData
       const { elemStore, chartMaps } = internalData
       const $xeTable = internalData.xeTable
-      const chartWrapper = getRefElem(elemStore['main-chart-wrapper'])
+      const chartWrapper = getRefElem(elemStore['main-chart-task-wrapper'])
       if (chartWrapper && $xeTable) {
         XEUtils.arrayEach(chartWrapper.children, (rowEl) => {
           const barEl = rowEl.children[0] as HTMLDivElement
@@ -761,9 +761,9 @@ export default defineVxeComponent({
           if (dragBarRow && $xeTable.getRowid(dragBarRow) === rowid) {
             return
           }
-          const rowRest = rowid ? chartMaps[rowid] : null
-          barEl.style.left = `${rowRest ? viewCellWidth * rowRest.oLeftSize : 0}px`
-          barEl.style.width = `${Math.max(1, rowRest ? (Math.floor(viewCellWidth * rowRest.oWidthSize) - 1) : 0)}px`
+          const chartRest = rowid ? chartMaps[rowid] : null
+          barEl.style.left = `${getTaskBarLeft(chartRest, viewCellWidth)}px`
+          barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
         })
       }
       return nextTick()
@@ -776,6 +776,9 @@ export default defineVxeComponent({
 
       const el = refElem.value
       if (!el) {
+        return
+      }
+      if (!$xeGantt) {
         return
       }
 
@@ -888,7 +891,10 @@ export default defineVxeComponent({
 
       reactData.scrollXWidth = viewTableWidth
 
-      return updateChart()
+      return Promise.all([
+        updateTaskChart(),
+        $xeGantt.handleUpdateTaskLink ? $xeGantt.handleUpdateTaskLink($xeGanttView) : null
+      ])
     }
 
     const handleRecalculateStyle = () => {
@@ -897,9 +903,11 @@ export default defineVxeComponent({
       if (!el || !el.clientWidth) {
         return nextTick()
       }
+      if (!$xeGantt) {
+        return nextTick()
+      }
       calcScrollbar()
       updateStyle()
-      updateChart()
       return computeScrollLoad()
     }
 
@@ -1090,7 +1098,7 @@ export default defineVxeComponent({
         ySpaceHeight = maxYHeight
       }
 
-      const bodyChartWrapperElem = getRefElem(elemStore['main-chart-wrapper'])
+      const bodyChartWrapperElem = getRefElem(elemStore['main-chart-task-wrapper'])
       if (bodyTableElem) {
         bodyTableElem.style.transform = `translate(${reactData.scrollXLeft || 0}px, ${scrollYTop}px)`
       }
@@ -1107,6 +1115,13 @@ export default defineVxeComponent({
       if (scrollYSpaceEl) {
         scrollYSpaceEl.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
       }
+
+      const lineWrapper = getRefElem(elemStore['main-chart-line-wrapper'])
+      const svgElem = lineWrapper ? lineWrapper.firstElementChild as HTMLDivElement : null
+      if (svgElem) {
+        svgElem.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
+      }
+
       reactData.scrollYTop = scrollYTop
       reactData.scrollYHeight = scrollYHeight
       reactData.isScrollYBig = isScrollYBig
