@@ -5,8 +5,6 @@
 </template>
 
 <script >
-import { VxeGanttDependencyType } from '../../../packages'
-
 export default {
   data () {
     const gridOptions = {
@@ -30,18 +28,6 @@ export default {
           width: 480
         }
       },
-      links: [
-        { from: '10001', to: '10002', type: VxeGanttDependencyType.FinishToStart },
-        { from: '10002', to: '10003', type: VxeGanttDependencyType.FinishToStart, lineTyle: 'dashed' },
-        { from: '10003', to: '10004', type: VxeGanttDependencyType.FinishToStart, lineTyle: 'flowDashed' },
-        { from: '10006', to: '10005', type: VxeGanttDependencyType.FinishToStart },
-        { from: '10008', to: '10007', type: VxeGanttDependencyType.FinishToStart },
-
-        { from: '10009', to: '10010', type: VxeGanttDependencyType.StartToFinish },
-        { from: '10010', to: '10011', type: VxeGanttDependencyType.StartToFinish },
-        { from: '10013', to: '10012', type: VxeGanttDependencyType.StartToFinish },
-        { from: '10015', to: '10014', type: VxeGanttDependencyType.StartToFinish }
-      ],
       taskViewScaleConfig: {
         // scaleUnit: 'week'
       },

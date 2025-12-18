@@ -943,6 +943,12 @@ function updateScrollXSpace ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
     scrollXSpaceEl.style.width = `${scrollXWidth}px`
   }
 
+  const lineWrapper = getRefElem(elemStore['main-chart-line-wrapper'])
+  const svgElem = lineWrapper ? lineWrapper.firstElementChild as HTMLDivElement : null
+  if (svgElem) {
+    svgElem.style.width = `${scrollXWidth}px`
+  }
+
   calcScrollbar($xeGanttView)
   return $xeGanttView.$nextTick()
 }

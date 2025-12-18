@@ -77,14 +77,14 @@ XEUtils.each((VxeTableComponent as any).methods, (fn, name) => {
 
 function handleTaskAddLink (item: VxeGanttPropTypes.Link, linkConfs: VxeGanttDefines.LinkConfObj[], fromConfMaps: Record<string, VxeGanttDefines.LinkConfObj[]>, fromKeyMaps: Record<string, VxeGanttDefines.LinkConfObj>, uniqueMaps: Record<string, VxeGanttDefines.LinkConfObj>) {
   if (item) {
-    const { type, from, to, lineStatus, lineColor, lineTyle, lineWidth, showArrow } = item
+    const { type, from, to, lineStatus, lineColor, lineType, lineWidth, showArrow } = item
     const tlKey = getTaskLinkKey(from, to)
     if (from && to && !uniqueMaps[tlKey]) {
       let confs = fromConfMaps[from]
       if (!confs) {
         confs = fromConfMaps[from] = []
       }
-      const confObj: VxeGanttDefines.LinkConfObj = { type, from, to, lineStatus, lineColor, lineTyle, lineWidth, showArrow }
+      const confObj: VxeGanttDefines.LinkConfObj = { type, from, to, lineStatus, lineColor, lineType, lineWidth, showArrow }
       confs.push(confObj)
       linkConfs.push(confObj)
       fromKeyMaps[from] = confObj
