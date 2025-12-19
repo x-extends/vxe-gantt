@@ -40,6 +40,9 @@
   overflow: hidden;
   pointer-events: all;
 }
+.vxe-gantt-view--chart-custom-bar-content {
+  width: 100%;
+}
 .vxe-gantt-view--chart-bar {
   align-items: center;
   height: var(--vxe-ui-gantt-view-chart-bar-height);
