@@ -5,7 +5,6 @@ import { getLastZIndex, nextZIndex, isEnableConf, formatText } from '../../ui/sr
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
 import { VxeUI } from '@vxe-ui/core'
-import { getTaskLinkKey } from './util'
 import { ganttEmits } from './emits'
 import { tableEmits } from './table-emits'
 import { warnLog, errLog } from '../../ui/src/log'
@@ -67,6 +66,7 @@ export default defineVxeComponent({
       seqConfig: PropType<VxeTablePropTypes.SeqConfig>
       editConfig: PropType<VxeTablePropTypes.EditConfig>
       sortConfig: PropType<VxeTablePropTypes.SortConfig>
+      treeConfig: PropType<VxeTablePropTypes.TreeConfig>
       filterConfig: PropType<VxeTablePropTypes.FilterConfig>
       expandConfig: PropType<VxeTablePropTypes.ExpandConfig>
       aggregateConfig: PropType<VxeTablePropTypes.AggregateConfig>
@@ -931,45 +931,6 @@ export default defineVxeComponent({
 
     const handleSplitRightViewEvent = () => {
       reactData.showRightView = !reactData.showRightView
-    }
-
-    const handleTableLinks = () => {
-      const { linkList } = reactData
-      reactData.tableLinks = linkList.slice(0)
-    }
-
-    const handleTaskAddLink = (item: VxeGanttPropTypes.Link, linkConfs: VxeGanttDefines.LinkConfObj[], fromConfMaps: Record<string, VxeGanttDefines.LinkConfObj[]>, fromKeyMaps: Record<string, VxeGanttDefines.LinkConfObj>, uniqueMaps: Record<string, VxeGanttDefines.LinkConfObj>) => {
-      if (item) {
-        const { type, from, to, lineStatus, lineColor, lineType, lineWidth, showArrow } = item
-        const tlKey = getTaskLinkKey(from, to)
-        if (from && to && !uniqueMaps[tlKey]) {
-          let confs = fromConfMaps[from]
-          if (!confs) {
-            confs = fromConfMaps[from] = []
-          }
-          const confObj: VxeGanttDefines.LinkConfObj = { type, from, to, lineStatus, lineColor, lineType, lineWidth, showArrow }
-          confs.push(confObj)
-          linkConfs.push(confObj)
-          fromKeyMaps[from] = confObj
-          uniqueMaps[tlKey] = confObj
-        }
-      }
-    }
-
-    const handleTaskUpdateLinks = (links: VxeGanttPropTypes.Links) => {
-      const linkConfs: VxeGanttDefines.LinkConfObj[] = []
-      const fromConfMaps: Record<string, VxeGanttDefines.LinkConfObj[]> = {}
-      const fromKeyMaps: Record<string, VxeGanttDefines.LinkConfObj> = {}
-      const uniqueMaps: Record<string, VxeGanttDefines.LinkConfObj> = {}
-      XEUtils.each(links || [], item => {
-        handleTaskAddLink(item, linkConfs, fromConfMaps, fromKeyMaps, uniqueMaps)
-      })
-      reactData.linkList = linkConfs
-      internalData.linkFromConfMaps = fromConfMaps
-      internalData.linkFromKeyMaps = fromKeyMaps
-      internalData.linkUniqueMaps = uniqueMaps
-      $xeGantt.handleTableLinks()
-      return nextTick()
     }
 
     const tableCompEvents: VxeTableEventProps = {}
@@ -1852,9 +1813,6 @@ export default defineVxeComponent({
           $xeGantt.closeTaskBarTooltip()
         }
       },
-      handleTableLinks,
-      handleTaskAddLink,
-      handleTaskUpdateLinks,
       handleTaskHeaderContextmenuEvent (evnt, params) {
         const $xeTable = refTable.value
         if ($xeTable) {
@@ -2466,8 +2424,10 @@ export default defineVxeComponent({
       }
     })
 
-    if (props.links) {
-      $xeGantt.handleTaskUpdateLinks(props.links)
+    if ($xeGantt.handleTaskUpdateLinks) {
+      if (props.links) {
+        $xeGantt.handleTaskUpdateLinks(props.links)
+      }
     }
     handleTaskScaleConfig()
     initPages()
@@ -2493,6 +2453,16 @@ export default defineVxeComponent({
         if (props.pagerConfig) {
           if (!VxeUIPagerComponent) {
             errLog('vxe.error.reqComp', ['vxe-pager'])
+          }
+        }
+        if (props.treeConfig && props.links) {
+          const $xeTable = refTable.value
+          if ($xeTable) {
+            const { computeTreeOpts } = $xeTable.getComputeMaps()
+            const treeOpts = computeTreeOpts.value
+            if (!treeOpts.transform) {
+              errLog('vxe.error.notSupportProp', ['links', 'tree-config.transform=false', 'tree-config.transform=true'])
+            }
           }
         }
 
