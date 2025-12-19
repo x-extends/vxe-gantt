@@ -121,6 +121,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       seqConfig: PropType<VxeTablePropTypes.SeqConfig>
       editConfig: PropType<VxeTablePropTypes.EditConfig>
       sortConfig: PropType<VxeTablePropTypes.SortConfig>
+      treeConfig: PropType<VxeTablePropTypes.TreeConfig>
       filterConfig: PropType<VxeTablePropTypes.FilterConfig>
       expandConfig: PropType<VxeTablePropTypes.ExpandConfig>
       aggregateConfig: PropType<VxeTablePropTypes.AggregateConfig>
@@ -2673,6 +2674,15 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if (props.toolbarConfig) {
         if (!VxeUIToolbarComponent) {
           errLog('vxe.error.reqComp', ['vxe-toolbar'])
+        }
+      }
+      if (props.treeConfig && props.links) {
+        const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
+        if ($xeTable) {
+          const treeOpts = $xeTable.computeTreeOpts
+          if (!treeOpts.transform) {
+            errLog('vxe.error.notSupportProp', ['links', 'tree-config.transform=false', 'tree-config.transform=true'])
+          }
         }
       }
     })
