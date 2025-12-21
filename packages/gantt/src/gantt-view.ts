@@ -734,13 +734,16 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   if (colInfoElem) {
     viewCellWidth = colInfoElem.clientWidth || 40
   }
-  let viewTableWidth = viewCellWidth * visibleColumn.length
-  if (bodyScrollElem) {
-    const viewWidth = bodyScrollElem.clientWidth
-    const remainWidth = viewWidth - viewTableWidth
-    if (remainWidth > 0) {
-      viewCellWidth += remainWidth / visibleColumn.length
-      viewTableWidth = viewWidth
+  let viewTableWidth = viewCellWidth
+  if (visibleColumn.length) {
+    viewTableWidth = Math.max(0, viewCellWidth * visibleColumn.length)
+    if (bodyScrollElem) {
+      const viewWidth = bodyScrollElem.clientWidth
+      const remainWidth = viewWidth - viewTableWidth
+      if (remainWidth > 0) {
+        viewCellWidth += Math.max(0, remainWidth / visibleColumn.length)
+        viewTableWidth = viewWidth
+      }
     }
   }
   reactData.viewCellWidth = viewCellWidth
