@@ -681,6 +681,7 @@ export default defineVxeComponent({
       if ($xeTable) {
         const startField = computeStartField.value
         const endField = computeEndField.value
+        const typeField = computeTypeField.value
         const { computeAggregateOpts, computeTreeOpts } = $xeTable.getComputeMaps()
         const tableReactData = $xeTable.reactData
         const { isRowGroupStatus } = tableReactData
@@ -692,8 +693,16 @@ export default defineVxeComponent({
         const childrenField = treeOpts.children || treeOpts.childrenField
 
         const handleMinMaxData = (row: any) => {
-          const startValue = XEUtils.get(row, startField)
-          const endValue = XEUtils.get(row, endField)
+          let startValue = XEUtils.get(row, startField)
+          let endValue = XEUtils.get(row, endField)
+          const typeValue = XEUtils.get(row, typeField)
+          const isMilestone = hasMilestoneTask(typeValue)
+          if (!startValue) {
+            startValue = endValue
+          }
+          if (isMilestone || !endValue) {
+            endValue = startValue
+          }
           if (startValue) {
             const startDate = parseStringDate(startValue)
             if (!minDate || minDate.getTime() > startDate.getTime()) {

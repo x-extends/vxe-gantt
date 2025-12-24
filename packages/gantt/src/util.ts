@@ -46,12 +46,11 @@ export function getTaskLinkKey (from: string | number, to: string | number) {
   return `${from}_${to}`
 }
 
-export function hasMilestoneTask (type: string) {
-  return type === 'milestone'
+const taskTypeMaps: Record<string, boolean> = {
+  milestone: true
 }
-
-const taskTypeMaps: Record<string, number> = {
-  milestone: 1
+export function hasMilestoneTask (type: string) {
+  return taskTypeMaps[type]
 }
 export function gettaskType (type: string) {
   return taskTypeMaps[type] ? type : 'default'
