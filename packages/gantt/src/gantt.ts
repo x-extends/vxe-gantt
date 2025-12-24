@@ -1935,8 +1935,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
     triggerTaskBarTooltipEvent (evnt: MouseEvent, params: VxeGanttDefines.TaskBarMouseoverParams) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
+      const internalData = $xeGantt.internalData
 
       const { barTipStore } = reactData
+      const { dragBarRow } = internalData
+      if (dragBarRow) {
+        return
+      }
       const taskBarTooltipOpts = $xeGantt.computeTaskBarTooltipOpts
       const titleField = $xeGantt.computeTitleField
       const { contentMethod } = taskBarTooltipOpts
