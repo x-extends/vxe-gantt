@@ -147,6 +147,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskLinkConfig: Object as PropType<VxeGanttPropTypes.TaskLinkConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
+    taskBarMilestoneConfig: Object as PropType<VxeGanttPropTypes.TaskBarMilestoneConfig>,
     taskBarTooltipConfig: Object as PropType<VxeGanttPropTypes.TaskBarTooltipConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
     taskBarResizeConfig: Object as PropType<VxeGanttPropTypes.TaskBarResizeConfig>,
@@ -295,6 +296,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       return Object.assign({}, getConfig().gantt.taskSplitConfig, props.taskSplitConfig)
     },
+    computeTaskBarMilestoneOpts () {
+      const $xeGantt = this
+      const props = $xeGantt
+
+      return Object.assign({}, getConfig().gantt.taskBarMilestoneConfig, props.taskBarMilestoneConfig)
+    },
     computeTaskBarTooltipOpts () {
       const $xeGantt = this
       const props = $xeGantt
@@ -358,6 +365,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
       return taskOpts.endField || 'end'
+    },
+    computeTypeField () {
+      const $xeGantt = this
+
+      const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
+      return taskOpts.typeField || 'type'
     },
     computeProgressField () {
       const $xeGantt = this

@@ -1,8 +1,8 @@
 import { VNode, CreateElement } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
-import { setScrollTop, setScrollLeft, removeClass, addClass } from '../../ui/src/dom'
-import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth } from './util'
+import { setScrollTop, setScrollLeft, removeClass, addClass, hasClass } from '../../ui/src/dom'
+import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth, hasMilestoneTask } from './util'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
@@ -462,6 +462,7 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
     if ($xeTable) {
       const startField = $xeGantt.computeStartField
       const endField = $xeGantt.computeEndField
+      const typeField = $xeGantt.computeTypeField
       const tableReactData = $xeTable as unknown as TableReactData
       const { isRowGroupStatus } = tableReactData
       const tableInternalData = $xeTable as unknown as TableInternalData
@@ -475,8 +476,15 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
       const renderFn = createChartRender($xeGanttView, fullCols)
       const handleParseRender = (row: any) => {
         const rowid = $xeTable.getRowid(row)
-        const startValue = XEUtils.get(row, startField)
-        const endValue = XEUtils.get(row, endField)
+        let startValue = XEUtils.get(row, startField)
+        let endValue = XEUtils.get(row, endField)
+        const isMilestone = hasMilestoneTask(XEUtils.get(row, typeField))
+        if (isMilestone) {
+          if (!startValue) {
+            startValue = endValue
+          }
+          endValue = startValue
+        }
         if (startValue && endValue) {
           const { offsetLeftSize, offsetWidthSize } = renderFn(startValue, endValue)
           ctMaps[rowid] = {
@@ -538,11 +546,13 @@ function handleUpdateData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewP
     const handleMinMaxData = (row: any) => {
       const startValue = XEUtils.get(row, startField)
       const endValue = XEUtils.get(row, endField)
-      if (startValue && endValue) {
+      if (startValue) {
         const startDate = parseStringDate($xeGanttView, startValue)
         if (!minDate || minDate.getTime() > startDate.getTime()) {
           minDate = startDate
         }
+      }
+      if (endValue) {
         const endDate = parseStringDate($xeGanttView, endValue)
         if (!maxDate || maxDate.getTime() < endDate.getTime()) {
           maxDate = endDate
@@ -624,7 +634,9 @@ function updateTaskChart ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPr
       }
       const chartRest = rowid ? chartMaps[rowid] : null
       barEl.style.left = `${getTaskBarLeft(chartRest, viewCellWidth)}px`
-      barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
+      if (!hasClass(barEl, 'is--milestone')) {
+        barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
+      }
     })
   }
   return $xeGanttView.$nextTick()
