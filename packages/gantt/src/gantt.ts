@@ -92,6 +92,7 @@ export default defineVxeComponent({
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskLinkConfig: Object as PropType<VxeGanttPropTypes.TaskLinkConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
+    taskBarMilestoneConfig: Object as PropType<VxeGanttPropTypes.TaskBarMilestoneConfig>,
     taskBarTooltipConfig: Object as PropType<VxeGanttPropTypes.TaskBarTooltipConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
     taskBarResizeConfig: Object as PropType<VxeGanttPropTypes.TaskBarResizeConfig>,
@@ -254,6 +255,10 @@ export default defineVxeComponent({
       return Object.assign({}, getConfig().gantt.taskSplitConfig, props.taskSplitConfig)
     })
 
+    const computeTaskBarMilestoneOpts = computed(() => {
+      return Object.assign({}, getConfig().gantt.taskBarMilestoneConfig, props.taskBarMilestoneConfig)
+    })
+
     const computeTaskBarTooltipOpts = computed(() => {
       return Object.assign({}, getConfig().gantt.taskBarTooltipConfig, props.taskBarTooltipConfig)
     })
@@ -296,6 +301,11 @@ export default defineVxeComponent({
     const computeEndField = computed(() => {
       const taskOpts = computeTaskOpts.value
       return taskOpts.endField || 'end'
+    })
+
+    const computeTypeField = computed(() => {
+      const taskOpts = computeTaskOpts.value
+      return taskOpts.typeField || 'type'
     })
 
     const computeProgressField = computed(() => {
@@ -509,6 +519,7 @@ export default defineVxeComponent({
       computeTaskBarMoveOpts,
       computeTaskBarResizeOpts,
       computeTaskSplitOpts,
+      computeTaskBarMilestoneOpts,
       computeTaskBarTooltipOpts,
       computeTaskLinkOpts,
       computeTaskViewScales,
@@ -518,6 +529,7 @@ export default defineVxeComponent({
       computeTitleField,
       computeStartField,
       computeEndField,
+      computeTypeField,
       computeProgressField,
       computeScrollbarOpts,
       computeScrollbarXToTop,

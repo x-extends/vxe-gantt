@@ -105,7 +105,8 @@ setIcon({
   GANTT_VIEW_LEFT_OPEN: iconPrefix + 'arrow-left',
   GANTT_VIEW_LEFT_CLOSE: iconPrefix + 'arrow-right',
   GANTT_VIEW_RIGHT_OPEN: iconPrefix + 'arrow-right',
-  GANTT_VIEW_RIGHT_CLOSE: iconPrefix + 'arrow-left'
+  GANTT_VIEW_RIGHT_CLOSE: iconPrefix + 'arrow-left',
+  GANTT_VIEW_TASK_MILESTONE: iconPrefix + 'square-fill rotate45'
 })
 
 export {

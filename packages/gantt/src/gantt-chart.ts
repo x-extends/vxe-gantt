@@ -2,14 +2,14 @@ import { h, inject, VNode, ref, Ref, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
 import XEUtils from 'xe-utils'
-import { getCellRestHeight } from './util'
+import { getCellRestHeight, hasMilestoneTask, gettaskType } from './util'
 import { getStringValue, isEnableConf } from '../../ui/src/utils'
 
 import type { VxeComponentStyleType } from 'vxe-pc-ui'
 import type { VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
-const { renderEmptyElement } = VxeUI
+const { getIcon, renderEmptyElement } = VxeUI
 
 const sourceType = 'gantt'
 const viewType = 'chart'
@@ -20,9 +20,9 @@ export default defineVxeComponent({
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
-    const { internalData: ganttInternalData } = $xeGantt
+    const { props: ganttProps, internalData: ganttInternalData } = $xeGantt
     const { reactData: ganttViewReactData, internalData: ganttViewInternalData } = $xeGanttView
-    const { computeProgressField, computeTitleField, computeTaskBarOpts, computeScaleUnit, computeTaskLinkOpts } = $xeGantt.getComputeMaps()
+    const { computeProgressField, computeTitleField, computeTypeField, computeTaskBarOpts, computeScaleUnit, computeTaskLinkOpts, computeTaskBarMilestoneOpts } = $xeGantt.getComputeMaps()
 
     const refElem = ref<HTMLDivElement>()
     const refTaskWrapperElem = ref() as Ref<HTMLDivElement>
@@ -43,12 +43,15 @@ export default defineVxeComponent({
       const ganttSlots = $xeGantt.context.slots
       const taskBarSlot = ganttSlots.taskBar || ganttSlots['task-bar']
 
+      const { taskBarMilestoneConfig } = ganttProps
       const titleField = computeTitleField.value
       const progressField = computeProgressField.value
+      const typeField = computeTypeField.value
       const taskBarOpts = computeTaskBarOpts.value
+      const taskBarMilestoneOpts = computeTaskBarMilestoneOpts.value
       const scaleUnit = computeScaleUnit.value
       const barParams = { $gantt: $xeGantt, row, scaleType: scaleUnit }
-      const { showProgress, showContent, contentMethod, barStyle, move, showTooltip } = taskBarOpts
+      const { showProgress, showContent, contentMethod, barStyle, moveable, showTooltip } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
       const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
       const { round } = barStyObj
@@ -58,6 +61,8 @@ export default defineVxeComponent({
 
       let title = getStringValue(XEUtils.get(row, titleField))
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
+      const typeValue = gettaskType(XEUtils.get(row, typeField))
+      const isMilestone = !!(taskBarMilestoneConfig && hasMilestoneTask(typeValue))
 
       const vbStyle: VxeComponentStyleType = {}
       const vpStyle: VxeComponentStyleType = {
@@ -124,12 +129,71 @@ export default defineVxeComponent({
           $xeGantt.dispatchEvent('task-bar-mouseleave', ttParams, evnt)
         }
       }
+
+      let cbVNs: VNode[] = []
+      if ($xeGantt.renderGanttTaskBarContent) {
+        cbVNs = $xeGantt.renderGanttTaskBarContent(ctParams, {
+          isMilestone,
+          title,
+          vbStyle,
+          vpStyle
+        })
+      } else if (taskBarSlot) {
+        cbVNs.push(
+          h('div', {
+            key: 'cbc',
+            class: 'vxe-gantt-view--chart-custom-bar-content'
+          }, $xeGantt.callSlot(taskBarSlot, barParams))
+        )
+      } else {
+        if (isMilestone) {
+          const { icon, iconStatus, iconStyle } = taskBarMilestoneOpts
+          const tbmParams = { $gantt: $xeGantt, row }
+          cbVNs.push(
+            h('div', {
+              key: 'vcm',
+              class: 'vxe-gantt-view--chart-milestone-wrapper'
+            }, [
+              h('div', {
+                class: ['vxe-gantt-view--chart-milestone-icon', iconStatus ? `theme--${XEUtils.isFunction(iconStatus) ? iconStatus(tbmParams) : iconStatus}` : ''],
+                style: iconStyle ? Object.assign({}, XEUtils.isFunction(iconStyle) ? iconStyle(tbmParams) : iconStyle) : undefined
+              }, [
+                h('i', {
+                  class: (icon ? (XEUtils.isFunction(icon) ? icon(tbmParams) : icon) : '') || getIcon().GANTT_VIEW_TASK_MILESTONE
+                })
+              ]),
+              showContent
+                ? h('div', {
+                  class: 'vxe-gantt-view--chart-milestone-content'
+                }, title)
+                : renderEmptyElement($xeGantt)
+            ])
+          )
+        } else {
+          cbVNs.push(
+            showProgress
+              ? h('div', {
+                key: 'vcp',
+                class: 'vxe-gantt-view--chart-progress',
+                style: vpStyle
+              })
+              : renderEmptyElement($xeGantt),
+            showContent
+              ? h('div', {
+                key: 'vcc',
+                class: 'vxe-gantt-view--chart-content'
+              }, title)
+              : renderEmptyElement($xeGantt)
+          )
+        }
+      }
+
       return h('div', {
         key: treeConfig ? rowid : $rowIndex,
         rowid,
-        class: ['vxe-gantt-view--chart-row', {
+        class: ['vxe-gantt-view--chart-row', `is--${gettaskType(typeValue)}`, {
           'is--round': round,
-          'is--move': move
+          'is--move': moveable
         }],
         style: {
           height: `${cellHeight}px`
@@ -139,38 +203,11 @@ export default defineVxeComponent({
         }
       }, [
         h('div', {
-          class: taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar',
+          class: [taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar', `is--${gettaskType(typeValue)}`],
           style: vbStyle,
           rowid,
           ...ons
-        }, $xeGantt.renderGanttTaskBarContent
-          ? $xeGantt.renderGanttTaskBarContent(ctParams, {
-            title,
-            vbStyle,
-            vpStyle
-          })
-          : (taskBarSlot
-              ? [
-                  h('div', {
-                    key: 'cbc',
-                    class: 'vxe-gantt-view--chart-custom-bar-content'
-                  }, $xeGantt.callSlot(taskBarSlot, barParams))
-                ]
-              : [
-                  showProgress
-                    ? h('div', {
-                      key: 'vcp',
-                      class: 'vxe-gantt-view--chart-progress',
-                      style: vpStyle
-                    })
-                    : renderEmptyElement($xeGantt),
-                  showContent
-                    ? h('div', {
-                      key: 'vcc',
-                      class: 'vxe-gantt-view--chart-content'
-                    }, title)
-                    : renderEmptyElement($xeGantt)
-                ]))
+        }, cbVNs)
       ])
     }
 

@@ -1,8 +1,8 @@
 import { h, ref, reactive, nextTick, inject, watch, provide, computed, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
-import { setScrollTop, setScrollLeft, removeClass, addClass } from '../../ui/src/dom'
+import { setScrollTop, setScrollLeft, removeClass, addClass, hasClass } from '../../ui/src/dom'
 import { VxeUI } from '@vxe-ui/core'
-import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth } from './util'
+import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth, hasMilestoneTask } from './util'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
@@ -52,7 +52,7 @@ export default defineVxeComponent({
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
 
     const { internalData: ganttInternalData } = $xeGantt
-    const { computeTaskOpts, computeTaskViewOpts, computeStartField, computeEndField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft, computeScaleUnit, computeWeekScale, computeMinScale } = $xeGantt.getComputeMaps()
+    const { computeTaskOpts, computeTaskViewOpts, computeStartField, computeEndField, computeTypeField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft, computeScaleUnit, computeWeekScale, computeMinScale } = $xeGantt.getComputeMaps()
 
     const refElem = ref<HTMLDivElement>()
 
@@ -612,6 +612,7 @@ export default defineVxeComponent({
         if ($xeTable) {
           const startField = computeStartField.value
           const endField = computeEndField.value
+          const typeField = computeTypeField.value
           const { computeAggregateOpts, computeTreeOpts } = $xeTable.getComputeMaps()
           const tableReactData = $xeTable.reactData
           const { isRowGroupStatus } = tableReactData
@@ -626,8 +627,15 @@ export default defineVxeComponent({
           const renderFn = createChartRender(fullCols)
           const handleParseRender = (row: any) => {
             const rowid = $xeTable.getRowid(row)
-            const startValue = XEUtils.get(row, startField)
-            const endValue = XEUtils.get(row, endField)
+            let startValue = XEUtils.get(row, startField)
+            let endValue = XEUtils.get(row, endField)
+            const isMilestone = hasMilestoneTask(XEUtils.get(row, typeField))
+            if (isMilestone) {
+              if (!startValue) {
+                startValue = endValue
+              }
+              endValue = startValue
+            }
             if (startValue && endValue) {
               const { offsetLeftSize, offsetWidthSize } = renderFn(startValue, endValue)
               ctMaps[rowid] = {
@@ -686,11 +694,13 @@ export default defineVxeComponent({
         const handleMinMaxData = (row: any) => {
           const startValue = XEUtils.get(row, startField)
           const endValue = XEUtils.get(row, endField)
-          if (startValue && endValue) {
+          if (startValue) {
             const startDate = parseStringDate(startValue)
             if (!minDate || minDate.getTime() > startDate.getTime()) {
               minDate = startDate
             }
+          }
+          if (endValue) {
             const endDate = parseStringDate(endValue)
             if (!maxDate || maxDate.getTime() < endDate.getTime()) {
               maxDate = endDate
@@ -763,7 +773,9 @@ export default defineVxeComponent({
           }
           const chartRest = rowid ? chartMaps[rowid] : null
           barEl.style.left = `${getTaskBarLeft(chartRest, viewCellWidth)}px`
-          barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
+          if (!hasClass(barEl, 'is--milestone')) {
+            barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
+          }
         })
       }
       return nextTick()

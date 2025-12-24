@@ -1,3 +1,6 @@
+@use "sass:map";
+@use "sass:list";
+
 .vxe-gantt-view--chart-task-wrapper {
   position: absolute;
   top: 0;
@@ -20,12 +23,6 @@
       }
     }
   }
-  &.is--move {
-    & > .vxe-gantt-view--chart-bar,
-    & > .vxe-gantt-view--chart-custom-bar {
-      user-select: none;
-    }
-  }
 }
 .vxe-gantt-view--chart-bar,
 .vxe-gantt-view--chart-custom-bar {
@@ -35,10 +32,12 @@
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  color: #ffffff;
-  background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
   overflow: hidden;
   pointer-events: all;
+  &.is--default {
+    color: #ffffff;
+    background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
+  }
 }
 .vxe-gantt-view--chart-custom-bar-content {
   width: 100%;
@@ -46,17 +45,22 @@
 .vxe-gantt-view--chart-bar {
   align-items: center;
   height: var(--vxe-ui-gantt-view-chart-bar-height);
-  &:hover {
-    &::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.1);
-      pointer-events: none;
+  &.is--default {
+    &:hover {
+      &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.1);
+        pointer-events: none;
+      }
     }
+  }
+  &.is--milestone {
+    white-space: nowrap;
   }
 }
 .vxe-gantt-view--chart-progress {
@@ -77,6 +81,55 @@
   white-space: nowrap;
   font-size: 0.9em;
   padding: 0 0.6em;
+}
+
+$iconThemeList: (
+  (
+    name: "primary",
+    color: var(--vxe-ui-font-primary-color),
+  ),
+  (
+    name: "success",
+    color: var(--vxe-ui-status-success-color),
+  ),
+  (
+    name: "info",
+    color: var(--vxe-ui-status-info-color),
+  ),
+  (
+    name: "warning",
+    color: var(--vxe-ui-status-warning-color),
+  ),
+  (
+    name: "danger",
+    color: var(--vxe-ui-status-danger-color),
+  ),
+  (
+    name: "error",
+    color: var(--vxe-ui-status-error-color),
+  )
+);
+.vxe-gantt-view--chart-milestone-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.vxe-gantt-view--chart-milestone-icon {
+  flex-shrink: 0;
+  padding: 0 0.3em;
+  color: var(--vxe-ui-font-primary-color);
+  @for $index from 0 to list.length($iconThemeList) {
+    $item: list.nth($iconThemeList, $index + 1);
+    &.theme--#{map.get($item, name)} {
+      color: map.get($item, color);
+    }
+  }
+  i {
+    display: inline-block;
+  }
+}
+.vxe-gantt-view--chart-milestone-content {
+  flex-grow: 1;
 }
 
 /*行拖拽*/
