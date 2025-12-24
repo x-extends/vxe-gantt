@@ -534,6 +534,7 @@ function handleUpdateData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewP
   if ($xeTable) {
     const startField = $xeGantt.computeStartField
     const endField = $xeGantt.computeEndField
+    const typeField = $xeGantt.computeTypeField
     const tableReactData = $xeTable as unknown as TableReactData
     const { isRowGroupStatus } = tableReactData
     const tableInternalData = $xeTable as unknown as TableInternalData
@@ -544,8 +545,16 @@ function handleUpdateData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewP
     const childrenField = treeOpts.children || treeOpts.childrenField
 
     const handleMinMaxData = (row: any) => {
-      const startValue = XEUtils.get(row, startField)
-      const endValue = XEUtils.get(row, endField)
+      let startValue = XEUtils.get(row, startField)
+      let endValue = XEUtils.get(row, endField)
+      const typeValue = XEUtils.get(row, typeField)
+      const isMilestone = hasMilestoneTask(typeValue)
+      if (!startValue) {
+        startValue = endValue
+      }
+      if (isMilestone || !endValue) {
+        endValue = startValue
+      }
       if (startValue) {
         const startDate = parseStringDate($xeGanttView, startValue)
         if (!minDate || minDate.getTime() > startDate.getTime()) {
