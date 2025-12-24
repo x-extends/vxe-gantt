@@ -1,85 +1,82 @@
 <template>
   <div>
-    <vxe-gantt ref="ganttRef" v-bind="ganttOptions" v-on="ganttEvents"></vxe-gantt>
+    <vxe-radio-group v-model="viewMode" @change="changeViewEvent">
+      <vxe-radio-button checked-value="1" content="年视图"></vxe-radio-button>
+      <vxe-radio-button checked-value="2" content="季度视图"></vxe-radio-button>
+      <vxe-radio-button checked-value="3" content="月视图"></vxe-radio-button>
+      <vxe-radio-button checked-value="4" content="周视图"></vxe-radio-button>
+      <vxe-radio-button checked-value="5" content="日视图"></vxe-radio-button>
+    </vxe-radio-group>
+
+    <vxe-gantt v-bind="ganttOptions"></vxe-gantt>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive } from 'vue'
-import { VxeUI } from 'vxe-pc-ui'
-import type { VxeGanttInstance, VxeGanttProps, VxeGanttListeners } from '../../../types'
+import { reactive, ref } from 'vue'
+import { VxeGanttProps, VxeGanttPropTypes } from '../../../types'
 
 interface RowVO {
   id: number
-  title: string
+  name: string
   start: string
   end: string
   progress: number
 }
 
-const ganttRef = ref<VxeGanttInstance<RowVO>>()
+const viewMode = ref('1')
+
+const taskViewConfig = reactive<VxeGanttPropTypes.TaskViewConfig>({
+  scales: ['year']
+})
 
 const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   border: true,
-  showFooter: true,
-  rowConfig: {
-    keyField: 'id',
-    isCurrent: true
-  },
-  columnConfig: {
-    resizable: true
-  },
   taskBarConfig: {
     showProgress: true,
-    showContent: true
-  },
-  taskViewConfig: {
-    scales: ['year', 'quarter', 'month', 'date'],
-    tableStyle: {
-      width: 480
+    barStyle: {
+      round: true,
+      bgColor: '#fca60b',
+      completedBgColor: '#65c16f'
     }
   },
-  taskViewScaleConfig: {
-    // scaleUnit: 'week'
-  },
+  taskViewConfig,
   columns: [
-    { type: 'seq' },
-    { field: 'title', title: '任务名称' },
+    { field: 'name', title: '任务名称' },
     { field: 'start', title: '开始时间', width: 100 },
     { field: 'end', title: '结束时间', width: 100 }
   ],
   data: [
-    { id: 10001, title: 'A项目', start: '2024-03-01', end: '2024-03-04', progress: 3 },
-    { id: 10002, title: '城市道路修理进度', start: '2024-03-03', end: '2024-03-08', progress: 10 },
-    { id: 10003, title: 'B大工程', start: '2024-03-11', end: '2024-03-12', progress: 90 },
-    { id: 10004, title: '超级大工程', start: '2024-02-26 07:30:00', end: '2024-02-28 09:00:00', progress: 15 },
-    { id: 10005, title: '地球净化项目', start: '2024-03-01', end: '2024-03-05', progress: 100 },
-    { id: 10006, title: '一个小目标项目', start: '2024-03-04', end: '2024-03-08', progress: 5 },
-    { id: 10007, title: '某某计划', start: '2024-03-05', end: '2024-03-09', progress: 70 },
-    { id: 10008, title: '某某科技项目8', start: '2024-03-01', end: '2024-03-03', progress: 50 },
-    { id: 10009, title: '地铁建设工程9', start: '2024-03-02', end: '2024-03-04', progress: 5 },
-    { id: 10010, title: '铁路修建计划10', start: '2024-03-01', end: '2024-03-03', progress: 10 },
-    { id: 10011, title: '铁路修建计划11', start: '2024-03-04', end: '2024-03-08', progress: 10 },
-    { id: 10012, title: '铁路修建计划12', start: '2024-03-02', end: '2024-03-04', progress: 10 },
-    { id: 10013, title: '铁路修建计划13', start: '2024-03-11', end: '2024-03-19', progress: 10 },
-    { id: 10014, title: '铁路修建计划14', start: '2024-03-05', end: '2024-03-09', progress: 10 },
-    { id: 10015, title: '铁路修建计划15', start: '2024-03-01', end: '2024-03-03', progress: 10 }
-  ],
-  footerData: [
-    { title: '合计', start: 111, end: 222 }
+    { id: 10001, name: 'A项目', start: '2023-08-01', end: '2024-11-15', progress: 3 },
+    { id: 10002, name: '城市道路修理进度', start: '2024-01-03', end: '2024-03-08', progress: 10 },
+    { id: 10003, name: 'B大工程', start: '2024-05-03', end: '2024-07-11', progress: 90 },
+    { id: 10004, name: '超级大工程', start: '2024-04-05', end: '2024-06-11', progress: 15 },
+    { id: 10005, name: '地球净化项目', start: '2024-07-08', end: '2024-08-15', progress: 100 },
+    { id: 10006, name: '一个小目标项目', start: '2024-08-10', end: '2024-11-21', progress: 5 },
+    { id: 10007, name: '某某计划', start: '2024-03-15', end: '2024-08-24', progress: 70 },
+    { id: 10008, name: '某某科技项目', start: '2024-03-20', end: '2024-03-29', progress: 50 },
+    { id: 10009, name: '地铁建设工程', start: '2025-01-19', end: '2025-03-18', progress: 5 },
+    { id: 10010, name: '铁路修建计划', start: '2024-12-12', end: '2025-02-10', progress: 10 }
   ]
 })
 
-const ganttEvents: VxeGanttListeners<RowVO> = {
-  cellMenu ({ row }) {
-    const $gantt = ganttRef.value
-    if ($gantt) {
-      $gantt.setCurrentRow(row)
-    }
-  },
-  menuClick (e) {
-    console.log(e)
-    VxeUI.modal.message({ content: `点击了 ${e.menu.code}`, status: 'success' })
+const changeViewEvent = () => {
+  switch (viewMode.value) {
+    case '1':
+      taskViewConfig.scales = ['year']
+      break
+    case '2':
+      taskViewConfig.scales = ['year', 'quarter']
+      break
+    case '3':
+      taskViewConfig.scales = ['year', 'month']
+      break
+    case '4':
+      taskViewConfig.scales = ['year', 'week']
+      break
+    case '5':
+      taskViewConfig.scales = ['month', 'day', 'date']
+      break
   }
 }
 </script>
