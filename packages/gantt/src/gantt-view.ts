@@ -279,7 +279,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
         }
       }
     }
@@ -302,7 +302,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
         }
       }
     }
@@ -325,7 +325,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
         }
       }
     }
@@ -348,7 +348,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
         }
       }
     }
@@ -395,7 +395,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
         }
       }
     }
@@ -418,7 +418,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
         }
       }
     }
@@ -431,7 +431,7 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         let offsetWidthSize = 0
         if (minViewDate) {
           offsetLeftSize = (startDate.getTime() - minViewDate.getTime()) / gapTime
-          offsetWidthSize = ((endDate.getTime() - startDate.getTime()) / gapTime) + 1
+          offsetWidthSize = ((endDate.getTime() - startDate.getTime()) / gapTime)
         }
         return {
           offsetLeftSize,
