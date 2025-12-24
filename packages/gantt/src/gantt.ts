@@ -1778,6 +1778,10 @@ export default defineVxeComponent({
       },
       triggerTaskBarTooltipEvent (evnt, params) {
         const { barTipStore } = reactData
+        const { dragBarRow } = internalData
+        if (dragBarRow) {
+          return
+        }
         const taskBarTooltipOpts = computeTaskBarTooltipOpts.value
         const titleField = computeTitleField.value
         const { contentMethod } = taskBarTooltipOpts

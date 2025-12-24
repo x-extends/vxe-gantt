@@ -109,7 +109,9 @@ export default defineVxeComponent({
     const internalData = createInternalData()
 
     const refMaps: GanttViewPrivateRef = {
-      refElem
+      refElem,
+      refScrollXHandleElem,
+      refScrollYHandleElem
     }
 
     const computeScaleDateList = computed(() => {

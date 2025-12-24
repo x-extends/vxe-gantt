@@ -100,7 +100,7 @@ export default defineVxeComponent({
         _rowIndex
       }
       return h('td', {
-        key: $columnIndex,
+        key: cellClassName || cellStyle ? field : $columnIndex,
         class: [
           'vxe-gantt-view--body-column',
           {
