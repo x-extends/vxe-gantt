@@ -560,7 +560,10 @@ export default defineVxeComponent({
       const scaleList = (taskScaleConfs && taskScaleConfs.length ? taskScaleConfs : ['month', 'date'] as VxeGanttDefines.ColumnScaleType[])
       scaleList.forEach(conf => {
         const sConf = !conf || XEUtils.isString(conf) ? { type: conf } : conf
-        const { type } = sConf
+        const { type, step } = sConf
+        if (step) {
+          errLog('vxe.error.errProp', [`step=${step}`, 'step=1'])
+        }
         if (!type || !viewTypeLevelMaps[type]) {
           errLog('vxe.error.errProp', [`type=${type}`, XEUtils.keys(viewTypeLevelMaps).join(',')])
           return
