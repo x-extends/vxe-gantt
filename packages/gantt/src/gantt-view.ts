@@ -303,15 +303,8 @@ export default defineVxeComponent({
           const q = Math.ceil((itemDate.getMonth() + 1) / 3)
           const W = `${XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)}`
           const WW = XEUtils.padStart(W, 2, '0')
-          let wYear = yyyy
-          // 周维度，由于年份和第几周是冲突的行为，所以需要特殊处理，判断是否跨年，例如
-          // '2024-12-31' 'yyyy-MM-dd W' >> '2024-12-31 1'
-          // '2025-01-01' 'yyyy-MM-dd W' >> '2025-01-01 1'
-          if (W === '1' && MM === '12') {
-            wYear = `${Number(yyyy) + 1}`
-            if (isMinWeek) {
-              yyyy = wYear
-            }
+          if (isMinWeek && checkWeekOfsetYear(W, M)) {
+            yyyy = `${Number(yyyy) + 1}`
           }
           const dateObj: VxeGanttDefines.ScaleDateObj = { date: itemDate, yy, yyyy, M, MM, d, dd, H, HH, m, mm, s, ss, q, W, WW, E, e }
           const colMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn> = {
@@ -421,6 +414,32 @@ export default defineVxeComponent({
       }
     }
 
+    /**
+     * 判断周的年份是否跨年
+     */
+    const checkWeekOfsetYear = (W: number | string, M: number | string) => {
+      return `${W}` === '1' && `${M}` === '12'
+    }
+
+    /**
+     * 周维度，由于年份和第几周是冲突的行为，所以需要特殊处理，判断是否跨年，例如
+     * '2024-12-31' 'yyyy-MM-dd W' >> '2024-12-31 1'
+     * '2025-01-01' 'yyyy-MM-dd W' >> '2025-01-01 1'
+     */
+    const parseWeekObj = (date: any, firstDay?: 0 | 5 | 1 | 2 | 3 | 4 | 6) => {
+      const currDate = XEUtils.toStringDate(date)
+      let yyyy = currDate.getFullYear()
+      const month = currDate.getMonth()
+      const weekNum = XEUtils.getYearWeek(currDate, firstDay)
+      if (checkWeekOfsetYear(weekNum, month + 1)) {
+        yyyy++
+      }
+      return {
+        yyyy,
+        W: weekNum
+      }
+    }
+
     const createChartRender = (fullCols: VxeGanttDefines.ViewColumn[]) => {
       const { minViewDate } = reactData
       const minScale = computeMinScale.value
@@ -505,9 +524,11 @@ export default defineVxeComponent({
           return (startValue: any, endValue: any) => {
             const startDate = parseStringDate(startValue)
             const endDate = parseStringDate(endValue)
-            const startStr = XEUtils.toDateString(startDate, 'yyyy-W', { firstDay: weekScale ? weekScale.startDay : undefined })
+            const startWeekObj = parseWeekObj(startDate, weekScale ? weekScale.startDay : undefined)
+            const startStr = `${startWeekObj.yyyy}-${startWeekObj.W}`
             const startFirstDate = XEUtils.getWhatWeek(startDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
-            const endStr = XEUtils.toDateString(endDate, 'yyyy-W', { firstDay: weekScale ? weekScale.startDay : undefined })
+            const endWeekObj = parseWeekObj(endDate, weekScale ? weekScale.startDay : undefined)
+            const endStr = `${endWeekObj.yyyy}-${endWeekObj.W}`
             const endFirstDate = XEUtils.getWhatWeek(endDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
             const dateSize = Math.floor((XEUtils.getWhatWeek(endDate, 1, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined).getTime() - endFirstDate.getTime()) / dayMs)
             const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
