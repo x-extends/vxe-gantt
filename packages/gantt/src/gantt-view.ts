@@ -951,7 +951,7 @@ export default defineVxeComponent({
 
       return Promise.all([
         updateTaskChart(),
-        $xeGantt.handleUpdateTaskLink ? $xeGantt.handleUpdateTaskLink($xeGanttView) : null
+        $xeGantt.handleUpdateTaskLinkStyle ? $xeGantt.handleUpdateTaskLinkStyle($xeGanttView) : null
       ])
     }
 
@@ -1115,10 +1115,15 @@ export default defineVxeComponent({
         scrollXSpaceEl.style.width = `${scrollXWidth}px`
       }
 
-      const lineWrapper = getRefElem(elemStore['main-chart-line-wrapper'])
-      const svgElem = lineWrapper ? lineWrapper.firstElementChild as HTMLDivElement : null
-      if (svgElem) {
-        svgElem.style.width = `${scrollXWidth}px`
+      const beforeWrapper = getRefElem(elemStore['main-chart-before-wrapper'])
+      const beforeSvgElem = beforeWrapper ? beforeWrapper.firstElementChild as HTMLDivElement : null
+      if (beforeSvgElem) {
+        beforeSvgElem.style.width = `${scrollXWidth}px`
+      }
+      const afterWrapper = getRefElem(elemStore['main-chart-after-wrapper'])
+      const afterSvgElem = afterWrapper ? afterWrapper.firstElementChild as HTMLDivElement : null
+      if (afterSvgElem) {
+        afterSvgElem.style.width = `${scrollXWidth}px`
       }
 
       calcScrollbar()
@@ -1180,10 +1185,15 @@ export default defineVxeComponent({
         scrollYSpaceEl.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
       }
 
-      const lineWrapper = getRefElem(elemStore['main-chart-line-wrapper'])
-      const svgElem = lineWrapper ? lineWrapper.firstElementChild as HTMLDivElement : null
-      if (svgElem) {
-        svgElem.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
+      const beforeWrapper = getRefElem(elemStore['main-chart-before-wrapper'])
+      const beforeSvgElem = beforeWrapper ? beforeWrapper.firstElementChild as HTMLDivElement : null
+      if (beforeSvgElem) {
+        beforeSvgElem.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
+      }
+      const afterWrapper = getRefElem(elemStore['main-chart-after-wrapper'])
+      const afterSvgElem = afterWrapper ? afterWrapper.firstElementChild as HTMLDivElement : null
+      if (afterSvgElem) {
+        afterSvgElem.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
       }
 
       reactData.scrollYTop = scrollYTop

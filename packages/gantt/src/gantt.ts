@@ -1,4 +1,4 @@
-import { h, ref, PropType, computed, provide, reactive, onUnmounted, watch, nextTick, VNode, onMounted } from 'vue'
+import { h, ref, PropType, computed, provide, reactive, onBeforeUnmount, onUnmounted, watch, nextTick, VNode, onMounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import XEUtils from 'xe-utils'
 import { getLastZIndex, nextZIndex, isEnableConf, formatText } from '../../ui/src/utils'
@@ -30,9 +30,54 @@ function createInternalData (): GanttInternalData {
     linkFromKeyMaps: {},
     linkUniqueMaps: {},
     uFoot: false,
-    resizeTableWidth: 0
-    // barTipTimeout: null
-    // dragBarRow: null
+    resizeTableWidth: 0,
+    // barTipTimeout: null,
+    // dragBarRow: null,
+    // dragLineRow: null,
+    dragLinkToStore: {
+      rowid: null,
+      type: 0
+    }
+  }
+}
+
+function createReactData (): GanttReactData {
+  return {
+    tableLoading: false,
+    proxyInited: false,
+    isZMax: false,
+    tableLinks: [],
+    tableData: [],
+    filterData: [],
+    formData: {},
+    sortData: [],
+    footerData: [],
+    tZindex: 0,
+    tablePage: {
+      total: 0,
+      pageSize: getConfig().pager?.pageSize || 10,
+      currentPage: 1
+    },
+    showLeftView: true,
+    showRightView: true,
+    taskScaleList: [],
+
+    barTipStore: {
+      row: null,
+      content: '',
+      visible: false,
+      params: null
+    },
+
+    dragLinkFromStore: {
+      rowid: null,
+      type: 0
+    },
+    activeBarRowid: null,
+    activeLink: null,
+    isActiveCeLe: false,
+    linkList: [],
+    upLinkFlag: 0
   }
 }
 
@@ -117,36 +162,7 @@ export default defineVxeComponent({
 
     const { computeSize } = useFns.useSize(props)
 
-    const reactData = reactive<GanttReactData>({
-      tableLoading: false,
-      proxyInited: false,
-      isZMax: false,
-      tableLinks: [],
-      tableData: [],
-      filterData: [],
-      formData: {},
-      sortData: [],
-      footerData: [],
-      tZindex: 0,
-      tablePage: {
-        total: 0,
-        pageSize: getConfig().pager?.pageSize || 10,
-        currentPage: 1
-      },
-      showLeftView: true,
-      showRightView: true,
-      taskScaleList: [],
-
-      barTipStore: {
-        row: null,
-        content: '',
-        visible: false,
-        params: null
-      },
-
-      linkList: [],
-      upLinkFlag: 0
-    })
+    const reactData = reactive(createReactData())
 
     const internalData = createInternalData()
 
@@ -286,6 +302,11 @@ export default defineVxeComponent({
       const taskViewOpts = computeTaskViewOpts.value
       const { scales } = taskViewOpts
       return scales
+    })
+
+    const computeTaskLinkStyle = computed(() => {
+      const { lineType, lineWidth, lineStatus, lineColor } = computeTaskLinkOpts.value
+      return `${lineType || ''}_${lineWidth || ''}_${lineStatus || ''}_${lineColor || ''}`
     })
 
     const computeTitleField = computed(() => {
@@ -1768,21 +1789,34 @@ export default defineVxeComponent({
             $xeTable.handleToggleCheckRowEvent(evnt, params)
           }
         }
+        reactData.isActiveCeLe = false
+        reactData.activeBarRowid = null
+        reactData.activeLink = null
         $xeGantt.dispatchEvent('task-cell-click', params, evnt)
       },
       handleTaskCellDblclickEvent (evnt, params) {
         $xeGantt.dispatchEvent('task-cell-dblclick', params, evnt)
       },
       handleTaskBarClickEvent (evnt, params) {
+        const $xeTable = refTable.value
+        const taskBarOpts = computeTaskBarOpts.value
+        const { linkCreatable } = taskBarOpts
+        const { row } = params
+        reactData.isActiveCeLe = !!linkCreatable
+        reactData.activeBarRowid = $xeTable ? $xeTable.getRowid(row) : row
+        reactData.activeLink = null
         $xeGantt.dispatchEvent('task-bar-click', params, evnt)
       },
       handleTaskBarDblclickEvent (evnt, params) {
         $xeGantt.dispatchEvent('task-bar-dblclick', params, evnt)
       },
       triggerTaskBarTooltipEvent (evnt, params) {
-        const { barTipStore } = reactData
-        const { dragBarRow } = internalData
-        if (dragBarRow) {
+        const { barTipStore, activeLink } = reactData
+        const { dragBarRow, dragLineRow } = internalData
+        if (dragBarRow || dragLineRow) {
+          return
+        }
+        if (activeLink) {
           return
         }
         const taskBarTooltipOpts = computeTaskBarTooltipOpts.value
@@ -2433,6 +2467,12 @@ export default defineVxeComponent({
       $xeGantt.refreshTaskView()
     })
 
+    watch(computeTaskLinkStyle, () => {
+      if ($xeGantt.handleUpdateTaskLinkData) {
+        $xeGantt.handleUpdateTaskLinkData()
+      }
+    })
+
     hooks.forEach((options) => {
       const { setupGantt } = options
       if (setupGantt) {
@@ -2443,16 +2483,16 @@ export default defineVxeComponent({
       }
     })
 
-    if ($xeGantt.handleTaskUpdateLinks) {
+    if ($xeGantt.handleTaskLoadLinks) {
       if (props.links) {
-        $xeGantt.handleTaskUpdateLinks(props.links)
+        $xeGantt.handleTaskLoadLinks(props.links)
       }
     }
     handleTaskScaleConfig()
     initPages()
 
     onMounted(() => {
-      if (!$xeGantt.handleUpdateTaskLink) {
+      if (!$xeGantt.handleUpdateTaskLinkData) {
         if (props.links) {
           warnLog('vxe.error.notProp', ['links'])
         }
@@ -2506,6 +2546,10 @@ export default defineVxeComponent({
       })
       initGanttView()
       globalEvents.on($xeGantt, 'keydown', handleGlobalKeydownEvent)
+    })
+
+    onBeforeUnmount(() => {
+      XEUtils.assign(reactData, createReactData())
     })
 
     onUnmounted(() => {

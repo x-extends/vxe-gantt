@@ -23,7 +23,8 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   showFooter: true,
   taskBarConfig: {
     showProgress: true,
-    showContent: true
+    showContent: true,
+    showTooltip: true
   },
   taskViewConfig: {
     tableStyle: {

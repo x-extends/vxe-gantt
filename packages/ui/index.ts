@@ -50,6 +50,7 @@ setConfig({
     },
     taskLinkConfig: {
       enabled: true,
+      isHover: true,
       showArrow: true
     },
     taskViewScaleConfig: {
