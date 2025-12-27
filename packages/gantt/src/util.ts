@@ -32,10 +32,6 @@ export function getTaskBarWidth (chartRest: VxeGanttDefines.RowCacheItem | null,
   return Math.max(1, chartRest ? (Math.floor(viewCellWidth * chartRest.oWidthSize) - 1) : 0)
 }
 
-export function getTaskLinkKey (from: string | number, to: string | number) {
-  return `${from}_${to}`
-}
-
 const taskTypeMaps: Record<string, boolean> = {
   milestone: true
 }

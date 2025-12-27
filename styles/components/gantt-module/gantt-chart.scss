@@ -16,6 +16,10 @@
     & > .vxe-gantt-view--chart-bar,
     & > .vxe-gantt-view--chart-custom-bar {
       border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius);
+      .vxe-gantt-view--chart-bar-content-wrapper,
+      .vxe-gantt-view--chart-custom-bar-content-wrapper {
+        border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius);
+      }
       &:hover {
         &::after {
           border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius);
@@ -32,15 +36,23 @@
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  overflow: hidden;
   pointer-events: all;
   &.is--default {
     color: #ffffff;
     background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
   }
 }
-.vxe-gantt-view--chart-custom-bar-content {
+.vxe-gantt-view--chart-bar-content-wrapper,
+.vxe-gantt-view--chart-custom-bar-content-wrapper {
   width: 100%;
+  overflow: hidden;
+}
+.vxe-gantt-view--chart-bar-content-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 .vxe-gantt-view--chart-bar {
   align-items: center;

@@ -42,8 +42,6 @@ export default defineVxeComponent({
       const _vm = this
       const $xeGantt = _vm.$xeGantt
 
-      const tableProps = $xeTable
-      const { treeConfig } = tableProps
       const tableReactData = $xeTable as unknown as TableReactData
       const { resizeHeightFlag } = tableReactData
       const tableInternalData = $xeTable as unknown as TableInternalData
@@ -53,10 +51,13 @@ export default defineVxeComponent({
       const defaultRowHeight = $xeTable.computeDefaultRowHeight
 
       const ganttProps = $xeGantt
+      const ganttReactData = $xeGantt.reactData
+      const ganttInternalData = $xeGantt.internalData
       const ganttSlots = $xeGantt.$scopedSlots
       const taskBarSlot = ganttSlots.taskBar || ganttSlots['task-bar']
 
       const { taskBarMilestoneConfig } = ganttProps
+      const { activeLink, activeBarRowid } = ganttReactData
       const titleField = $xeGantt.computeTitleField
       const progressField = $xeGantt.computeProgressField
       const typeField = $xeGantt.computeTypeField
@@ -105,31 +106,26 @@ export default defineVxeComponent({
         rowIndex,
         _rowIndex
       }
-      const ons: {
-        click: any
-        dblclick: any
-        mousedown: any
+      const ctOns: {
         mouseover?: any
         mouseleave?: any
-      } = {
-        click (evnt: MouseEvent) {
-          $xeGantt.handleTaskBarClickEvent(evnt, barParams)
-        },
-        dblclick (evnt: MouseEvent) {
-          $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
-        },
-        mousedown (evnt: MouseEvent) {
-          if ($xeGantt.handleTaskBarMousedownEvent) {
-            $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
-          }
-        }
-      }
+      } = {}
       if (showTooltip) {
-        ons.mouseover = (evnt: MouseEvent) => {
-          $xeGantt.triggerTaskBarTooltipEvent(evnt, Object.assign({ $event: evnt }, ctParams))
+        ctOns.mouseover = (evnt: MouseEvent) => {
+          const { dragBarRow } = ganttInternalData
+          const ttParams = Object.assign({ $event: evnt }, ctParams)
+          if (!dragBarRow) {
+            $xeGantt.triggerTaskBarTooltipEvent(evnt, ttParams)
+          }
+          $xeGantt.dispatchEvent('task-bar-mouseenter', ttParams, evnt)
         }
-        ons.mouseleave = (evnt: MouseEvent) => {
-          $xeGantt.handleTaskBarTooltipLeaveEvent(evnt, Object.assign({ $event: evnt }, ctParams))
+        ctOns.mouseleave = (evnt: MouseEvent) => {
+          const { dragBarRow } = ganttInternalData
+          const ttParams = Object.assign({ $event: evnt }, ctParams)
+          if (!dragBarRow) {
+            $xeGantt.handleTaskBarTooltipLeaveEvent(evnt, ttParams)
+          }
+          $xeGantt.dispatchEvent('task-bar-mouseleave', ttParams, evnt)
         }
       }
 
@@ -139,13 +135,16 @@ export default defineVxeComponent({
           isMilestone,
           title,
           vbStyle,
-          vpStyle
+          vpStyle,
+          rowid,
+          ctOns
         })
       } else if (taskBarSlot) {
         cbVNs.push(
           h('div', {
             key: 'cbc',
-            class: 'vxe-gantt-view--chart-custom-bar-content'
+            class: 'vxe-gantt-view--chart-custom-bar-content-wrapper',
+            on: ctOns
           }, $xeGantt.callSlot(taskBarSlot, barParams, h))
         )
       } else {
@@ -155,7 +154,8 @@ export default defineVxeComponent({
           cbVNs.push(
             h('div', {
               key: 'vcm',
-              class: 'vxe-gantt-view--chart-milestone-wrapper'
+              class: 'vxe-gantt-view--chart-milestone-wrapper',
+              on: ctOns
             }, [
               h('div', {
                 class: ['vxe-gantt-view--chart-milestone-icon', iconStatus ? `theme--${XEUtils.isFunction(iconStatus) ? iconStatus(tbmParams) : iconStatus}` : ''],
@@ -174,25 +174,31 @@ export default defineVxeComponent({
           )
         } else {
           cbVNs.push(
-            showProgress
-              ? h('div', {
-                key: 'vcp',
-                class: 'vxe-gantt-view--chart-progress',
-                style: vpStyle
-              })
-              : renderEmptyElement($xeGantt),
-            showContent
-              ? h('div', {
-                key: 'vcc',
-                class: 'vxe-gantt-view--chart-content'
-              }, title)
-              : renderEmptyElement($xeGantt)
+            h('div', {
+              key: 'vbc',
+              class: 'vxe-gantt-view--chart-bar-content-wrapper',
+              on: ctOns
+            }, [
+              showProgress
+                ? h('div', {
+                  key: 'vcp',
+                  class: 'vxe-gantt-view--chart-progress',
+                  style: vpStyle
+                })
+                : renderEmptyElement($xeGantt),
+              showContent
+                ? h('div', {
+                  key: 'vcc',
+                  class: 'vxe-gantt-view--chart-content'
+                }, title)
+                : renderEmptyElement($xeGantt)
+            ])
           )
         }
       }
 
       return h('div', {
-        key: treeConfig ? rowid : $rowIndex,
+        key: rowid,
         attrs: {
           rowid
         },
@@ -210,12 +216,27 @@ export default defineVxeComponent({
         }
       }, [
         h('div', {
-          class: [taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar', `is--${gettaskType(typeValue)}`],
+          class: [taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar', `is--${gettaskType(typeValue)}`, {
+            'is--active': activeBarRowid === rowid,
+            'active--link': activeLink && (rowid === `${activeLink.from}` || rowid === `${activeLink.to}`)
+          }],
           style: vbStyle,
           attrs: {
             rowid
           },
-          on: ons
+          on: {
+            click (evnt: MouseEvent) {
+              $xeGantt.handleTaskBarClickEvent(evnt, barParams)
+            },
+            dblclick (evnt: MouseEvent) {
+              $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
+            },
+            mousedown (evnt: MouseEvent) {
+              if ($xeGantt.handleTaskBarMousedownEvent) {
+                $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
+              }
+            }
+          }
         }, cbVNs)
       ])
     },
@@ -265,31 +286,47 @@ export default defineVxeComponent({
       const _vm = this
       const $xeGantt = _vm.$xeGantt
       const $xeGanttView = _vm.$xeGanttView
+      const ganttReactData = $xeGantt.reactData
       const ganttViewInternalData = $xeGanttView.internalData
       const ganttViewReactData = $xeGanttView.reactData
 
       const $xeTable = ganttViewInternalData.xeTable
 
+      const { dragLinkFromStore } = ganttReactData
       const { tableData } = ganttViewReactData
       const taskLinkOpts = $xeGantt.computeTaskLinkOpts
-      const { showArrow } = taskLinkOpts
+      const taskBarOpts = $xeGantt.computeTaskBarOpts
+      const { isCurrent, isHover } = taskLinkOpts
+      const { linkCreatable } = taskBarOpts
 
       return h('div', {
         ref: 'refElem',
-        class: 'vxe-gantt-view--chart-wrapper'
+        class: ['vxe-gantt-view--chart-wrapper', {
+          'is--cl-drag': dragLinkFromStore.rowid
+        }]
       }, [
-        $xeGantt.renderGanttTaskLines
+        $xeGantt.renderGanttTaskChartBefores
           ? h('div', {
-            ref: 'reflineWrapperElem',
-            class: ['vxe-gantt-view--chart-line-wrapper', {
-              'show-arrow': showArrow
+            ref: 'refChartBeforeWrapperElem',
+            class: ['vxe-gantt-view--chart-before-wrapper', {
+              'link--current': isCurrent,
+              'link--hover': isHover
             }]
-          }, $xeTable && isEnableConf(taskLinkOpts) ? $xeGantt.renderGanttTaskLines(h) : [])
+          }, $xeTable && isEnableConf(taskLinkOpts) ? $xeGantt.renderGanttTaskChartBefores(h) : [])
           : renderEmptyElement($xeGantt),
         h('div', {
           ref: 'refTaskWrapperElem',
-          class: 'vxe-gantt-view--chart-task-wrapper'
-        }, $xeTable ? _vm.renderTaskRows(h, $xeTable, tableData) : [])
+          class: ['vxe-gantt-view--chart-task-wrapper', {
+            'link--current': isCurrent,
+            'link--create': linkCreatable
+          }]
+        }, $xeTable ? _vm.renderTaskRows(h, $xeTable, tableData) : []),
+        $xeGantt.renderGanttTaskChartAfters
+          ? h('div', {
+            ref: 'refChartAfterWrapperElem',
+            class: 'vxe-gantt-view--chart-after-wrapper'
+          }, $xeTable && isEnableConf(taskLinkOpts) ? $xeGantt.renderGanttTaskChartAfters(h) : [])
+          : renderEmptyElement($xeGantt)
       ])
     }
   },
@@ -301,7 +338,8 @@ export default defineVxeComponent({
     const { elemStore } = ganttViewInternalData
     const prefix = 'main-chart-'
     elemStore[`${prefix}task-wrapper`] = _vm.$refs.refTaskWrapperElem as HTMLDivElement
-    elemStore[`${prefix}line-wrapper`] = _vm.$refs.reflineWrapperElem as HTMLDivElement
+    elemStore[`${prefix}before-wrapper`] = _vm.$refs.refChartBeforeWrapperElem as HTMLDivElement
+    elemStore[`${prefix}after-wrapper`] = _vm.$refs.refChartAfterWrapperElem as HTMLDivElement
   },
   destroyed () {
     const _vm = this
@@ -311,7 +349,8 @@ export default defineVxeComponent({
     const { elemStore } = ganttViewInternalData
     const prefix = 'main-chart-'
     elemStore[`${prefix}task-wrapper`] = null
-    elemStore[`${prefix}line-wrapper`] = null
+    elemStore[`${prefix}before-wrapper`] = null
+    elemStore[`${prefix}after-wrapper`] = null
   },
   render (this: any, h) {
     return this.renderVN(h)
