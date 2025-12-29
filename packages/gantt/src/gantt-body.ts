@@ -145,7 +145,7 @@ export default defineVxeComponent({
       const scaleUnit = computeScaleUnit.value
       const taskViewOpts = computeTaskViewOpts.value
       const { viewStyle } = taskViewOpts
-      const { rowClassName, rowStyle } = viewStyle || {}
+      const { rowClassName, rowStyle, cellClassName, cellStyle } = viewStyle || {}
 
       const { tableColumn, scrollYLoad } = reactData
 
@@ -192,7 +192,7 @@ export default defineVxeComponent({
         }
         trVNs.push(
           h('tr', {
-            key: treeConfig ? rowid : $rowIndex,
+            key: rowClassName || rowStyle || cellClassName || cellStyle ? rowid : $rowIndex,
             class: [
               'vxe-gantt-view--body-row',
               {
