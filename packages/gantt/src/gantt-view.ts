@@ -1426,7 +1426,6 @@ export default defineVxeComponent({
         const tableReactData = $xeTable as unknown as TableReactData
         const { tableData } = tableReactData
         reactData.tableData = tableData
-        handleUpdateData($xeGanttView)
         if (force) {
           handleUpdateData($xeGanttView)
         }

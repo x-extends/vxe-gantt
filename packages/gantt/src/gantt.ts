@@ -15,7 +15,7 @@ import type { VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropType
 
 const { getConfig, getIcon, getI18n, commands, globalMixins, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement } = VxeUI
 
-const tableProps = (VxeTableComponent as any).props
+const tableProps = VxeTableComponent.props
 
 const tableMethods: VxeTableMethods = {} as VxeTableMethods
 const propKeys = Object.keys(tableProps) as (keyof VxeTableProps)[]
