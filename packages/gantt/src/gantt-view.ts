@@ -1,4 +1,4 @@
-import { h, ref, reactive, nextTick, inject, watch, provide, computed, onMounted, onUnmounted } from 'vue'
+import { h, ref, reactive, nextTick, inject, onBeforeUnmount, provide, computed, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { setScrollTop, setScrollLeft, removeClass, addClass, hasClass } from '../../ui/src/dom'
 import { VxeUI } from '@vxe-ui/core'
@@ -41,6 +41,43 @@ function createInternalData (): GanttViewInternalData {
   }
 }
 
+function createReactData (): GanttViewReactData {
+  return {
+    // 是否启用了横向 X 可视渲染方式加载
+    scrollXLoad: false,
+    // 是否启用了纵向 Y 可视渲染方式加载
+    scrollYLoad: false,
+    // 是否存在纵向滚动条
+    overflowY: true,
+    // 是否存在横向滚动条
+    overflowX: true,
+    // 纵向滚动条的宽度
+    scrollbarWidth: 0,
+    // 横向滚动条的高度
+    scrollbarHeight: 0,
+
+    // 最后滚动时间戳
+    lastScrollTime: 0,
+    lazScrollLoading: false,
+
+    scrollVMLoading: false,
+    scrollYHeight: 0,
+    scrollYTop: 0,
+    isScrollYBig: false,
+    scrollXLeft: 0,
+    scrollXWidth: 0,
+    isScrollXBig: false,
+
+    minViewDate: null,
+    maxViewDate: null,
+    tableData: [],
+    tableColumn: [],
+    headerGroups: [],
+
+    viewCellWidth: 40
+  }
+}
+
 const maxYHeight = 5e6
 // const maxXWidth = 5e6
 
@@ -71,40 +108,7 @@ export default defineVxeComponent({
 
     const refColInfoElem = ref<HTMLDivElement>()
 
-    const reactData = reactive<GanttViewReactData>({
-      // 是否启用了横向 X 可视渲染方式加载
-      scrollXLoad: false,
-      // 是否启用了纵向 Y 可视渲染方式加载
-      scrollYLoad: false,
-      // 是否存在纵向滚动条
-      overflowY: true,
-      // 是否存在横向滚动条
-      overflowX: true,
-      // 纵向滚动条的宽度
-      scrollbarWidth: 0,
-      // 横向滚动条的高度
-      scrollbarHeight: 0,
-
-      // 最后滚动时间戳
-      lastScrollTime: 0,
-      lazScrollLoading: false,
-
-      scrollVMLoading: false,
-      scrollYHeight: 0,
-      scrollYTop: 0,
-      isScrollYBig: false,
-      scrollXLeft: 0,
-      scrollXWidth: 0,
-      isScrollXBig: false,
-
-      minViewDate: null,
-      maxViewDate: null,
-      tableData: [],
-      tableColumn: [],
-      headerGroups: [],
-
-      viewCellWidth: 40
-    })
+    const reactData = reactive(createReactData())
 
     const internalData = createInternalData()
 
@@ -1102,29 +1106,34 @@ export default defineVxeComponent({
       //   footerTableElem.style.transform = `translate(${xSpaceLeft}px, 0px)`
       // }
 
+      const ySpaceWidth = scrollXWidth
+
       const layoutList = ['header', 'body', 'footer']
       layoutList.forEach(layout => {
         const xSpaceElem = getRefElem(elemStore[`main-${layout}-xSpace`])
         if (xSpaceElem) {
-          xSpaceElem.style.width = scrollXLoad ? `${scrollXWidth}px` : ''
+          xSpaceElem.style.width = scrollXLoad ? `${ySpaceWidth}px` : ''
         }
       })
 
       const scrollXSpaceEl = refScrollXSpaceElem.value
       if (scrollXSpaceEl) {
-        scrollXSpaceEl.style.width = `${scrollXWidth}px`
+        scrollXSpaceEl.style.width = `${ySpaceWidth}px`
       }
 
       const beforeWrapper = getRefElem(elemStore['main-chart-before-wrapper'])
       const beforeSvgElem = beforeWrapper ? beforeWrapper.firstElementChild as HTMLDivElement : null
       if (beforeSvgElem) {
-        beforeSvgElem.style.width = `${scrollXWidth}px`
+        beforeSvgElem.style.width = `${ySpaceWidth}px`
       }
       const afterWrapper = getRefElem(elemStore['main-chart-after-wrapper'])
       const afterSvgElem = afterWrapper ? afterWrapper.firstElementChild as HTMLDivElement : null
       if (afterSvgElem) {
-        afterSvgElem.style.width = `${scrollXWidth}px`
+        afterSvgElem.style.width = `${ySpaceWidth}px`
       }
+
+      reactData.scrollXLeft = xSpaceLeft
+      reactData.scrollXWidth = ySpaceWidth
 
       calcScrollbar()
       return nextTick()
@@ -1172,7 +1181,7 @@ export default defineVxeComponent({
         bodyTableElem.style.transform = `translate(${reactData.scrollXLeft || 0}px, ${scrollYTop}px)`
       }
       if (bodyChartWrapperElem) {
-        bodyChartWrapperElem.style.transform = `translate(${reactData.scrollXLeft || 0}px, ${scrollYTop}px)`
+        bodyChartWrapperElem.style.transform = `translateY(${scrollYTop}px)`
       }
 
       const bodyYSpaceElem = getRefElem(elemStore['main-body-ySpace'])
@@ -1334,12 +1343,16 @@ export default defineVxeComponent({
           }
         })
       },
-      updateViewData () {
+      updateViewData (force?: boolean) {
         const $xeTable = internalData.xeTable
         if ($xeTable) {
           const tableReactData = $xeTable.reactData
           const { tableData } = tableReactData
           reactData.tableData = tableData
+          if (force) {
+            handleUpdateData()
+          }
+          handleRecalculateStyle()
         }
         return nextTick()
       },
@@ -1655,19 +1668,12 @@ export default defineVxeComponent({
       ])
     }
 
-    const tdFlag = ref(0)
-    watch(() => reactData.tableData, () => {
-      tdFlag.value++
-    })
-    watch(() => reactData.tableData.length, () => {
-      tdFlag.value++
-    })
-    watch(tdFlag, () => {
-      handleUpdateData()
-    })
-
     onMounted(() => {
       globalEvents.on($xeGanttView, 'resize', handleGlobalResizeEvent)
+    })
+
+    onBeforeUnmount(() => {
+      XEUtils.assign(reactData, createReactData())
     })
 
     onUnmounted(() => {
