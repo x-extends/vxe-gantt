@@ -1,6 +1,6 @@
 {
   "name": "vxe-gantt",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "description": "A vue based gantt component",
   "scripts": {
     "update": "npm install --legacy-peer-deps",
@@ -59,7 +59,7 @@
     "typescript": "~4.9.5",
     "vue": "3.4.27",
     "vue-router": "~4.5.1",
-    "vxe-pc-ui": "^4.11.27",
+    "vxe-pc-ui": "^4.11.29",
     "vxe-table": "^4.17.38"
   },
   "vetur": {

@@ -31,9 +31,9 @@ export default defineVxeComponent({
 
     const renderTaskBar = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number) => {
       const tableReactData = $xeTable.reactData
-      const { resizeHeightFlag } = tableReactData
+      const { resizeHeightFlag, pendingRowFlag } = tableReactData
       const tableInternalData = $xeTable.internalData
-      const { fullAllDataRowIdData } = tableInternalData
+      const { fullAllDataRowIdData, pendingRowMaps } = tableInternalData
       const { computeCellOpts, computeRowOpts, computeDefaultRowHeight } = $xeTable.getComputeMaps()
       const cellOpts = computeCellOpts.value
       const rowOpts = computeRowOpts.value
@@ -187,6 +187,7 @@ export default defineVxeComponent({
         key: rowid,
         rowid,
         class: ['vxe-gantt-view--chart-row', `is--${gettaskType(typeValue)}`, {
+          'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid],
           'is--round': round,
           'is--move': moveable
         }],

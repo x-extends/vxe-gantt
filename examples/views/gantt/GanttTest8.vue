@@ -1,14 +1,19 @@
 <template>
   <div>
-    <vxe-select v-model="rowSize" :options="dataOptions" @change="changeRowSizeEvent"></vxe-select>
-
-    <vxe-gantt v-bind="ganttOptions"></vxe-gantt>
+    <vxe-button status="success" @click="getPendingEvent">获取已标记数据</vxe-button>
+    <vxe-gantt ref="ganttRef" v-bind="ganttOptions">
+      <template #action="{ row }">
+        <vxe-button mode="text" status="error" @click="pendingRow(row, true)">标记</vxe-button>
+        <vxe-button mode="text" @click="pendingRow(row, false)">取消</vxe-button>
+      </template>
+    </vxe-gantt>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, reactive } from 'vue'
-import { VxeGanttProps } from '../../../types'
+import { VxeUI } from '../../../packages'
+import { VxeGanttProps, VxeGanttInstance } from '../../../types'
 
 interface RowVO {
   id: number
@@ -18,35 +23,17 @@ interface RowVO {
   progress: number
 }
 
-const rowSize = ref(500)
-
-const dataOptions = ref([
-  { label: '加载 3 行', value: 3 },
-  { label: '加载 20 行', value: 20 },
-  { label: '加载 100 行', value: 100 },
-  { label: '加载 500 行', value: 500 },
-  { label: '加载 1000 行', value: 1000 },
-  { label: '加载 5000 行', value: 5000 },
-  { label: '加载 10000 行', value: 10000 },
-  { label: '加载 50000 行', value: 50000 },
-  { label: '加载 100000 行', value: 100000 }
-])
+const ganttRef = ref<VxeGanttInstance<RowVO>>()
 
 const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   border: true,
-  loading: false,
   showOverflow: true,
-  showHeaderOverflow: true,
-  showFooterOverflow: true,
-  height: 600,
-  rowConfig: {
-    keyField: 'id' // 行主键
-  },
+  keepSource: true,
+  height: 500,
   taskBarConfig: {
     showProgress: true, // 是否显示进度条
     showContent: true, // 是否在任务条显示内容
     moveable: true, // 是否允许拖拽任务移动日期
-    resizable: true, // 是否允许拖拽任务调整日期
     barStyle: {
       round: true, // 圆角
       bgColor: '#fca60b', // 任务条的背景颜色
@@ -58,16 +45,23 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
       width: 480 // 表格宽度
     }
   },
-  virtualYConfig: {
-    gt: 0,
-    enabled: true
+  editConfig: {
+    trigger: 'dblclick',
+    mode: 'cell',
+    showStatus: true
+  },
+  keyboardConfig: {
+    isEdit: true, // 是否开启任意键进入编辑（功能键除外）
+    isDel: true, // 是否开启删除键功能
+    isEsc: true // 是否开启Esc键关闭编辑功能
   },
   columns: [
     { type: 'seq', width: 70 },
-    { field: 'title', title: '任务名称' },
-    { field: 'start', title: '开始时间', width: 100 },
-    { field: 'end', title: '结束时间', width: 100 },
-    { field: 'progress', title: '进度(%)', width: 80 }
+    { field: 'title', title: '任务名称', minWidth: 160, editRender: { name: 'VxeInput' } },
+    { field: 'start', title: '开始时间', width: 120, editRender: { name: 'VxeDatePicker' } },
+    { field: 'end', title: '结束时间', width: 120, editRender: { name: 'VxeDatePicker' } },
+    { field: 'progress', title: '进度(%)', width: 140, editRender: { name: 'VxeNumberInput' } },
+    { field: 'action', title: '操作', fixed: 'right', width: 140, slots: { default: 'action' } }
   ],
   data: [
     { id: 10001, title: '任务1', start: '2024-03-01', end: '2024-03-04', progress: 3 },
@@ -88,28 +82,18 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   ]
 })
 
-// 模拟行数据
-const loadList = (size = 200) => {
-  ganttOptions.loading = true
-  setTimeout(() => {
-    const dataList: RowVO[] = []
-    for (let i = 0; i < size; i++) {
-      dataList.push({
-        id: 10000 + i,
-        title: `任务${i + 1}`,
-        start: i % 3 ? '2024-03-03' : i % 2 ? '2024-03-10' : '2024-03-22',
-        end: i % 3 ? '2024-03-11' : i % 2 ? '2024-03-19' : '2024-04-04',
-        progress: i % 2 ? 50 : 30
-      })
-    }
-    ganttOptions.data = dataList
-    ganttOptions.loading = false
-  }, 150)
+const pendingRow = async (row: RowVO, status: boolean) => {
+  const $gantt = ganttRef.value
+  if ($gantt) {
+    $gantt.setPendingRow(row, status)
+  }
 }
 
-const changeRowSizeEvent = () => {
-  loadList(rowSize.value)
+const getPendingEvent = () => {
+  const $gantt = ganttRef.value
+  if ($gantt) {
+    const pendingRecords = $gantt.getPendingRecords()
+    VxeUI.modal.alert(`标记：${pendingRecords.length} 行`)
+  }
 }
-
-loadList(rowSize.value)
 </script>
