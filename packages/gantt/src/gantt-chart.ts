@@ -43,9 +43,9 @@ export default defineVxeComponent({
       const $xeGantt = _vm.$xeGantt
 
       const tableReactData = $xeTable as unknown as TableReactData
-      const { resizeHeightFlag } = tableReactData
+      const { resizeHeightFlag, pendingRowFlag } = tableReactData
       const tableInternalData = $xeTable as unknown as TableInternalData
-      const { fullAllDataRowIdData } = tableInternalData
+      const { fullAllDataRowIdData, pendingRowMaps } = tableInternalData
       const cellOpts = $xeTable.computeCellOpts
       const rowOpts = $xeTable.computeRowOpts
       const defaultRowHeight = $xeTable.computeDefaultRowHeight
@@ -203,6 +203,7 @@ export default defineVxeComponent({
           rowid
         },
         class: ['vxe-gantt-view--chart-row', `is--${gettaskType(typeValue)}`, {
+          'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid],
           'is--round': round,
           'is--move': moveable
         }],

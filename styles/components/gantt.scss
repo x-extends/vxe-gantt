@@ -606,6 +606,23 @@
   white-space: nowrap;
 }
 
+.vxe-gantt-view--body-row {
+  &.row--pending {
+    & > .vxe-gantt-view--body-column {
+      &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 0;
+        border-bottom: 1px solid var(--vxe-ui-table-validate-error-color);
+        z-index: 1;
+      }
+    }
+  }
+}
+
 // 行高亮
 .vxe-gantt-view--body-row {
   &.row--stripe {
