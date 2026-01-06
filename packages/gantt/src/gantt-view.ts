@@ -183,6 +183,8 @@ function handleColumnHeader ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
       const WW = XEUtils.padStart(W, 2, '0')
       if (isMinWeek && checkWeekOfsetYear(W, M)) {
         yyyy = `${Number(yyyy) + 1}`
+        M = '1'
+        MM = '0' + M
       }
       const dateObj: VxeGanttDefines.ScaleDateObj = { date: itemDate, yy, yyyy, M, MM, d, dd, H, HH, m, mm, s, ss, q, W, WW, E, e }
       const colMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn> = {
