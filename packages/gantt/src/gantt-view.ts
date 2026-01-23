@@ -1786,14 +1786,10 @@ export default defineVxeComponent({
   beforeDestroy () {
     const $xeGanttView = this
     const reactData = $xeGanttView.reactData
+    const internalData = $xeGanttView.internalData
 
     globalEvents.off($xeGanttView, 'keydown')
     XEUtils.assign(reactData, createReactData())
-  },
-  destroyed () {
-    const $xeGanttView = this
-    const internalData = $xeGanttView.internalData
-
     XEUtils.assign(internalData, createInternalData())
   },
   render (this: any, h) {
