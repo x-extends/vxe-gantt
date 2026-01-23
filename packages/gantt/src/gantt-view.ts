@@ -1676,11 +1676,11 @@ export default defineVxeComponent({
 
     onBeforeUnmount(() => {
       XEUtils.assign(reactData, createReactData())
+      XEUtils.assign(internalData, createInternalData())
     })
 
     onUnmounted(() => {
       globalEvents.off($xeGanttView, 'keydown')
-      XEUtils.assign(internalData, createInternalData())
     })
 
     $xeGanttView.renderVN = renderVN

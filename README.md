@@ -73,9 +73,9 @@
 * [x] 里程碑
 * [x] 虚拟滚动
 * [x] CSS 变量主题
-* [x] ([企业版](https://vxetable.cn/pluginDocs/)) 依赖线连接线
-* [x] ([企业版](https://vxetable.cn/pluginDocs/)) 任务条可拖拽
-* [x] ([企业版](https://vxetable.cn/pluginDocs/)) 可视化创建依赖线
+* [x] ([企业版](https://store.vxeui.com)) 依赖线连接线
+* [x] ([企业版](https://store.vxeui.com)) 任务条可拖拽
+* [x] ([企业版](https://store.vxeui.com)) 可视化创建依赖线
 
 ## 安装
 
