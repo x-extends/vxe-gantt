@@ -55,21 +55,21 @@ body:
   id: issue_vxe_ui_version
   attributes:
     label: "vxe-pc-ui 版本："
-    placeholder: "例如：4.10.12"
+    placeholder: "例如：4.12.17"
   validations:
     required: true
 - type: input
   id: issue_vxe_table_version
   attributes:
     label: "vxe-table 版本："
-    placeholder: "例如：4.17.5"
+    placeholder: "例如：4.17.46"
   validations:
     required: true
 - type: input
   id: issue_vxe_gantt_version
   attributes:
     label: "vxe-gantt 版本："
-    placeholder: "例如：4.0.21"
+    placeholder: "例如：4.2.5"
   validations:
     required: true
 - type: checkboxes
