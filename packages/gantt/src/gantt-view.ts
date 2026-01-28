@@ -225,13 +225,20 @@ export default defineVxeComponent({
     const updateTodayData = () => {
       const ganttReactData = $xeGantt.reactData
       const { taskScaleList } = ganttReactData
+      const minScale = computeMinScale.value
       const weekScale = taskScaleList.find(item => item.type === 'week')
+      const isMinWeek = minScale.type === 'week'
       const itemDate = new Date()
-      const [yyyy, MM, dd, HH, mm, ss] = XEUtils.toDateString(itemDate, 'yyyy-M-d-H-m-s').split('-')
+      let [yyyy, M, MM, dd, HH, mm, ss] = XEUtils.toDateString(itemDate, 'yyyy-M-MM-dd-HH-mm-ss').split('-')
       const e = itemDate.getDay()
       const E = e + 1
       const q = Math.ceil((itemDate.getMonth() + 1) / 3)
-      const W = XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)
+      const W = `${XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)}`
+      if (isMinWeek && checkWeekOfsetYear(W, M)) {
+        yyyy = `${Number(yyyy) + 1}`
+        M = '1'
+        MM = '0' + M
+      }
       internalData.todayDateMaps = {
         year: yyyy,
         quarter: `${yyyy}_q${q}`,
