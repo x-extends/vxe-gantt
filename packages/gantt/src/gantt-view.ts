@@ -8,6 +8,7 @@ import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
 import GanttViewFooterComponent from './gantt-footer'
 
+import type { VxeTableConstructor } from 'vxe-table'
 import type { VxeGanttViewConstructor, GanttViewReactData, GanttViewPrivateRef, VxeGanttDefines, VxeGanttViewPrivateMethods, GanttViewInternalData, VxeGanttViewMethods, GanttViewPrivateComputed, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 const { globalEvents } = VxeUI
@@ -820,6 +821,34 @@ export default defineVxeComponent({
       }
     }
 
+    const handleSubTaskMinMaxSize = ($xeTable: VxeTableConstructor, list: any[]) => {
+      const { chartMaps } = internalData
+      const { computeTreeOpts } = $xeTable.getComputeMaps()
+      const treeOpts = computeTreeOpts.value
+      const childrenField = treeOpts.children || treeOpts.childrenField
+
+      const typeField = computeTypeField.value
+
+      let minChildLeftSize = 0
+      let maxChildLeftSize = 0
+      XEUtils.eachTree(list, childRow => {
+        const childRowid = $xeTable.getRowid(childRow)
+        const renderTaskType = XEUtils.get(childRow, typeField)
+        if (hasSubviewTask(renderTaskType)) {
+          return
+        }
+        const childChartRest = childRowid ? chartMaps[childRowid] : null
+        if (childChartRest) {
+          maxChildLeftSize = Math.max(maxChildLeftSize, childChartRest.oLeftSize + childChartRest.oWidthSize)
+          minChildLeftSize = minChildLeftSize ? Math.min(minChildLeftSize, childChartRest.oLeftSize) : childChartRest.oLeftSize
+        }
+      }, { children: childrenField })
+      return {
+        minSize: minChildLeftSize,
+        maxSize: maxChildLeftSize
+      }
+    }
+
     const updateTaskChartStyle = () => {
       const { dragBarRow } = ganttInternalData
       const { viewCellWidth } = reactData
@@ -851,27 +880,29 @@ export default defineVxeComponent({
                   const childBarEl = childEl as HTMLDivElement
                   const childRowid = childBarEl.getAttribute('rowid') || ''
                   const childChartRest = childRowid ? chartMaps[childRowid] : null
-                  childBarEl.style.left = `${getTaskBarLeft(childChartRest, viewCellWidth)}px`
-                  // 里程碑不需要宽度
-                  if (!hasClass(childBarEl, 'is--milestone')) {
-                    childBarEl.style.width = `${getTaskBarWidth(childChartRest, viewCellWidth)}px`
+                  if (childChartRest) {
+                    const childRow = childChartRest.row
+                    // 如果是子视图
+                    if (hasClass(childBarEl, 'is--subview')) {
+                      const subChildren: any[] = childRow[childrenField]
+                      const { minSize: minChildLeftSize, maxSize: maxChildLeftSize } = handleSubTaskMinMaxSize($xeTable, subChildren)
+                      childBarEl.style.left = `${viewCellWidth * minChildLeftSize}px`
+                      childBarEl.style.width = `${viewCellWidth * (maxChildLeftSize - minChildLeftSize)}px`
+                    } else {
+                      childBarEl.style.left = `${getTaskBarLeft(childChartRest, viewCellWidth)}px`
+                      if (!hasClass(childBarEl, 'is--milestone')) {
+                      // 里程碑不需要宽度
+                        childBarEl.style.width = `${getTaskBarWidth(childChartRest, viewCellWidth)}px`
+                      }
+                    }
                   }
                 })
               } else {
                 // 如果展开子任务
                 const childBarEl = childWrapperEl.firstElementChild as HTMLDivElement
                 if (childBarEl) {
-                  let minChildLeftSize = 0
-                  let maxChildLeftSize = 0
                   const rowChildren: any[] = row ? row[childrenField] : []
-                  rowChildren.forEach(childRow => {
-                    const childRowid = $xeTable.getRowid(childRow)
-                    const childChartRest = childRowid ? chartMaps[childRowid] : null
-                    if (childChartRest) {
-                      maxChildLeftSize = Math.max(maxChildLeftSize, childChartRest.oLeftSize + childChartRest.oWidthSize)
-                      minChildLeftSize = minChildLeftSize ? Math.min(minChildLeftSize, childChartRest.oLeftSize) : childChartRest.oLeftSize
-                    }
-                  })
+                  const { minSize: minChildLeftSize, maxSize: maxChildLeftSize } = handleSubTaskMinMaxSize($xeTable, rowChildren)
                   childBarEl.style.left = `${viewCellWidth * minChildLeftSize}px`
                   childBarEl.style.width = `${viewCellWidth * (maxChildLeftSize - minChildLeftSize)}px`
                 }
