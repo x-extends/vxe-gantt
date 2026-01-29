@@ -2,7 +2,7 @@ import { VNode, CreateElement } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
 import { setScrollTop, setScrollLeft, removeClass, addClass, hasClass } from '../../ui/src/dom'
-import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth, hasMilestoneTask } from './util'
+import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth, hasMilestoneTask, getTaskType, hasSubviewTask } from './util'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
@@ -556,14 +556,23 @@ function handleParseColumn ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const rowid = $xeTable.getRowid(row)
         let startValue = XEUtils.get(row, startField)
         let endValue = XEUtils.get(row, endField)
-        const isMilestone = hasMilestoneTask(XEUtils.get(row, typeField))
+        const renderTaskType = getTaskType(XEUtils.get(row, typeField))
+        const isMilestone = hasMilestoneTask(renderTaskType)
+        const isSubview = hasSubviewTask(renderTaskType)
         if (isMilestone) {
           if (!startValue) {
             startValue = endValue
           }
           endValue = startValue
         }
-        if (startValue && endValue) {
+        if (isSubview) {
+          ctMaps[rowid] = {
+            row,
+            rowid,
+            oLeftSize: 0,
+            oWidthSize: 0
+          }
+        } else if (startValue && endValue) {
           const { offsetLeftSize, offsetWidthSize } = renderFn(startValue, endValue)
           ctMaps[rowid] = {
             row,
@@ -698,7 +707,7 @@ function calcScrollbar ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPriv
   }
 }
 
-function updateTaskChart ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
+function updateTaskChartStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
   const $xeGantt = $xeGanttView.$xeGantt
   const reactData = $xeGanttView.reactData
   const internalData = $xeGanttView.internalData
@@ -720,9 +729,27 @@ function updateTaskChart ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPr
         return
       }
       const chartRest = rowid ? chartMaps[rowid] : null
-      barEl.style.left = `${getTaskBarLeft(chartRest, viewCellWidth)}px`
-      if (!hasClass(barEl, 'is--milestone')) {
-        barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
+      // 子任务视图
+      if (hasClass(barEl, 'is--subview')) {
+        const childWrapperEl = barEl.firstElementChild as HTMLDivElement
+        if (childWrapperEl) {
+          XEUtils.arrayEach(childWrapperEl.children, (childEl) => {
+            const childBarEl = childEl as HTMLDivElement
+            const childRowid = childBarEl.getAttribute('rowid') || ''
+            const childChartRest = childRowid ? chartMaps[childRowid] : null
+            childBarEl.style.left = `${getTaskBarLeft(childChartRest, viewCellWidth)}px`
+            // 里程碑不需要宽度
+            if (!hasClass(childBarEl, 'is--milestone')) {
+              childBarEl.style.width = `${getTaskBarWidth(childChartRest, viewCellWidth)}px`
+            }
+          })
+        }
+      } else {
+        barEl.style.left = `${getTaskBarLeft(chartRest, viewCellWidth)}px`
+        // 里程碑不需要宽度
+        if (!hasClass(barEl, 'is--milestone')) {
+          barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
+        }
       }
     })
   }
@@ -859,7 +886,7 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   reactData.scrollXWidth = viewTableWidth
 
   return Promise.all([
-    updateTaskChart($xeGanttView),
+    updateTaskChartStyle($xeGanttView),
     $xeGantt.handleUpdateTaskLinkStyle ? $xeGantt.handleUpdateTaskLinkStyle($xeGanttView) : null
   ])
 }

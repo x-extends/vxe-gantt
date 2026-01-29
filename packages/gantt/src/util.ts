@@ -1,4 +1,4 @@
-import type { VxeGanttDefines } from '../../../types'
+import type { VxeGanttDefines, VxeGanttTaskType } from '../../../types'
 import type { VxeTableDefines, VxeTablePropTypes } from 'vxe-table'
 
 export function getRefElem (refEl: any) {
@@ -29,15 +29,19 @@ export function getTaskBarLeft (chartRest: VxeGanttDefines.RowCacheItem | null, 
 }
 
 export function getTaskBarWidth (chartRest: VxeGanttDefines.RowCacheItem | null, viewCellWidth: number) {
-  return Math.max(1, chartRest ? (Math.floor(viewCellWidth * chartRest.oWidthSize) - 1) : 0)
+  return chartRest && chartRest.oWidthSize ? Math.max(1, chartRest ? (Math.floor(viewCellWidth * chartRest.oWidthSize) - 1) : 0) : 0
 }
 
-const taskTypeMaps: Record<string, boolean> = {
-  milestone: true
+const taskTypeMaps: Record<VxeGanttTaskType, boolean> = {
+  milestone: true,
+  subview: true
 }
 export function hasMilestoneTask (type: string) {
-  return taskTypeMaps[type]
+  return type === 'milestone'
 }
-export function gettaskType (type: string) {
-  return taskTypeMaps[type] ? type : 'default'
+export function hasSubviewTask (type: string) {
+  return type === 'subview'
+}
+export function getTaskType (type: string) {
+  return taskTypeMaps[type as VxeGanttTaskType] ? type as VxeGanttTaskType : 'default'
 }

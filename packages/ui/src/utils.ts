@@ -8,6 +8,10 @@ export function isEnableConf (conf: any): boolean {
   return conf && conf.enabled !== false
 }
 
+export function hasEnableConf (conf: any, opts: any): boolean {
+  return opts && (conf ? opts.enabled !== false : opts.enabled)
+}
+
 export function isEmptyValue (cellValue: any) {
   return cellValue === null || cellValue === undefined || cellValue === ''
 }
