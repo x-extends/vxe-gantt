@@ -707,6 +707,35 @@ function calcScrollbar ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPriv
   }
 }
 
+function handleSubTaskMinMaxSize ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods, $xeTable: VxeTableConstructor, list: any[]) {
+  const $xeGantt = $xeGanttView.$xeGantt
+  const internalData = $xeGanttView.internalData
+
+  const { chartMaps } = internalData
+  const treeOpts = $xeTable.computeTreeOpts
+  const childrenField = treeOpts.children || treeOpts.childrenField
+
+  const typeField = $xeGantt.computeTypeField
+  let minChildLeftSize = 0
+  let maxChildLeftSize = 0
+  XEUtils.eachTree(list, childRow => {
+    const childRowid = $xeTable.getRowid(childRow)
+    const renderTaskType = XEUtils.get(childRow, typeField)
+    if (hasSubviewTask(renderTaskType)) {
+      return
+    }
+    const childChartRest = childRowid ? chartMaps[childRowid] : null
+    if (childChartRest) {
+      maxChildLeftSize = Math.max(maxChildLeftSize, childChartRest.oLeftSize + childChartRest.oWidthSize)
+      minChildLeftSize = minChildLeftSize ? Math.min(minChildLeftSize, childChartRest.oLeftSize) : childChartRest.oLeftSize
+    }
+  }, { children: childrenField })
+  return {
+    minSize: minChildLeftSize,
+    maxSize: maxChildLeftSize
+  }
+}
+
 function updateTaskChartStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods) {
   const $xeGantt = $xeGanttView.$xeGantt
   const reactData = $xeGanttView.reactData
@@ -719,6 +748,8 @@ function updateTaskChartStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttV
   const { elemStore, chartMaps } = internalData
   const chartWrapper = getRefElem(elemStore['main-chart-task-wrapper'])
   if (chartWrapper && $xeTable) {
+    const treeOpts = $xeTable.computeTreeOpts
+    const childrenField = treeOpts.children || treeOpts.childrenField
     XEUtils.arrayEach(chartWrapper.children, (rowEl) => {
       const barEl = rowEl.children[0] as HTMLDivElement
       if (!barEl) {
@@ -729,20 +760,44 @@ function updateTaskChartStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttV
         return
       }
       const chartRest = rowid ? chartMaps[rowid] : null
+      const row = chartRest ? chartRest.row : null
       // 子任务视图
       if (hasClass(barEl, 'is--subview')) {
         const childWrapperEl = barEl.firstElementChild as HTMLDivElement
         if (childWrapperEl) {
-          XEUtils.arrayEach(childWrapperEl.children, (childEl) => {
-            const childBarEl = childEl as HTMLDivElement
-            const childRowid = childBarEl.getAttribute('rowid') || ''
-            const childChartRest = childRowid ? chartMaps[childRowid] : null
-            childBarEl.style.left = `${getTaskBarLeft(childChartRest, viewCellWidth)}px`
-            // 里程碑不需要宽度
-            if (!hasClass(childBarEl, 'is--milestone')) {
-              childBarEl.style.width = `${getTaskBarWidth(childChartRest, viewCellWidth)}px`
+          // 行内展示
+          if (hasClass(childWrapperEl, 'is--inline')) {
+            XEUtils.arrayEach(childWrapperEl.children, (childEl) => {
+              const childBarEl = childEl as HTMLDivElement
+              const childRowid = childBarEl.getAttribute('rowid') || ''
+              const childChartRest = childRowid ? chartMaps[childRowid] : null
+              if (childChartRest) {
+                const childRow = childChartRest.row
+                // 如果是子视图
+                if (hasClass(childBarEl, 'is--subview')) {
+                  const subChildren: any[] = childRow[childrenField]
+                  const { minSize: minChildLeftSize, maxSize: maxChildLeftSize } = handleSubTaskMinMaxSize($xeGanttView, $xeTable, subChildren)
+                  childBarEl.style.left = `${viewCellWidth * minChildLeftSize}px`
+                  childBarEl.style.width = `${viewCellWidth * (maxChildLeftSize - minChildLeftSize)}px`
+                } else {
+                  childBarEl.style.left = `${getTaskBarLeft(childChartRest, viewCellWidth)}px`
+                  if (!hasClass(childBarEl, 'is--milestone')) {
+                    // 里程碑不需要宽度
+                    childBarEl.style.width = `${getTaskBarWidth(childChartRest, viewCellWidth)}px`
+                  }
+                }
+              }
+            })
+          } else {
+            // 如果展开子任务
+            const childBarEl = childWrapperEl.firstElementChild as HTMLDivElement
+            if (childBarEl) {
+              const rowChildren: any[] = row ? row[childrenField] : []
+              const { minSize: minChildLeftSize, maxSize: maxChildLeftSize } = handleSubTaskMinMaxSize($xeGanttView, $xeTable, rowChildren)
+              childBarEl.style.left = `${viewCellWidth * minChildLeftSize}px`
+              childBarEl.style.width = `${viewCellWidth * (maxChildLeftSize - minChildLeftSize)}px`
             }
-          })
+          }
         }
       } else {
         barEl.style.left = `${getTaskBarLeft(chartRest, viewCellWidth)}px`

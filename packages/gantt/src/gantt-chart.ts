@@ -185,7 +185,10 @@ export default defineVxeComponent({
             cbVNs.push(
               h('div', {
                 key: 'vcsc',
-                class: 'vxe-gantt-view--chart-subview-wrapper is--inline'
+                class: ['vxe-gantt-view--chart-subview-wrapper is--inline', {
+                  'is--round': round,
+                  'is--move': moveable
+                }]
               }, rowChildren.map(childRow => {
                 const childRowid = $xeTable.getRowid(childRow)
                 let childTitle = getStringValue(XEUtils.get(childRow, titleField))

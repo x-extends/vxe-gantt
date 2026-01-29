@@ -72,6 +72,10 @@
     color: #ffffff;
     background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
   }
+  &.is--subview {
+    color: #ffffff;
+    background-color: var(--vxe-ui-gantt-view-task-bar-overview-background-color);
+  }
 }
 .vxe-gantt-view--chart-bar-content-wrapper,
 .vxe-gantt-view--chart-custom-bar-content-wrapper,
