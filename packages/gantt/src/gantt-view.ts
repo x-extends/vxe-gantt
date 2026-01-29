@@ -2,7 +2,7 @@ import { h, ref, reactive, nextTick, inject, onBeforeUnmount, provide, computed,
 import { defineVxeComponent } from '../../ui/src/comp'
 import { setScrollTop, setScrollLeft, removeClass, addClass, hasClass } from '../../ui/src/dom'
 import { VxeUI } from '@vxe-ui/core'
-import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth, hasMilestoneTask } from './util'
+import { getRefElem, getStandardGapTime, getTaskBarLeft, getTaskBarWidth, hasMilestoneTask, getTaskType, hasSubviewTask } from './util'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
@@ -676,14 +676,23 @@ export default defineVxeComponent({
             const rowid = $xeTable.getRowid(row)
             let startValue = XEUtils.get(row, startField)
             let endValue = XEUtils.get(row, endField)
-            const isMilestone = hasMilestoneTask(XEUtils.get(row, typeField))
+            const renderTaskType = getTaskType(XEUtils.get(row, typeField))
+            const isMilestone = hasMilestoneTask(renderTaskType)
+            const isSubview = hasSubviewTask(renderTaskType)
             if (isMilestone) {
               if (!startValue) {
                 startValue = endValue
               }
               endValue = startValue
             }
-            if (startValue && endValue) {
+            if (isSubview) {
+              ctMaps[rowid] = {
+                row,
+                rowid,
+                oLeftSize: 0,
+                oWidthSize: 0
+              }
+            } else if (startValue && endValue) {
               const { offsetLeftSize, offsetWidthSize } = renderFn(startValue, endValue)
               ctMaps[rowid] = {
                 row,
@@ -811,13 +820,16 @@ export default defineVxeComponent({
       }
     }
 
-    const updateTaskChart = () => {
+    const updateTaskChartStyle = () => {
       const { dragBarRow } = ganttInternalData
       const { viewCellWidth } = reactData
       const { elemStore, chartMaps } = internalData
       const $xeTable = internalData.xeTable
       const chartWrapper = getRefElem(elemStore['main-chart-task-wrapper'])
       if (chartWrapper && $xeTable) {
+        const { computeTreeOpts } = $xeTable.getComputeMaps()
+        const treeOpts = computeTreeOpts.value
+        const childrenField = treeOpts.children || treeOpts.childrenField
         XEUtils.arrayEach(chartWrapper.children, (rowEl) => {
           const barEl = rowEl.children[0] as HTMLDivElement
           if (!barEl) {
@@ -828,9 +840,49 @@ export default defineVxeComponent({
             return
           }
           const chartRest = rowid ? chartMaps[rowid] : null
-          barEl.style.left = `${getTaskBarLeft(chartRest, viewCellWidth)}px`
-          if (!hasClass(barEl, 'is--milestone')) {
-            barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
+          const row = chartRest ? chartRest.row : null
+          // 子任务视图
+          if (hasClass(barEl, 'is--subview')) {
+            const childWrapperEl = barEl.firstElementChild as HTMLDivElement
+            if (childWrapperEl) {
+              // 行内展示
+              if (hasClass(childWrapperEl, 'is--inline')) {
+                XEUtils.arrayEach(childWrapperEl.children, (childEl) => {
+                  const childBarEl = childEl as HTMLDivElement
+                  const childRowid = childBarEl.getAttribute('rowid') || ''
+                  const childChartRest = childRowid ? chartMaps[childRowid] : null
+                  childBarEl.style.left = `${getTaskBarLeft(childChartRest, viewCellWidth)}px`
+                  // 里程碑不需要宽度
+                  if (!hasClass(childBarEl, 'is--milestone')) {
+                    childBarEl.style.width = `${getTaskBarWidth(childChartRest, viewCellWidth)}px`
+                  }
+                })
+              } else {
+                // 如果展开子任务
+                const childBarEl = childWrapperEl.firstElementChild as HTMLDivElement
+                if (childBarEl) {
+                  let minChildLeftSize = 0
+                  let maxChildLeftSize = 0
+                  const rowChildren: any[] = row ? row[childrenField] : []
+                  rowChildren.forEach(childRow => {
+                    const childRowid = $xeTable.getRowid(childRow)
+                    const childChartRest = childRowid ? chartMaps[childRowid] : null
+                    if (childChartRest) {
+                      maxChildLeftSize = Math.max(maxChildLeftSize, childChartRest.oLeftSize + childChartRest.oWidthSize)
+                      minChildLeftSize = minChildLeftSize ? Math.min(minChildLeftSize, childChartRest.oLeftSize) : childChartRest.oLeftSize
+                    }
+                  })
+                  childBarEl.style.left = `${viewCellWidth * minChildLeftSize}px`
+                  childBarEl.style.width = `${viewCellWidth * (maxChildLeftSize - minChildLeftSize)}px`
+                }
+              }
+            }
+          } else {
+            barEl.style.left = `${getTaskBarLeft(chartRest, viewCellWidth)}px`
+            // 里程碑不需要宽度
+            if (!hasClass(barEl, 'is--milestone')) {
+              barEl.style.width = `${getTaskBarWidth(chartRest, viewCellWidth)}px`
+            }
           }
         })
       }
@@ -963,7 +1015,7 @@ export default defineVxeComponent({
       reactData.scrollXWidth = viewTableWidth
 
       return Promise.all([
-        updateTaskChart(),
+        updateTaskChartStyle(),
         $xeGantt.handleUpdateTaskLinkStyle ? $xeGantt.handleUpdateTaskLinkStyle($xeGanttView) : null
       ])
     }

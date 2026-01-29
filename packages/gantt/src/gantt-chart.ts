@@ -2,8 +2,8 @@ import { h, inject, VNode, ref, Ref, onMounted, onUnmounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
 import XEUtils from 'xe-utils'
-import { getCellRestHeight, hasMilestoneTask, gettaskType } from './util'
-import { getStringValue, isEnableConf } from '../../ui/src/utils'
+import { getCellRestHeight, hasMilestoneTask, getTaskType, hasSubviewTask } from './util'
+import { getStringValue, isEnableConf, hasEnableConf } from '../../ui/src/utils'
 
 import type { VxeComponentStyleType } from 'vxe-pc-ui'
 import type { VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
@@ -22,14 +22,14 @@ export default defineVxeComponent({
 
     const { props: ganttProps, reactData: ganttReactData, internalData: ganttInternalData } = $xeGantt
     const { reactData: ganttViewReactData, internalData: ganttViewInternalData } = $xeGanttView
-    const { computeProgressField, computeTitleField, computeTypeField, computeTaskBarOpts, computeScaleUnit, computeTaskLinkOpts, computeTaskBarMilestoneOpts } = $xeGantt.getComputeMaps()
+    const { computeProgressField, computeTitleField, computeTypeField, computeTaskBarOpts, computeScaleUnit, computeTaskLinkOpts, computeTaskBarMilestoneOpts, computeTaskBarSubviewOpts } = $xeGantt.getComputeMaps()
 
     const refElem = ref<HTMLDivElement>()
     const refTaskWrapperElem = ref() as Ref<HTMLDivElement>
     const refChartBeforeWrapperElem = ref() as Ref<HTMLDivElement>
     const refChartAfterWrapperElem = ref() as Ref<HTMLDivElement>
 
-    const renderTaskBar = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number) => {
+    const renderTaskBar = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number, rowChildren: any[], isExpandTree: boolean) => {
       const tableReactData = $xeTable.reactData
       const { resizeHeightFlag, pendingRowFlag } = tableReactData
       const tableInternalData = $xeTable.internalData
@@ -42,13 +42,14 @@ export default defineVxeComponent({
       const ganttSlots = $xeGantt.context.slots
       const taskBarSlot = ganttSlots.taskBar || ganttSlots['task-bar']
 
-      const { taskBarMilestoneConfig } = ganttProps
+      const { taskBarMilestoneConfig, taskBarSubviewConfig } = ganttProps
       const { activeLink, activeBarRowid } = ganttReactData
       const titleField = computeTitleField.value
       const progressField = computeProgressField.value
       const typeField = computeTypeField.value
       const taskBarOpts = computeTaskBarOpts.value
       const taskBarMilestoneOpts = computeTaskBarMilestoneOpts.value
+      const taskBarSubviewOpts = computeTaskBarSubviewOpts.value
       const scaleUnit = computeScaleUnit.value
       const barParams = { $gantt: $xeGantt, row, scaleType: scaleUnit }
       const { showProgress, showContent, contentMethod, barStyle, moveable, showTooltip } = taskBarOpts
@@ -61,8 +62,9 @@ export default defineVxeComponent({
 
       let title = getStringValue(XEUtils.get(row, titleField))
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
-      const typeValue = gettaskType(XEUtils.get(row, typeField))
-      const isMilestone = !!(taskBarMilestoneConfig && hasMilestoneTask(typeValue))
+      const renderTaskType = getTaskType(XEUtils.get(row, typeField))
+      const isMilestone = !!(hasEnableConf(taskBarMilestoneConfig, taskBarMilestoneOpts) && hasMilestoneTask(renderTaskType))
+      const isSubview = !!(hasEnableConf(taskBarSubviewConfig, taskBarSubviewOpts) && hasSubviewTask(renderTaskType))
 
       const vbStyle: VxeComponentStyleType = {}
       const vpStyle: VxeComponentStyleType = {
@@ -134,7 +136,90 @@ export default defineVxeComponent({
           }, $xeGantt.callSlot(taskBarSlot, barParams))
         )
       } else {
-        if (isMilestone) {
+        if (isSubview && rowChildren && rowChildren.length) {
+          if (isExpandTree) {
+            if (taskBarSubviewOpts.showOverview) {
+              cbVNs.push(
+                h('div', {
+                  key: 'vcso',
+                  class: ['vxe-gantt-view--chart-subview-wrapper is--overview', {
+                    'is--round': round,
+                    'is--move': moveable
+                  }]
+                }, [
+                  h('div', {
+                    key: rowid,
+                    rowid: rowid,
+                    class: 'vxe-gantt-view--chart-subview-bar'
+                  }, [
+                    h('div', {
+                      class: 'vxe-gantt-view--chart-subview-bar-content-wrapper'
+                    }, [
+                      showContent
+                        ? h('div', {
+                          class: 'vxe-gantt-view--chart-content'
+                        }, title)
+                        : renderEmptyElement($xeGantt)
+                    ])
+                  ])
+                ])
+              )
+            }
+          } else {
+            cbVNs.push(
+              h('div', {
+                key: 'vcsc',
+                class: ['vxe-gantt-view--chart-subview-wrapper is--inline', {
+                  'is--round': round,
+                  'is--move': moveable
+                }]
+              }, rowChildren.map(childRow => {
+                const childRowid = $xeTable.getRowid(childRow)
+                let childTitle = getStringValue(XEUtils.get(childRow, titleField))
+                const childProgressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(childRow, progressField)))) : 0
+                const childRenderTaskType = getTaskType(XEUtils.get(childRow, typeField))
+
+                const vpcStyle: VxeComponentStyleType = {
+                  width: `${childProgressValue || 0}%`
+                }
+                if (isBarRowStyle) {
+                  const { completedBgColor } = barStyObj
+                  if (completedBgColor) {
+                    vpcStyle.backgroundColor = completedBgColor
+                  }
+                }
+
+                if (contentMethod) {
+                  childTitle = getStringValue(contentMethod({ row: childRow, title: childTitle, scaleType: scaleUnit }))
+                }
+
+                return h('div', {
+                  key: childRowid,
+                  rowid: childRowid,
+                  class: ['vxe-gantt-view--chart-subview-bar', `is--${childRenderTaskType}`, {
+                    'row--pending': !!pendingRowFlag && !!pendingRowMaps[childRowid]
+                  }]
+                }, [
+                  h('div', {
+                    class: 'vxe-gantt-view--chart-subview-bar-content-wrapper'
+                  }, [
+                    showProgress
+                      ? h('div', {
+                        class: 'vxe-gantt-view--chart-progress',
+                        style: vpcStyle
+                      })
+                      : renderEmptyElement($xeGantt),
+                    showContent
+                      ? h('div', {
+                        class: 'vxe-gantt-view--chart-content'
+                      }, childTitle)
+                      : renderEmptyElement($xeGantt)
+                  ])
+                ])
+              }))
+            )
+          }
+        } else if (isMilestone) {
           const { icon, iconStatus, iconStyle } = taskBarMilestoneOpts
           const tbmParams = { $gantt: $xeGantt, row }
           cbVNs.push(
@@ -167,14 +252,12 @@ export default defineVxeComponent({
             }, [
               showProgress
                 ? h('div', {
-                  key: 'vcp',
                   class: 'vxe-gantt-view--chart-progress',
                   style: vpStyle
                 })
                 : renderEmptyElement($xeGantt),
               showContent
                 ? h('div', {
-                  key: 'vcc',
                   class: 'vxe-gantt-view--chart-content'
                 }, title)
                 : renderEmptyElement($xeGantt)
@@ -186,7 +269,7 @@ export default defineVxeComponent({
       return h('div', {
         key: rowid,
         rowid,
-        class: ['vxe-gantt-view--chart-row', `is--${gettaskType(typeValue)}`, {
+        class: ['vxe-gantt-view--chart-row', `is--${renderTaskType}`, {
           'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid],
           'is--round': round,
           'is--move': moveable
@@ -199,7 +282,7 @@ export default defineVxeComponent({
         }
       }, [
         h('div', {
-          class: [taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar', `is--${gettaskType(typeValue)}`, {
+          class: [taskBarSlot ? 'vxe-gantt-view--chart-custom-bar' : 'vxe-gantt-view--chart-bar', `is--${renderTaskType}`, {
             'is--active': activeBarRowid === rowid,
             'active--link': activeLink && (rowid === `${activeLink.from}` || rowid === `${activeLink.to}`)
           }],
@@ -244,16 +327,18 @@ export default defineVxeComponent({
           rowIndex = rowRest.index
           _rowIndex = rowRest._index
         }
-        trVNs.push(renderTaskBar($xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex))
         let isExpandTree = false
         let rowChildren: any[] = []
 
-        if (treeConfig && !scrollYLoad && !transform) {
+        if (treeConfig) {
           rowChildren = row[childrenField]
           isExpandTree = !!treeExpandedFlag && rowChildren && rowChildren.length > 0 && !!treeExpandedMaps[rowid]
         }
+
+        trVNs.push(renderTaskBar($xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex, rowChildren, isExpandTree))
+
         // 如果是树形表格
-        if (isExpandTree) {
+        if (treeConfig && isExpandTree && !scrollYLoad && !transform) {
           trVNs.push(...renderTaskRows($xeTable, rowChildren))
         }
       })

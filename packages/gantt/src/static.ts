@@ -21,11 +21,15 @@ export enum VxeGanttDependencyType {
 }
 
 /**
- * 任务类型
+ * 任务渲染类型
  */
 export enum VxeGanttTaskType {
   /**
-   * 里程碑
+   * 里程碑类型，该类型节点不需要结束日期
    */
-  Milestone = 'milestone'
+  Milestone = 'milestone',
+  /**
+   * 子视图类型，该类型会将子任务渲染到一行，无需开始日期和结束日期
+   */
+  Subview = 'subview'
 }

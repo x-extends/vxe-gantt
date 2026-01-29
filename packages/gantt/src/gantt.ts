@@ -1,7 +1,7 @@
 import { h, ref, PropType, computed, provide, reactive, onBeforeUnmount, onUnmounted, watch, nextTick, VNode, onMounted } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import XEUtils from 'xe-utils'
-import { getLastZIndex, nextZIndex, isEnableConf, formatText } from '../../ui/src/utils'
+import { getLastZIndex, nextZIndex, isEnableConf, hasEnableConf, formatText } from '../../ui/src/utils'
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
 import { VxeUI } from '@vxe-ui/core'
@@ -138,6 +138,7 @@ export default defineVxeComponent({
     taskLinkConfig: Object as PropType<VxeGanttPropTypes.TaskLinkConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskBarMilestoneConfig: Object as PropType<VxeGanttPropTypes.TaskBarMilestoneConfig>,
+    taskBarSubviewConfig: Object as PropType<VxeGanttPropTypes.TaskBarSubviewConfig>,
     taskBarTooltipConfig: Object as PropType<VxeGanttPropTypes.TaskBarTooltipConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
     taskBarResizeConfig: Object as PropType<VxeGanttPropTypes.TaskBarResizeConfig>,
@@ -275,6 +276,10 @@ export default defineVxeComponent({
       return Object.assign({}, getConfig().gantt.taskBarMilestoneConfig, props.taskBarMilestoneConfig)
     })
 
+    const computeTaskBarSubviewOpts = computed(() => {
+      return Object.assign({}, getConfig().gantt.taskBarSubviewConfig, props.taskBarSubviewConfig)
+    })
+
     const computeTaskBarTooltipOpts = computed(() => {
       return Object.assign({}, getConfig().gantt.taskBarTooltipConfig, props.taskBarTooltipConfig)
     })
@@ -349,12 +354,13 @@ export default defineVxeComponent({
     })
 
     const computeStyles = computed(() => {
-      const { height, maxHeight } = props
+      const { height, maxHeight, taskBarSubviewConfig } = props
       const { isZMax, tZindex } = reactData
       const taskViewOpts = computeTaskViewOpts.value
       const { tableStyle } = taskViewOpts
       const taskBarOpts = computeTaskBarOpts.value
       const { barStyle } = taskBarOpts
+      const taskBarSubviewOpts = computeTaskBarSubviewOpts.value
       const stys: VxeComponentStyleType = {}
       if (isZMax) {
         stys.zIndex = tZindex
@@ -367,12 +373,15 @@ export default defineVxeComponent({
         }
       }
       if (barStyle && !XEUtils.isFunction(barStyle)) {
-        const { bgColor, completedBgColor } = barStyle
+        const { bgColor, completedBgColor, overviewBgColor } = barStyle
         if (bgColor) {
           stys['--vxe-ui-gantt-view-task-bar-background-color'] = bgColor
         }
         if (completedBgColor) {
           stys['--vxe-ui-gantt-view-task-bar-completed-background-color'] = completedBgColor
+        }
+        if (overviewBgColor && hasEnableConf(taskBarSubviewConfig, taskBarSubviewOpts)) {
+          stys['--vxe-ui-gantt-view-task-bar-overview-background-color'] = overviewBgColor
         }
       }
       if (tableStyle) {
@@ -541,6 +550,7 @@ export default defineVxeComponent({
       computeTaskBarResizeOpts,
       computeTaskSplitOpts,
       computeTaskBarMilestoneOpts,
+      computeTaskBarSubviewOpts,
       computeTaskBarTooltipOpts,
       computeTaskLinkOpts,
       computeTaskViewScales,

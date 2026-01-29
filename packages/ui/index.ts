@@ -95,6 +95,9 @@ setConfig({
       resize: true,
       showCollapseTableButton: true,
       showCollapseTaskButton: true
+    },
+    taskBarSubviewConfig: {
+      // showOverview: false
     }
   }
 })
