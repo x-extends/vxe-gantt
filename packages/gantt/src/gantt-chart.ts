@@ -20,7 +20,7 @@ export default defineVxeComponent({
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
-    const { props: ganttProps, reactData: ganttReactData, internalData: ganttInternalData } = $xeGantt
+    const { props: ganttProps, reactData: ganttReactData } = $xeGantt
     const { reactData: ganttViewReactData, internalData: ganttViewInternalData } = $xeGanttView
     const { computeProgressField, computeTitleField, computeTypeField, computeTaskBarOpts, computeScaleUnit, computeTaskLinkOpts, computeTaskBarMilestoneOpts, computeTaskBarSubviewOpts } = $xeGantt.getComputeMaps()
 
@@ -38,11 +38,14 @@ export default defineVxeComponent({
       const cellOpts = computeCellOpts.value
       const rowOpts = computeRowOpts.value
       const defaultRowHeight = computeDefaultRowHeight.value
+      const { computeTreeOpts } = $xeTable.getComputeMaps()
+      const treeOpts = computeTreeOpts.value
+      const childrenField = treeOpts.children || treeOpts.childrenField
 
       const ganttSlots = $xeGantt.context.slots
       const taskBarSlot = ganttSlots.taskBar || ganttSlots['task-bar']
 
-      const { taskBarMilestoneConfig, taskBarSubviewConfig } = ganttProps
+      const { treeConfig, taskBarMilestoneConfig, taskBarSubviewConfig } = ganttProps
       const { activeLink, activeBarRowid } = ganttReactData
       const titleField = computeTitleField.value
       const progressField = computeProgressField.value
@@ -63,8 +66,6 @@ export default defineVxeComponent({
       let title = getStringValue(XEUtils.get(row, titleField))
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
       const renderTaskType = getTaskType(XEUtils.get(row, typeField))
-      const isMilestone = !!(hasEnableConf(taskBarMilestoneConfig, taskBarMilestoneOpts) && hasMilestoneTask(renderTaskType))
-      const isSubview = !!(hasEnableConf(taskBarSubviewConfig, taskBarSubviewOpts) && hasSubviewTask(renderTaskType))
 
       const vbStyle: VxeComponentStyleType = {}
       const vpStyle: VxeComponentStyleType = {
@@ -80,10 +81,6 @@ export default defineVxeComponent({
         }
       }
 
-      if (contentMethod) {
-        title = getStringValue(contentMethod({ row, title, scaleType: scaleUnit }))
-      }
-
       const ctParams = {
         $gantt: $xeGantt,
         source: sourceType,
@@ -94,90 +91,93 @@ export default defineVxeComponent({
         rowIndex,
         _rowIndex
       }
-      const ctOns: {
-        onMouseover?: any
-        onMouseleave?: any
-      } = {}
-      if (showTooltip) {
-        ctOns.onMouseover = (evnt: MouseEvent) => {
-          const { dragBarRow } = ganttInternalData
-          const ttParams = Object.assign({ $event: evnt }, ctParams)
-          if (!dragBarRow) {
-            $xeGantt.triggerTaskBarTooltipEvent(evnt, ttParams)
-          }
-          $xeGantt.dispatchEvent('task-bar-mouseenter', ttParams, evnt)
-        }
-        ctOns.onMouseleave = (evnt: MouseEvent) => {
-          const { dragBarRow } = ganttInternalData
-          const ttParams = Object.assign({ $event: evnt }, ctParams)
-          if (!dragBarRow) {
-            $xeGantt.handleTaskBarTooltipLeaveEvent(evnt, ttParams)
-          }
-          $xeGantt.dispatchEvent('task-bar-mouseleave', ttParams, evnt)
-        }
-      }
 
       let cbVNs: VNode[] = []
       if ($xeGantt.renderGanttTaskBarContent) {
         cbVNs = $xeGantt.renderGanttTaskBarContent(ctParams, {
-          isMilestone,
-          title,
-          vbStyle,
-          vpStyle,
-          rowid,
-          ctOns
+          $gantt: $xeGantt,
+          $table: $xeTable,
+          rowid
         })
-      } else if (taskBarSlot) {
-        cbVNs.push(
-          h('div', {
-            key: 'cbc',
-            class: 'vxe-gantt-view--chart-custom-bar-content-wrapper',
-            ...ctOns
-          }, $xeGantt.callSlot(taskBarSlot, barParams))
-        )
       } else {
-        if (isSubview && rowChildren && rowChildren.length) {
-          if (isExpandTree) {
-            if (taskBarSubviewOpts.showOverview) {
-              cbVNs.push(
-                h('div', {
-                  key: 'vcso',
-                  class: ['vxe-gantt-view--chart-subview-wrapper is--overview', {
-                    'is--round': round,
-                    'is--move': moveable
-                  }]
-                }, [
+        const isMilestone = !!(hasEnableConf(taskBarMilestoneConfig, taskBarMilestoneOpts) && hasMilestoneTask(renderTaskType))
+        const isSubview = !!(hasEnableConf(taskBarSubviewConfig, taskBarSubviewOpts) && hasSubviewTask(renderTaskType))
+
+        if (contentMethod) {
+          title = getStringValue(contentMethod({ row, title, scaleType: scaleUnit }))
+        }
+
+        const ctOns: {
+          onMouseover?: any
+          onMouseleave?: any
+        } = {}
+        if (showTooltip) {
+          ctOns.onMouseover = (evnt: MouseEvent) => {
+            const ttParams = Object.assign({ $event: evnt }, ctParams)
+            $xeGantt.dispatchEvent('task-bar-mouseenter', ttParams, evnt)
+          }
+          ctOns.onMouseleave = (evnt: MouseEvent) => {
+            const ttParams = Object.assign({ $event: evnt }, ctParams)
+            $xeGantt.dispatchEvent('task-bar-mouseleave', ttParams, evnt)
+          }
+        }
+
+        if (taskBarSlot) {
+          cbVNs.push(
+            h('div', {
+              key: 'cbc',
+              class: 'vxe-gantt-view--chart-custom-bar-content-wrapper',
+              ...ctOns
+            }, $xeGantt.callSlot(taskBarSlot, barParams))
+          )
+        } else {
+          if (isSubview && treeConfig && rowChildren && rowChildren.length) {
+            if (isExpandTree) {
+              if (taskBarSubviewOpts.showOverview) {
+                cbVNs.push(
                   h('div', {
-                    key: rowid,
-                    rowid: rowid,
-                    class: 'vxe-gantt-view--chart-subview-bar'
+                    key: 'vcso',
+                    class: 'vxe-gantt-view--chart-subview-wrapper is--overview'
                   }, [
                     h('div', {
-                      class: 'vxe-gantt-view--chart-subview-bar-content-wrapper'
+                      key: rowid,
+                      rowid: rowid,
+                      class: ['vxe-gantt-view--chart-subview-row', {
+                        'is--progress': showProgress,
+                        'is--round': round,
+                        'is--move': moveable
+                      }]
                     }, [
-                      showContent
-                        ? h('div', {
-                          class: 'vxe-gantt-view--chart-content'
-                        }, title)
-                        : renderEmptyElement($xeGantt)
+                      h('div', {
+                        rowid: rowid,
+                        class: 'vxe-gantt-view--chart-subview-bar'
+                      }, [
+                        h('div', {
+                          class: 'vxe-gantt-view--chart-subview-bar-content-wrapper'
+                        }, [
+                          showContent
+                            ? h('div', {
+                              class: 'vxe-gantt-view--chart-content'
+                            }, title)
+                            : renderEmptyElement($xeGantt)
+                        ])
+                      ])
                     ])
                   ])
-                ])
-              )
-            }
-          } else {
-            cbVNs.push(
-              h('div', {
-                key: 'vcsc',
-                class: ['vxe-gantt-view--chart-subview-wrapper is--inline', {
-                  'is--round': round,
-                  'is--move': moveable
-                }]
-              }, rowChildren.map(childRow => {
+                )
+              }
+            } else {
+              const cbcVNs: VNode[] = []
+              XEUtils.eachTree(rowChildren, childRow => {
                 const childRowid = $xeTable.getRowid(childRow)
                 let childTitle = getStringValue(XEUtils.get(childRow, titleField))
                 const childProgressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(childRow, progressField)))) : 0
                 const childRenderTaskType = getTaskType(XEUtils.get(childRow, typeField))
+                const isChildSubview = !!(hasEnableConf(taskBarSubviewConfig, taskBarSubviewOpts) && hasSubviewTask(childRenderTaskType))
+
+                if (isChildSubview) {
+                  return
+                }
 
                 const vpcStyle: VxeComponentStyleType = {
                   width: `${childProgressValue || 0}%`
@@ -193,76 +193,107 @@ export default defineVxeComponent({
                   childTitle = getStringValue(contentMethod({ row: childRow, title: childTitle, scaleType: scaleUnit }))
                 }
 
-                return h('div', {
-                  key: childRowid,
-                  rowid: childRowid,
-                  class: ['vxe-gantt-view--chart-subview-bar', `is--${childRenderTaskType}`, {
-                    'row--pending': !!pendingRowFlag && !!pendingRowMaps[childRowid]
-                  }]
-                }, [
+                cbcVNs.push(
                   h('div', {
-                    class: 'vxe-gantt-view--chart-subview-bar-content-wrapper'
+                    key: childRowid,
+                    rowid: childRowid,
+                    class: ['vxe-gantt-view--chart-subview-row', `is--${childRenderTaskType}`, {
+                      'is--progress': showProgress,
+                      'is--round': round,
+                      'is--move': moveable,
+                      'row--pending': !!pendingRowFlag && !!pendingRowMaps[childRowid]
+                    }]
                   }, [
-                    showProgress
-                      ? h('div', {
-                        class: 'vxe-gantt-view--chart-progress',
-                        style: vpcStyle
-                      })
-                      : renderEmptyElement($xeGantt),
-                    showContent
-                      ? h('div', {
-                        class: 'vxe-gantt-view--chart-content'
-                      }, childTitle)
-                      : renderEmptyElement($xeGantt)
+                    h('div', {
+                      rowid: childRowid,
+                      class: ['vxe-gantt-view--chart-subview-bar', `is--${childRenderTaskType}`],
+                      onClick (evnt: MouseEvent) {
+                        evnt.stopPropagation()
+                        $xeGantt.handleTaskBarClickEvent(evnt, barParams)
+                      },
+                      onDblclick (evnt: MouseEvent) {
+                        evnt.stopPropagation()
+                        $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
+                      },
+                      onMousedown (evnt: MouseEvent) {
+                        evnt.stopPropagation()
+                        if ($xeGantt.handleTaskBarMousedownEvent) {
+                          $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
+                        }
+                      }
+                    }, [
+                      h('div', {
+                        class: 'vxe-gantt-view--chart-subview-bar-content-wrapper'
+                      }, [
+                        showProgress
+                          ? h('div', {
+                            class: 'vxe-gantt-view--chart-progress',
+                            style: vpcStyle
+                          })
+                          : renderEmptyElement($xeGantt),
+                        showContent
+                          ? h('div', {
+                            class: 'vxe-gantt-view--chart-content'
+                          }, childTitle)
+                          : renderEmptyElement($xeGantt)
+                      ])
+                    ])
                   ])
-                ])
-              }))
+                )
+              }, { children: childrenField })
+
+              cbVNs.push(
+                h('div', {
+                  key: 'vcsc',
+                  class: 'vxe-gantt-view--chart-subview-wrapper is--inline'
+                }, cbcVNs)
+              )
+            }
+          } else if (isMilestone) {
+            const { icon, iconStatus, iconStyle } = taskBarMilestoneOpts
+            const tbmParams = { $gantt: $xeGantt, row }
+            cbVNs.push(
+              h('div', {
+                key: 'vcm',
+                class: 'vxe-gantt-view--chart-milestone-wrapper',
+                ...ctOns
+              }, [
+                h('div', {
+                  class: ['vxe-gantt-view--chart-milestone-icon', iconStatus ? `theme--${XEUtils.isFunction(iconStatus) ? iconStatus(tbmParams) : iconStatus}` : ''],
+                  style: iconStyle ? Object.assign({}, XEUtils.isFunction(iconStyle) ? iconStyle(tbmParams) : iconStyle) : undefined
+                }, [
+                  h('i', {
+                    class: (icon ? (XEUtils.isFunction(icon) ? icon(tbmParams) : icon) : '') || getIcon().GANTT_VIEW_TASK_MILESTONE
+                  })
+                ]),
+                showContent
+                  ? h('div', {
+                    class: 'vxe-gantt-view--chart-milestone-content'
+                  }, title)
+                  : renderEmptyElement($xeGantt)
+              ])
+            )
+          } else {
+            cbVNs.push(
+              h('div', {
+                key: 'vbc',
+                class: 'vxe-gantt-view--chart-bar-content-wrapper',
+                ...ctOns
+              }, [
+                showProgress
+                  ? h('div', {
+                    class: 'vxe-gantt-view--chart-progress',
+                    style: vpStyle
+                  })
+                  : renderEmptyElement($xeGantt),
+                showContent
+                  ? h('div', {
+                    class: 'vxe-gantt-view--chart-content'
+                  }, title)
+                  : renderEmptyElement($xeGantt)
+              ])
             )
           }
-        } else if (isMilestone) {
-          const { icon, iconStatus, iconStyle } = taskBarMilestoneOpts
-          const tbmParams = { $gantt: $xeGantt, row }
-          cbVNs.push(
-            h('div', {
-              key: 'vcm',
-              class: 'vxe-gantt-view--chart-milestone-wrapper',
-              ...ctOns
-            }, [
-              h('div', {
-                class: ['vxe-gantt-view--chart-milestone-icon', iconStatus ? `theme--${XEUtils.isFunction(iconStatus) ? iconStatus(tbmParams) : iconStatus}` : ''],
-                style: iconStyle ? Object.assign({}, XEUtils.isFunction(iconStyle) ? iconStyle(tbmParams) : iconStyle) : undefined
-              }, [
-                h('i', {
-                  class: (icon ? (XEUtils.isFunction(icon) ? icon(tbmParams) : icon) : '') || getIcon().GANTT_VIEW_TASK_MILESTONE
-                })
-              ]),
-              showContent
-                ? h('div', {
-                  class: 'vxe-gantt-view--chart-milestone-content'
-                }, title)
-                : renderEmptyElement($xeGantt)
-            ])
-          )
-        } else {
-          cbVNs.push(
-            h('div', {
-              key: 'vbc',
-              class: 'vxe-gantt-view--chart-bar-content-wrapper',
-              ...ctOns
-            }, [
-              showProgress
-                ? h('div', {
-                  class: 'vxe-gantt-view--chart-progress',
-                  style: vpStyle
-                })
-                : renderEmptyElement($xeGantt),
-              showContent
-                ? h('div', {
-                  class: 'vxe-gantt-view--chart-content'
-                }, title)
-                : renderEmptyElement($xeGantt)
-            ])
-          )
         }
       }
 
@@ -270,6 +301,7 @@ export default defineVxeComponent({
         key: rowid,
         rowid,
         class: ['vxe-gantt-view--chart-row', `is--${renderTaskType}`, {
+          'is--progress': showProgress,
           'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid],
           'is--round': round,
           'is--move': moveable

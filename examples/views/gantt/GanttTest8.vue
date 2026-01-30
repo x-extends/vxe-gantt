@@ -32,6 +32,7 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   },
   taskBarConfig: {
     showContent: true,
+    showProgress: true,
     barStyle: {
       round: true
     }
