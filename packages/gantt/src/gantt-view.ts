@@ -767,8 +767,8 @@ function updateTaskChartStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttV
         if (childWrapperEl) {
           // 行内展示
           if (hasClass(childWrapperEl, 'is--inline')) {
-            XEUtils.arrayEach(childWrapperEl.children, (childEl) => {
-              const childBarEl = childEl as HTMLDivElement
+            XEUtils.arrayEach(childWrapperEl.children, (childRowEl) => {
+              const childBarEl = childRowEl.children[0] as HTMLDivElement
               const childRowid = childBarEl.getAttribute('rowid') || ''
               const childChartRest = childRowid ? chartMaps[childRowid] : null
               if (childChartRest) {
@@ -790,7 +790,8 @@ function updateTaskChartStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttV
             })
           } else {
             // 如果展开子任务
-            const childBarEl = childWrapperEl.firstElementChild as HTMLDivElement
+            const childRowEl = childWrapperEl.children[0] as HTMLDivElement
+            const childBarEl = childRowEl ? childRowEl.children[0] as HTMLDivElement : null
             if (childBarEl) {
               const rowChildren: any[] = row ? row[childrenField] : []
               const { minSize: minChildLeftSize, maxSize: maxChildLeftSize } = handleSubTaskMinMaxSize($xeGanttView, $xeTable, rowChildren)
