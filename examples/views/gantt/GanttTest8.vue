@@ -1,6 +1,25 @@
 <template>
   <div>
-    <vxe-gantt v-bind="ganttOptions"></vxe-gantt>
+    <vxe-gantt v-bind="ganttOptions">
+      <template #task-bar-overview="{ row }">
+        <div class="custom-task-bar" :style="{ backgroundColor: row.bgColor }">
+          <div class="custom-task-title">{{ row.title }}</div>
+          <div>已完成：{{ row.progress }}%</div>
+        </div>
+      </template>
+
+      <template #task-bar="{ row }">
+        <div class="custom-task-bar" :style="{ backgroundColor: row.bgColor }">
+          <div>
+            <vxe-image :src="row.imgUrl" height="30" circle></vxe-image>
+          </div>
+          <div>
+            <div class="custom-task-title">{{ row.title }}</div>
+            <div>已完成：{{ row.progress }}%</div>
+          </div>
+        </div>
+      </template>
+    </vxe-gantt>
   </div>
 </template>
 
@@ -32,21 +51,20 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   },
   taskBarConfig: {
     showContent: true,
-    showProgress: true,
+    showTooltip: true,
     barStyle: {
       round: true
     }
   },
   taskViewConfig: {
     tableStyle: {
-      width: 480
+      width: 380
     }
   },
   columns: [
     { field: 'title', title: '任务名称', minWidth: 140, treeNode: true },
     { field: 'start', title: '开始时间', width: 100 },
-    { field: 'end', title: '结束时间', width: 100 },
-    { field: 'progress', title: '进度(%)', width: 80 }
+    { field: 'end', title: '结束时间', width: 100 }
   ],
   data: [
     { id: 10001, parentId: null, title: 'A项目', start: '', end: '', progress: 0, type: VxeGanttTaskType.Subview },
@@ -76,3 +94,18 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   ]
 })
 </script>
+
+<style lang="scss" scoped>
+.custom-task-bar {
+  display: flex;
+  flex-direction: row;
+  padding: 2px 6px;
+  width: 100%;
+  font-size: 12px;
+}
+.custom-task-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</style>

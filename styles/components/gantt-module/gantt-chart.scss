@@ -40,16 +40,19 @@
 }
 .vxe-gantt-view--chart-subview-row {
   &.row--pending {
-    .vxe-gantt-view--chart-subview-bar {
+    .vxe-gantt-view--chart-subview-bar,
+    .vxe-gantt-view--chart-subview-custom-bar {
       color: var(--vxe-ui-font-disabled-color);
       opacity: 0.5;
       text-decoration: line-through;
     }
   }
   &.is--round {
-    & > .vxe-gantt-view--chart-subview-bar {
+    & > .vxe-gantt-view--chart-subview-bar,
+    & > .vxe-gantt-view--chart-subview-custom-bar {
       border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius);
-      .vxe-gantt-view--chart-subview-bar-content-wrapper {
+      .vxe-gantt-view--chart-subview-bar-content-wrapper,
+      .vxe-gantt-view--chart-subview-custom-bar-content-wrapper {
         border-radius: var(--vxe-ui-gantt-view-task-bar-border-radius);
       }
       &:hover {
@@ -72,8 +75,9 @@
 }
 
 .vxe-gantt-view--chart-bar,
+.vxe-gantt-view--chart-custom-bar,
 .vxe-gantt-view--chart-subview-bar,
-.vxe-gantt-view--chart-custom-bar {
+.vxe-gantt-view--chart-subview-custom-bar {
   display: flex;
   flex-direction: row;
   position: absolute;
@@ -85,7 +89,8 @@
 
 .vxe-gantt-view--chart-row {
   &.is--progress {
-    & > .vxe-gantt-view--chart-bar {
+    & > .vxe-gantt-view--chart-bar,
+    & > .vxe-gantt-view--chart-custom-bar {
       &.is--default {
         color: #ffffff;
         background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
@@ -93,7 +98,8 @@
     }
   }
   &:not(.is--progress) {
-    & > .vxe-gantt-view--chart-bar {
+    & > .vxe-gantt-view--chart-bar,
+    & > .vxe-gantt-view--chart-custom-bar {
       &.is--default {
         color: #ffffff;
         background-color: var(--vxe-ui-gantt-view-task-bar-completed-background-color);
@@ -103,7 +109,8 @@
 }
 .vxe-gantt-view--chart-subview-row {
   &.is--progress {
-    & > .vxe-gantt-view--chart-subview-bar {
+    & > .vxe-gantt-view--chart-subview-bar,
+    & > .vxe-gantt-view--chart-subview-custom-bar {
       &.is--subview {
         color: #ffffff;
         background-color: var(--vxe-ui-gantt-view-task-bar-overview-background-color);
@@ -115,7 +122,8 @@
     }
   }
   &:not(.is--progress) {
-    & > .vxe-gantt-view--chart-subview-bar {
+    & > .vxe-gantt-view--chart-subview-bar,
+    & > .vxe-gantt-view--chart-subview-custom-bar {
       &.is--subview {
         color: #ffffff;
         background-color: var(--vxe-ui-gantt-view-task-bar-overview-background-color);
@@ -130,7 +138,8 @@
 
 .vxe-gantt-view--chart-bar-content-wrapper,
 .vxe-gantt-view--chart-custom-bar-content-wrapper,
-.vxe-gantt-view--chart-subview-bar-content-wrapper {
+.vxe-gantt-view--chart-subview-bar-content-wrapper,
+.vxe-gantt-view--chart-subview-custom-bar-content-wrapper {
   width: 100%;
   overflow: hidden;
 }
