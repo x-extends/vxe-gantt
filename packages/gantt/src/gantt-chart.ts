@@ -338,6 +338,11 @@ export default defineVxeComponent({
         style: {
           height: `${cellHeight}px`
         },
+        onDragstart (evnt) {
+          if (ganttInternalData.dragBarRow) {
+            evnt.preventDefault()
+          }
+        },
         onContextmenu (evnt) {
           $xeGantt.handleTaskBarContextmenuEvent(evnt, ctParams)
         }
