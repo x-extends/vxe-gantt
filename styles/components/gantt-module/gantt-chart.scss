@@ -152,9 +152,11 @@
   align-items: center;
 }
 .vxe-gantt-view--chart-bar,
-.vxe-gantt-view--chart-subview-bar {
+.vxe-gantt-view--chart-custom-bar,
+.vxe-gantt-view--chart-subview-bar,
+.vxe-gantt-view--chart-subview-custom-bar {
   align-items: center;
-  height: var(--vxe-ui-gantt-view-chart-bar-height);
+  min-height: var(--vxe-ui-gantt-view-chart-bar-height);
   &.is--default {
     &:hover {
       &::after {
