@@ -135,6 +135,14 @@
     }
   }
 }
+.vxe-gantt-view--chart-bar-content-wrapper,
+.vxe-gantt-view--chart-subview-bar-content-wrapper{
+  height: var(--vxe-ui-gantt-view-chart-bar-height);
+}
+.vxe-gantt-view--chart-custom-bar-content-wrapper,
+.vxe-gantt-view--chart-subview-custom-bar-content-wrapper {
+  min-height: var(--vxe-ui-gantt-view-chart-bar-height);
+}
 
 .vxe-gantt-view--chart-bar-content-wrapper,
 .vxe-gantt-view--chart-custom-bar-content-wrapper,
@@ -146,7 +154,6 @@
 .vxe-gantt-view--chart-bar-content-wrapper,
 .vxe-gantt-view--chart-subview-bar-content-wrapper {
   width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -156,7 +163,6 @@
 .vxe-gantt-view--chart-subview-bar,
 .vxe-gantt-view--chart-subview-custom-bar {
   align-items: center;
-  min-height: var(--vxe-ui-gantt-view-chart-bar-height);
   &.is--default {
     &:hover {
       &::after {
