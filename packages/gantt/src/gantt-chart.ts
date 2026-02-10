@@ -54,11 +54,12 @@ export default defineVxeComponent({
       const taskBarOpts = computeTaskBarOpts.value
       const taskBarMilestoneOpts = computeTaskBarMilestoneOpts.value
       const taskBarSubviewOpts = computeTaskBarSubviewOpts.value
+      const { showOverview, barStyle: subBarStyle } = taskBarSubviewOpts
       const scaleUnit = computeScaleUnit.value
       const barParams = { $gantt: $xeGantt, row, scaleType: scaleUnit }
       const { showProgress, showContent, contentMethod, barStyle, moveable, showTooltip } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
-      const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
+      const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) || undefined : barStyle) : {}) || {}
       const { round } = barStyObj
 
       const rowRest = fullAllDataRowIdData[rowid] || {}
@@ -133,7 +134,7 @@ export default defineVxeComponent({
 
         if (isSubview && treeConfig && rowChildren && rowChildren.length) {
           if (isExpandTree) {
-            if (taskBarSubviewOpts.showOverview) {
+            if (showOverview) {
               cbVNs.push(
                 h('div', {
                   key: 'vcso',
@@ -202,6 +203,17 @@ export default defineVxeComponent({
                 }
               }
 
+              const childCtParams = {
+                $gantt: $xeGantt,
+                source: sourceType,
+                type: viewType,
+                scaleType: scaleUnit,
+                row: childRow,
+                $rowIndex: $xeTable.getVMRowIndex(childRow),
+                rowIndex: $xeTable.getRowIndex(childRow),
+                _rowIndex: $xeTable.getVTRowIndex(childRow)
+              }
+
               if (contentMethod) {
                 childTitle = getStringValue(contentMethod({ row: childRow, title: childTitle, scaleType: scaleUnit }))
               }
@@ -220,18 +232,19 @@ export default defineVxeComponent({
                   h('div', {
                     rowid: childRowid,
                     class: [taskBarSlot ? 'vxe-gantt-view--chart-subview-custom-bar' : 'vxe-gantt-view--chart-subview-bar', `is--${childRenderTaskType}`],
+                    style: subBarStyle ? (XEUtils.isFunction(subBarStyle) ? subBarStyle(childCtParams) : subBarStyle) : undefined,
                     onClick (evnt: MouseEvent) {
                       evnt.stopPropagation()
-                      $xeGantt.handleTaskBarClickEvent(evnt, childBarParams)
+                      $xeGantt.handleTaskBarClickEvent(evnt, childCtParams)
                     },
                     onDblclick (evnt: MouseEvent) {
                       evnt.stopPropagation()
-                      $xeGantt.handleTaskBarDblclickEvent(evnt, childBarParams)
+                      $xeGantt.handleTaskBarDblclickEvent(evnt, childCtParams)
                     },
                     onMousedown (evnt: MouseEvent) {
                       evnt.stopPropagation()
                       if ($xeGantt.handleTaskBarMousedownEvent) {
-                        $xeGantt.handleTaskBarMousedownEvent(evnt, childBarParams)
+                        $xeGantt.handleTaskBarMousedownEvent(evnt, childCtParams)
                       }
                     }
                   }, [
@@ -240,7 +253,7 @@ export default defineVxeComponent({
                         key: 'cbc',
                         class: 'vxe-gantt-view--chart-subview-custom-bar-content-wrapper',
                         ...ctOns
-                      }, $xeGantt.callSlot(taskBarSlot, childBarParams))
+                      }, $xeGantt.callSlot(taskBarSlot, childCtParams))
                       : h('div', {
                         class: 'vxe-gantt-view--chart-subview-bar-content-wrapper',
                         ...ctOns
