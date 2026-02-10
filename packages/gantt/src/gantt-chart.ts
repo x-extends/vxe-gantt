@@ -67,6 +67,7 @@ export default defineVxeComponent({
       const taskBarOpts = $xeGantt.computeTaskBarOpts
       const taskBarMilestoneOpts = $xeGantt.computeTaskBarMilestoneOpts
       const taskBarSubviewOpts = $xeGantt.computeTaskBarSubviewOpts
+      const { showOverview, barStyle: subBarStyle } = taskBarSubviewOpts
       const scaleUnit = $xeGantt.computeScaleUnit
       const barParams = { $gantt: $xeGantt, row, scaleType: scaleUnit }
       const { showProgress, showContent, contentMethod, barStyle, moveable, showTooltip } = taskBarOpts
@@ -146,7 +147,7 @@ export default defineVxeComponent({
 
         if (isSubview && treeConfig && rowChildren && rowChildren.length) {
           if (isExpandTree) {
-            if (taskBarSubviewOpts.showOverview) {
+            if (showOverview) {
               cbVNs.push(
                 h('div', {
                   key: 'vcso',
@@ -219,6 +220,17 @@ export default defineVxeComponent({
                 }
               }
 
+              const childCtParams = {
+                $gantt: $xeGantt,
+                source: sourceType,
+                type: viewType,
+                scaleType: scaleUnit,
+                row: childRow,
+                $rowIndex: $xeTable.getVMRowIndex(childRow),
+                rowIndex: $xeTable.getRowIndex(childRow),
+                _rowIndex: $xeTable.getVTRowIndex(childRow)
+              }
+
               if (contentMethod) {
                 childTitle = getStringValue(contentMethod({ row: childRow, title: childTitle, scaleType: scaleUnit }))
               }
@@ -241,19 +253,20 @@ export default defineVxeComponent({
                       rowid: childRowid
                     },
                     class: [taskBarSlot ? 'vxe-gantt-view--chart-subview-custom-bar' : 'vxe-gantt-view--chart-subview-bar', `is--${childRenderTaskType}`],
+                    style: subBarStyle ? (XEUtils.isFunction(subBarStyle) ? subBarStyle(childCtParams) || undefined : subBarStyle) : undefined,
                     on: {
                       click (evnt: MouseEvent) {
                         evnt.stopPropagation()
-                        $xeGantt.handleTaskBarClickEvent(evnt, barParams)
+                        $xeGantt.handleTaskBarClickEvent(evnt, childCtParams)
                       },
                       dblclick (evnt: MouseEvent) {
                         evnt.stopPropagation()
-                        $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
+                        $xeGantt.handleTaskBarDblclickEvent(evnt, childCtParams)
                       },
                       mousedown (evnt: MouseEvent) {
                         evnt.stopPropagation()
                         if ($xeGantt.handleTaskBarMousedownEvent) {
-                          $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
+                          $xeGantt.handleTaskBarMousedownEvent(evnt, childCtParams)
                         }
                       }
                     }
@@ -263,7 +276,7 @@ export default defineVxeComponent({
                         key: 'cbc',
                         class: 'vxe-gantt-view--chart-subview-custom-bar-content-wrapper',
                         on: ctOns
-                      }, $xeGantt.callSlot(taskBarSlot, childBarParams, h))
+                      }, $xeGantt.callSlot(taskBarSlot, childCtParams, h))
                       : h('div', {
                         class: 'vxe-gantt-view--chart-subview-bar-content-wrapper',
                         on: ctOns
@@ -288,7 +301,7 @@ export default defineVxeComponent({
             cbVNs.push(
               h('div', {
                 key: 'vcsc',
-                class: 'vxe-gantt-view--chart-subview-wrappe is--inliner'
+                class: 'vxe-gantt-view--chart-subview-wrapper is--inline'
               }, cbcVNs)
             )
           }

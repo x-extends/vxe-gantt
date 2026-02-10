@@ -16,9 +16,13 @@ export default {
         rowField: 'id',
         parentField: 'parentId'
       },
-      taskBarSubviewConfig: {
-        showOverview: true
+      taskConfig: {
+        startField: 'start',
+        endField: 'end',
+        typeField: 'type',
+        progressField: 'progress'
       },
+      taskBarSubviewConfig: {},
       taskBarConfig: {
         showContent: true,
         barStyle: {
