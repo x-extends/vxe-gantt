@@ -203,16 +203,12 @@ export default defineVxeComponent({
                 }
               }
 
-              const childCtParams = {
-                $gantt: $xeGantt,
-                source: sourceType,
-                type: viewType,
-                scaleType: scaleUnit,
+              const childCtParams = XEUtils.assign({}, ctParams, {
                 row: childRow,
-                $rowIndex: $xeTable.getVMRowIndex(childRow),
                 rowIndex: $xeTable.getRowIndex(childRow),
+                $rowIndex: $xeTable.getVMRowIndex(childRow),
                 _rowIndex: $xeTable.getVTRowIndex(childRow)
-              }
+              })
 
               if (contentMethod) {
                 childTitle = getStringValue(contentMethod({ row: childRow, title: childTitle, scaleType: scaleUnit }))
