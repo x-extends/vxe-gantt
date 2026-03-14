@@ -448,9 +448,10 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
         const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
         const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+        // 如果最小轴为天，当存在时分秒时，在当前单元格内渲染维度；如果不存在，则填充满单元格
         return {
           offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + 1
+          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + (subtract ? 0 : 1)
         }
       }
     }

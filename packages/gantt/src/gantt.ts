@@ -414,7 +414,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const { height, maxHeight, taskBarSubviewConfig } = props
       const { isZMax, tZindex } = reactData
       const taskViewOpts = $xeGantt.computeTaskViewOpts as VxeGanttPropTypes.TaskViewConfig
-      const { tableStyle } = taskViewOpts
+      const { viewStyle, tableStyle } = taskViewOpts
       const taskBarOpts = $xeGantt.computeTaskBarOpts as VxeGanttPropTypes.TaskBarConfig
       const { barStyle } = taskBarOpts
       const taskBarSubviewOpts = $xeGantt.computeTaskBarSubviewOpts
@@ -439,6 +439,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
         if (overviewBgColor && hasEnableConf(taskBarSubviewConfig, taskBarSubviewOpts)) {
           stys['--vxe-ui-gantt-view-task-bar-overview-background-color'] = overviewBgColor
+        }
+      }
+      if (viewStyle) {
+        const { cellWidth } = viewStyle
+        if (cellWidth) {
+          stys['--vxe-ui-gantt-view-default-cell-width'] = toCssUnit(cellWidth)
         }
       }
       if (tableStyle) {
