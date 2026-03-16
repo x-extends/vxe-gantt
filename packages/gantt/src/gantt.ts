@@ -6,6 +6,7 @@ import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addCla
 import { getSlotVNs } from '../../ui/src/vn'
 import { VxeUI } from '@vxe-ui/core'
 import { ganttEmits } from './emits'
+import { getRefElem } from './util'
 import { tableEmits } from './table-emits'
 import { warnLog, errLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
@@ -1696,6 +1697,29 @@ export default defineVxeComponent({
           if ($tooltip && $tooltip.close) {
             $tooltip.close()
           }
+        }
+        return nextTick()
+      },
+      scrollToTaskView (row) {
+        const $xeTable = refTable.value
+        if ($xeTable) {
+          return $xeTable.scrollToRow(row).then(() => {
+            const $ganttView = refGanttView.value
+            if ($ganttView) {
+              const ganttViewReactData = $ganttView.reactData
+              const ganttViewInternalData = $ganttView.internalData
+              const { viewCellWidth } = ganttViewReactData
+              const { chartMaps, elemStore } = ganttViewInternalData
+              const rowid = $xeTable.getRowid(row)
+              const chartRest = rowid ? chartMaps[rowid] : null
+              if (chartRest) {
+                const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
+                if (bodyScrollElem) {
+                  bodyScrollElem.scrollLeft = XEUtils.floor(chartRest.oLeftSize * viewCellWidth)
+                }
+              }
+            }
+          })
         }
         return nextTick()
       }
