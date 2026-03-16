@@ -5,6 +5,7 @@ import XEUtils from 'xe-utils'
 import { getLastZIndex, nextZIndex, isEnableConf, hasEnableConf, formatText } from '../../ui/src/utils'
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
+import { getRefElem } from './util'
 import { warnLog, errLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
@@ -1841,6 +1842,31 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
       return []
+    },
+    scrollToTaskView (row: any) {
+      const $xeGantt = this
+      const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
+
+      if ($xeTable) {
+        return $xeTable.scrollToRow(row).then(() => {
+          const $ganttView = $xeGantt.$refs.refGanttView as VxeGanttViewInstance
+          if ($ganttView) {
+            const ganttViewReactData = $ganttView.reactData
+            const ganttViewInternalData = $ganttView.internalData
+            const { viewCellWidth } = ganttViewReactData
+            const { chartMaps, elemStore } = ganttViewInternalData
+            const rowid = $xeTable.getRowid(row)
+            const chartRest = rowid ? chartMaps[rowid] : null
+            if (chartRest) {
+              const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
+              if (bodyScrollElem) {
+                bodyScrollElem.scrollLeft = XEUtils.floor(chartRest.oLeftSize * viewCellWidth)
+              }
+            }
+          }
+        })
+      }
+      return $xeGantt.$nextTick()
     },
     /**
      * 获取需要排除的高度
