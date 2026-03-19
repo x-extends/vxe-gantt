@@ -89,7 +89,7 @@ export default defineVxeComponent({
 
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
 
-    const { internalData: ganttInternalData } = $xeGantt
+    const { reactData: ganttReactData, internalData: ganttInternalData } = $xeGantt
     const { computeTaskOpts, computeTaskViewOpts, computeStartField, computeEndField, computeTypeField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft, computeScaleUnit, computeWeekScale, computeMinScale } = $xeGantt.getComputeMaps()
 
     const refElem = ref<HTMLDivElement>()
@@ -130,8 +130,8 @@ export default defineVxeComponent({
         return dateList
       }
 
-      const leftSize = -XEUtils.toNumber(gridding ? gridding.leftSpacing || 0 : 0)
-      const rightSize = XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
+      const leftSize = -(ganttReactData.currLeftSpacing + XEUtils.toNumber(gridding ? gridding.leftSpacing || 0 : 0))
+      const rightSize = ganttReactData.currRightSpacing + XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
       const currStep = 1// XEUtils.toNumber(step || 1) || 1
       switch (type) {
         case 'year': {
@@ -1444,6 +1444,8 @@ export default defineVxeComponent({
           const { tableData } = tableReactData
           reactData.tableData = tableData
           if (force) {
+            ganttReactData.currLeftSpacing = 0
+            ganttReactData.currRightSpacing = 0
             handleUpdateData()
           }
           handleRecalculateStyle()

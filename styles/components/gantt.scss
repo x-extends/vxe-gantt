@@ -58,6 +58,8 @@
     position: relative;
     display: flex;
     flex-direction: row;
+    flex-grow: 1;
+    overflow: hidden;
   }
   .vxe-gantt--left-wrapper,
   .vxe-gantt--right-wrapper {
@@ -112,6 +114,8 @@
   flex-grow: 1;
 }
 .vxe-gantt--layout-body-content-wrapper {
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
   overflow: hidden;
 }

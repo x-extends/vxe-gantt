@@ -78,7 +78,10 @@ function createReactData (): GanttReactData {
     activeLink: null,
     isActiveCeLe: false,
     linkList: [],
-    upLinkFlag: 0
+    upLinkFlag: 0,
+
+    currLeftSpacing: 0,
+    currRightSpacing: 0
   }
 }
 
@@ -1953,9 +1956,9 @@ export default defineVxeComponent({
     }
 
     Object.assign($xeGantt, ganttExtendTableMethods, ganttMethods, ganttPrivateMethods, {
-      // 检查插槽
       loadColumn (columns: any[]) {
         const $xeTable = refTable.value
+        // 检查插槽
         XEUtils.eachTree(columns, (column) => {
           const { type } = column
           if (column.slots) {
@@ -1971,6 +1974,8 @@ export default defineVxeComponent({
             errLog('vxe.error.errProp', ['type=expand', 'type=seq,radio,checkbox,html'])
           }
         })
+        reactData.currLeftSpacing = 0
+        reactData.currRightSpacing = 0
         if ($xeTable) {
           return $xeTable.loadColumn(columns)
         }
