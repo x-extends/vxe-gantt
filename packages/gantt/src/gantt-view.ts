@@ -1408,6 +1408,7 @@ export default defineVxeComponent({
       const $xeGanttView = this
       const $xeGantt = $xeGanttView.$xeGantt
       const reactData = $xeGanttView.reactData
+      const ganttReactData = $xeGantt.reactData
 
       const { minViewDate, maxViewDate } = reactData
       const taskViewOpts = $xeGantt.computeTaskViewOpts
@@ -1419,8 +1420,8 @@ export default defineVxeComponent({
         return dateList
       }
 
-      const leftSize = -XEUtils.toNumber(gridding ? gridding.leftSpacing || 0 : 0)
-      const rightSize = XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
+      const leftSize = -(ganttReactData.currLeftSpacing + XEUtils.toNumber(gridding ? gridding.leftSpacing || 0 : 0))
+      const rightSize = ganttReactData.currRightSpacing + XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
       const currStep = 1// XEUtils.toNumber(step || 1) || 1
       switch (type) {
         case 'year': {
@@ -1511,8 +1512,10 @@ export default defineVxeComponent({
     },
     updateViewData (force?: boolean): Promise<void> {
       const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
       const reactData = $xeGanttView.reactData
       const internalData = $xeGanttView.internalData
+      const ganttReactData = $xeGantt.reactData
 
       const $xeTable = internalData.xeTable
       if ($xeTable) {
@@ -1520,6 +1523,8 @@ export default defineVxeComponent({
         const { tableData } = tableReactData
         reactData.tableData = tableData
         if (force) {
+          ganttReactData.currLeftSpacing = 0
+          ganttReactData.currRightSpacing = 0
           handleUpdateData($xeGanttView)
         }
         handleRecalculateStyle($xeGanttView)

@@ -128,7 +128,10 @@ function createReactData (): GanttReactData {
     activeLink: null,
     isActiveCeLe: false,
     linkList: [],
-    upLinkFlag: 0
+    upLinkFlag: 0,
+
+    currLeftSpacing: 0,
+    currRightSpacing: 0
   }
 }
 
@@ -2138,9 +2141,11 @@ export default /* define-vxe-component start */ defineVxeComponent({
     },
     loadColumn (columns: any[]) {
       const $xeGantt = this
+      const reactData = $xeGantt.reactData
       const slots = $xeGantt.$scopedSlots
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
+      // 检查插槽
       XEUtils.eachTree(columns, column => {
         const { type } = column
         if (column.slots) {
@@ -2156,6 +2161,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
           errLog('vxe.error.errProp', ['type=expand', 'type=seq,radio,checkbox,html'])
         }
       })
+      reactData.currLeftSpacing = 0
+      reactData.currRightSpacing = 0
       return $xeTable.loadColumn(columns)
     },
     reloadColumn (columns: any[]) {
