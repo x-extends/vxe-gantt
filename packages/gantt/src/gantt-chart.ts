@@ -465,6 +465,7 @@ export default defineVxeComponent({
       const { tableData } = ganttViewReactData
       const taskLinkOpts = $xeGantt.computeTaskLinkOpts
       const taskBarOpts = $xeGantt.computeTaskBarOpts
+      const nowLineLeft = $xeGanttView.computeNowLineLeft
       const { isCurrent, isHover } = taskLinkOpts
       const { linkCreatable } = taskBarOpts
 
@@ -474,6 +475,14 @@ export default defineVxeComponent({
           'is--cl-drag': dragLinkFromStore.rowid
         }]
       }, [
+        h('div', {
+          class: ['vxe-gantt-view--chart-now-line', {
+            'is--visible': nowLineLeft >= 0
+          }],
+          style: {
+            left: nowLineLeft + 'px'
+          }
+        }),
         $xeGantt.renderGanttTaskChartBefores
           ? h('div', {
             ref: 'refChartBeforeWrapperElem',

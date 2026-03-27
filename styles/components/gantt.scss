@@ -588,19 +588,6 @@
     color: var(--vxe-ui-font-primary-color);
   }
 }
-.vxe-gantt-view--body-column {
-  &.is--now {
-    &::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 1px;
-      height: 100%;
-      background-color: var(--vxe-ui-font-primary-color);
-    }
-  }
-}
 .vxe-gantt-view--header-column,
 .vxe-gantt-view--body-column,
 .vxe-gantt-view--footer-column {
@@ -624,6 +611,19 @@
         z-index: 1;
       }
     }
+  }
+}
+
+.vxe-gantt-view--chart-now-line {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 1px;
+  background-color: var(--vxe-ui-font-primary-color);
+  &.is--visible {
+    display: block;
   }
 }
 

@@ -110,6 +110,7 @@ function updateTodayData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPr
     M = '1'
     MM = '0' + M
   }
+  ganttReactData.nowTime = itemDate.getTime()
   internalData.todayDateMaps = {
     year: yyyy,
     quarter: `${yyyy}_q${q}`,
@@ -1490,6 +1491,50 @@ export default defineVxeComponent({
         }
       }
       return dateList
+    },
+    computeNowLineLeft () {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
+      const ganttReactData = $xeGantt.reactData
+
+      const { minViewDate, maxViewDate, viewCellWidth, tableColumn } = reactData
+      const { todayDateMaps } = internalData
+      const minScale = $xeGantt.computeMinScale
+      const taskViewOpts = $xeGantt.computeTaskViewOpts
+      const taskNowLineOpts = $xeGantt.computeTaskNowLineOpts
+      const { showNowLine } = taskViewOpts
+      const { mode } = taskNowLineOpts
+      const { nowTime } = ganttReactData
+
+      // 此刻线
+      let nlLeft = 0
+      if (showNowLine && minScale && minViewDate && maxViewDate && nowTime >= minViewDate.getTime() && nowTime <= maxViewDate.getTime()) {
+        const todayValue = todayDateMaps[minScale.type]
+        let currCol: VxeGanttDefines.ViewColumn | null = null
+        let nextCol: VxeGanttDefines.ViewColumn | null = null
+        for (let i = 0; i < tableColumn.length; i++) {
+          const column = tableColumn[i]
+          if (column.field === todayValue) {
+            currCol = tableColumn[i]
+            nlLeft = i * viewCellWidth
+            nextCol = tableColumn[i + 1]
+            break
+          }
+        }
+        if (mode === 'progress') {
+          if (currCol && nextCol) {
+            const currTime = currCol.dateObj.date.getTime()
+            const offsetTime = nowTime - currTime
+            const nowProgress = Math.max(0, Math.min(1, offsetTime / (nextCol.dateObj.date.getTime() - currTime)))
+            nlLeft += nowProgress * viewCellWidth
+          }
+        } else if (mode === 'end') {
+          nlLeft += viewCellWidth - 1
+        }
+      }
+      return nlLeft
     }
   },
   methods: {

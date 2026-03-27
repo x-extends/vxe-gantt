@@ -130,6 +130,7 @@ function createReactData (): GanttReactData {
     linkList: [],
     upLinkFlag: 0,
 
+    nowTime: 0,
     currLeftSpacing: 0,
     currRightSpacing: 0
   }
@@ -174,6 +175,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     layouts: Array as PropType<VxeGanttPropTypes.Layouts>,
     taskConfig: Object as PropType<VxeGanttPropTypes.TaskConfig>,
     taskViewScaleConfig: Object as PropType<VxeGanttPropTypes.TaskViewScaleConfig>,
+    taskNowLineConfig: Object as PropType<VxeGanttPropTypes.TaskNowLineConfig>,
     taskViewConfig: Object as PropType<VxeGanttPropTypes.TaskViewConfig>,
     taskLinkConfig: Object as PropType<VxeGanttPropTypes.TaskLinkConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
@@ -267,6 +269,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const props = $xeGantt
 
       return XEUtils.merge({}, getConfig().gantt.taskViewScaleConfig, props.taskViewScaleConfig)
+    },
+    computeTaskNowLineOpts  () {
+      const $xeGantt = this
+      const props = $xeGantt
+
+      return Object.assign({}, getConfig().gantt.taskNowLineConfig, props.taskNowLineConfig)
     },
     computeTaskViewOpts () {
       const $xeGantt = this
@@ -1846,19 +1854,19 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return []
     },
-    scrollToTaskView (row: any) {
+    scrollToTaskView (rowOrRowid: any) {
       const $xeGantt = this
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
       if ($xeTable) {
-        return $xeTable.scrollToRow(row).then(() => {
+        const rowid = XEUtils.isString(rowOrRowid) || XEUtils.isNumber(rowOrRowid) ? rowOrRowid : $xeTable.getRowid(rowOrRowid)
+        return $xeTable.scrollToRow(rowOrRowid).then(() => {
           const $ganttView = $xeGantt.$refs.refGanttView as VxeGanttViewInstance
           if ($ganttView) {
             const ganttViewReactData = $ganttView.reactData
             const ganttViewInternalData = $ganttView.internalData
             const { viewCellWidth } = ganttViewReactData
             const { chartMaps, elemStore } = ganttViewInternalData
-            const rowid = $xeTable.getRowid(row)
             const chartRest = rowid ? chartMaps[rowid] : null
             if (chartRest) {
               const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
