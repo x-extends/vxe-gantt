@@ -23,6 +23,7 @@ export default defineVxeComponent({
     const { props: ganttProps, reactData: ganttReactData, internalData: ganttInternalData } = $xeGantt
     const { reactData: ganttViewReactData, internalData: ganttViewInternalData } = $xeGanttView
     const { computeProgressField, computeTitleField, computeTypeField, computeTaskBarOpts, computeScaleUnit, computeTaskLinkOpts, computeTaskBarMilestoneOpts, computeTaskBarSubviewOpts } = $xeGantt.getComputeMaps()
+    const { computeNowLineLeft } = $xeGanttView.getComputeMaps()
 
     const refElem = ref<HTMLDivElement>()
     const refTaskWrapperElem = ref() as Ref<HTMLDivElement>
@@ -427,6 +428,7 @@ export default defineVxeComponent({
       const { tableData } = ganttViewReactData
       const taskLinkOpts = computeTaskLinkOpts.value
       const taskBarOpts = computeTaskBarOpts.value
+      const nowLineLeft = computeNowLineLeft.value
       const { isCurrent, isHover } = taskLinkOpts
       const { linkCreatable } = taskBarOpts
 
@@ -436,6 +438,14 @@ export default defineVxeComponent({
           'is--cl-drag': dragLinkFromStore.rowid
         }]
       }, [
+        h('div', {
+          class: ['vxe-gantt-view--chart-now-line', {
+            'is--visible': nowLineLeft >= 0
+          }],
+          style: {
+            left: nowLineLeft + 'px'
+          }
+        }),
         $xeGantt.renderGanttTaskChartBefores
           ? h('div', {
             ref: refChartBeforeWrapperElem,

@@ -90,7 +90,7 @@ export default defineVxeComponent({
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
 
     const { reactData: ganttReactData, internalData: ganttInternalData } = $xeGantt
-    const { computeTaskOpts, computeTaskViewOpts, computeStartField, computeEndField, computeTypeField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft, computeScaleUnit, computeWeekScale, computeMinScale } = $xeGantt.getComputeMaps()
+    const { computeTaskOpts, computeTaskViewOpts, computeStartField, computeEndField, computeTypeField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft, computeScaleUnit, computeWeekScale, computeMinScale, computeTaskNowLineOpts } = $xeGantt.getComputeMaps()
 
     const refElem = ref<HTMLDivElement>()
 
@@ -202,8 +202,49 @@ export default defineVxeComponent({
       return dateList
     })
 
+    const computeNowLineLeft = computed(() => {
+      const ganttReactData = $xeGantt.reactData
+      const { minViewDate, maxViewDate, viewCellWidth, tableColumn } = reactData
+      const { todayDateMaps } = internalData
+      const minScale = computeMinScale.value
+      const taskViewOpts = computeTaskViewOpts.value
+      const taskNowLineOpts = computeTaskNowLineOpts.value
+      const { showNowLine } = taskViewOpts
+      const { mode } = taskNowLineOpts
+      const { nowTime } = ganttReactData
+
+      // 此刻线
+      let nlLeft = 0
+      if (showNowLine && minScale && minViewDate && maxViewDate && nowTime >= minViewDate.getTime() && nowTime <= maxViewDate.getTime()) {
+        const todayValue = todayDateMaps[minScale.type]
+        let currCol: VxeGanttDefines.ViewColumn | null = null
+        let nextCol: VxeGanttDefines.ViewColumn | null = null
+        for (let i = 0; i < tableColumn.length; i++) {
+          const column = tableColumn[i]
+          if (column.field === todayValue) {
+            currCol = tableColumn[i]
+            nlLeft = i * viewCellWidth
+            nextCol = tableColumn[i + 1]
+            break
+          }
+        }
+        if (mode === 'progress') {
+          if (currCol && nextCol) {
+            const currTime = currCol.dateObj.date.getTime()
+            const offsetTime = nowTime - currTime
+            const nowProgress = Math.max(0, Math.min(1, offsetTime / (nextCol.dateObj.date.getTime() - currTime)))
+            nlLeft += nowProgress * viewCellWidth
+          }
+        } else if (mode === 'end') {
+          nlLeft += viewCellWidth - 1
+        }
+      }
+      return nlLeft
+    })
+
     const computeMaps: GanttViewPrivateComputed = {
-      computeScaleDateList
+      computeScaleDateList,
+      computeNowLineLeft
     }
 
     const $xeGanttView = {
@@ -240,6 +281,7 @@ export default defineVxeComponent({
         M = '1'
         MM = '0' + M
       }
+      ganttReactData.nowTime = itemDate.getTime()
       internalData.todayDateMaps = {
         year: yyyy,
         quarter: `${yyyy}_q${q}`,
