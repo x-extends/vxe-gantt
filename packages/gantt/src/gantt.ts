@@ -430,6 +430,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const taskBarOpts = $xeGantt.computeTaskBarOpts as VxeGanttPropTypes.TaskBarConfig
       const { barStyle } = taskBarOpts
       const taskBarSubviewOpts = $xeGantt.computeTaskBarSubviewOpts
+      const taskNowLineOpts = $xeGantt.computeTaskNowLineOpts
+      const { fontColor: nfColor, bgColor: nbgColor } = taskNowLineOpts
       const stys: VxeComponentStyleType = {}
       if (isZMax) {
         stys.zIndex = tZindex
@@ -452,6 +454,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
         if (overviewBgColor && hasEnableConf(taskBarSubviewConfig, taskBarSubviewOpts)) {
           stys['--vxe-ui-gantt-view-task-bar-overview-background-color'] = overviewBgColor
         }
+      }
+      if (nfColor) {
+        stys['--vxe-ui-gantt-view-task-now-line-color'] = nfColor
+      }
+      if (nbgColor) {
+        stys['--vxe-ui-gantt-view-task-now-line-background-color'] = nbgColor
       }
       if (viewStyle) {
         const { cellWidth } = viewStyle

@@ -461,6 +461,8 @@ export default defineVxeComponent({
 
       const $xeTable = ganttViewInternalData.xeTable
 
+      const ganttSlots = $xeGantt.$scopedSlots
+
       const { dragLinkFromStore } = ganttReactData
       const { tableData } = ganttViewReactData
       const taskLinkOpts = $xeGantt.computeTaskLinkOpts
@@ -468,6 +470,7 @@ export default defineVxeComponent({
       const nowLineLeft = $xeGanttView.computeNowLineLeft
       const { isCurrent, isHover } = taskLinkOpts
       const { linkCreatable } = taskBarOpts
+      const taskNowLineSlot = ganttSlots.taskNowLine || ganttSlots['task-now-line']
 
       return h('div', {
         ref: 'refElem',
@@ -475,14 +478,14 @@ export default defineVxeComponent({
           'is--cl-drag': dragLinkFromStore.rowid
         }]
       }, [
-        h('div', {
-          class: ['vxe-gantt-view--chart-now-line', {
-            'is--visible': nowLineLeft >= 0
-          }],
-          style: {
-            left: nowLineLeft + 'px'
-          }
-        }),
+        nowLineLeft > 0
+          ? h('div', {
+            class: 'vxe-gantt-view--chart-now-line',
+            style: {
+              left: nowLineLeft + 'px'
+            }
+          }, taskNowLineSlot ? taskNowLineSlot({}) : [])
+          : renderEmptyElement($xeGantt),
         $xeGantt.renderGanttTaskChartBefores
           ? h('div', {
             ref: 'refChartBeforeWrapperElem',

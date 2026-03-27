@@ -1530,6 +1530,8 @@ export default defineVxeComponent({
             const nowProgress = Math.max(0, Math.min(1, offsetTime / (nextCol.dateObj.date.getTime() - currTime)))
             nlLeft += nowProgress * viewCellWidth
           }
+        } else if (mode === 'center') {
+          nlLeft += viewCellWidth / 2
         } else if (mode === 'end') {
           nlLeft += viewCellWidth - 1
         }

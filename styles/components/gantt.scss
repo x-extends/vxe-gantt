@@ -585,7 +585,7 @@
   font-size: 1em;
   height: var(--vxe-ui-gantt-view-cell-height, var(--vxe-ui-table-row-line-height));
   &.is--now {
-    color: var(--vxe-ui-font-primary-color);
+    color: var(--vxe-ui-gantt-view-task-now-line-color, var(--vxe-ui-font-primary-color));
   }
 }
 .vxe-gantt-view--header-column,
@@ -615,15 +615,16 @@
 }
 
 .vxe-gantt-view--chart-now-line {
-  display: none;
   position: absolute;
   left: 0;
   top: 0;
   height: 100%;
-  width: 1px;
-  background-color: var(--vxe-ui-font-primary-color);
-  &.is--visible {
+  &::before {
+    content: "";
     display: block;
+    width: 1px;
+    height: 100%;
+    background-color: var(--vxe-ui-gantt-view-task-now-line-background-color, var(--vxe-ui-font-primary-color));
   }
 }
 
