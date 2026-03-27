@@ -20,7 +20,7 @@ export default defineVxeComponent({
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
-    const { props: ganttProps, reactData: ganttReactData, internalData: ganttInternalData } = $xeGantt
+    const { props: ganttProps, context: ganttContext, reactData: ganttReactData, internalData: ganttInternalData } = $xeGantt
     const { reactData: ganttViewReactData, internalData: ganttViewInternalData } = $xeGanttView
     const { computeProgressField, computeTitleField, computeTypeField, computeTaskBarOpts, computeScaleUnit, computeTaskLinkOpts, computeTaskBarMilestoneOpts, computeTaskBarSubviewOpts } = $xeGantt.getComputeMaps()
     const { computeNowLineLeft } = $xeGanttView.getComputeMaps()
@@ -424,6 +424,8 @@ export default defineVxeComponent({
     const renderVN = () => {
       const $xeTable = ganttViewInternalData.xeTable
 
+      const { slots: ganttSlots } = ganttContext
+
       const { dragLinkFromStore } = ganttReactData
       const { tableData } = ganttViewReactData
       const taskLinkOpts = computeTaskLinkOpts.value
@@ -431,6 +433,7 @@ export default defineVxeComponent({
       const nowLineLeft = computeNowLineLeft.value
       const { isCurrent, isHover } = taskLinkOpts
       const { linkCreatable } = taskBarOpts
+      const taskNowLineSlot = ganttSlots.taskNowLine || ganttSlots['task-now-line']
 
       return h('div', {
         ref: refElem,
@@ -438,14 +441,14 @@ export default defineVxeComponent({
           'is--cl-drag': dragLinkFromStore.rowid
         }]
       }, [
-        h('div', {
-          class: ['vxe-gantt-view--chart-now-line', {
-            'is--visible': nowLineLeft >= 0
-          }],
-          style: {
-            left: nowLineLeft + 'px'
-          }
-        }),
+        nowLineLeft > 0
+          ? h('div', {
+            class: 'vxe-gantt-view--chart-now-line',
+            style: {
+              left: nowLineLeft + 'px'
+            }
+          }, taskNowLineSlot ? taskNowLineSlot({}) : [])
+          : renderEmptyElement($xeGantt),
         $xeGantt.renderGanttTaskChartBefores
           ? h('div', {
             ref: refChartBeforeWrapperElem,
