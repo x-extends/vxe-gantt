@@ -622,7 +622,7 @@
   &::before {
     content: "";
     display: block;
-    width: 1px;
+    width: var(--vxe-ui-gantt-view-task-now-line-width, 1px);
     height: 100%;
     background-color: var(--vxe-ui-gantt-view-task-now-line-background-color, var(--vxe-ui-font-primary-color));
   }
