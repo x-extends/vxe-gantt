@@ -1,12 +1,15 @@
 <template>
   <div>
-    <vxe-gantt v-bind="ganttOptions"></vxe-gantt>
+    <vxe-switch v-model="menuConfig.enabled"></vxe-switch>
+    <vxe-gantt ref="ganttRef" v-bind="ganttOptions" v-on="ganttEvents"></vxe-gantt>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { reactive } from 'vue'
-import { VxeGanttProps } from '../../../types'
+import { ref, reactive } from 'vue'
+import { VxeUI } from 'vxe-pc-ui'
+import type { VxeGanttInstance, VxeGanttProps, VxeGanttListeners } from '../../../types'
+import type { VxeTablePropTypes } from 'vxe-table'
 
 interface RowVO {
   id: number
@@ -16,13 +19,82 @@ interface RowVO {
   progress: number
 }
 
+const ganttRef = ref<VxeGanttInstance<RowVO>>()
+
+const menuConfig = reactive<VxeTablePropTypes.MenuConfig<RowVO>>({
+  enabled: true,
+  header: {
+    options: [
+      [
+        { code: 'exportAll', name: '导出所有.csv', prefixConfig: { icon: 'vxe-icon-download' }, visible: true, disabled: false }
+      ]
+    ]
+  },
+  body: {
+    options: [
+      [
+        { code: 'copy', name: '复制内容（Ctrl+C）', prefixConfig: { icon: 'vxe-icon-copy' }, visible: true, disabled: false },
+        { code: 'clear', name: '清除内容', visible: true, disabled: false },
+        { code: 'reload', name: '刷新表格', visible: true, disabled: false }
+      ],
+      [
+        { code: 'myPrint', name: '打印（Ctrl+P）', prefixConfig: { icon: 'vxe-icon-print' }, visible: true, disabled: false },
+        { code: 'myExport', name: '导出.csv', prefixConfig: { icon: 'vxe-icon-download' }, visible: true, disabled: false }
+      ]
+    ]
+  },
+  footer: {
+    options: [
+      [
+        { code: 'exportAll', name: '导出所有.csv', prefixConfig: { icon: 'vxe-icon-download' }, visible: true, disabled: false }
+      ]
+    ]
+  },
+  visibleMethod ({ options, row, column }) {
+    // 示例：只有 title 列允许操作，清除按钮只能在 start,end 才显示
+    // 显示之前处理按钮的操作权限
+    const isCopyDisabled = !column || column.field !== 'title'
+    const isClearVisible = column && column.field === 'title'
+    const isMyPrintVisible = row && row.progress < 30
+    const isMyExportVisible = row && row.progress > 80
+    options.forEach(list => {
+      list.forEach(item => {
+        if (item.code === 'copy') {
+          item.disabled = isCopyDisabled
+        }
+        if (item.code === 'clear') {
+          item.visible = isClearVisible
+        }
+        if (item.code === 'myPrint') {
+          item.visible = isMyPrintVisible
+        }
+        if (item.code === 'myExport') {
+          item.visible = isMyExportVisible
+        }
+      })
+    })
+    return true
+  }
+})
+
 const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   border: true,
+  showFooter: true,
+  height: 400,
+  rowConfig: {
+    isCurrent: true
+  },
   columnConfig: {
     resizable: true
   },
   taskBarConfig: {
-    showProgress: true
+    showProgress: true,
+    showContent: true
+  },
+  taskViewConfig: {
+    tableStyle: {
+      width: 480
+    }
   },
   columns: [
     { field: 'title', title: '任务名称' },
@@ -39,9 +111,39 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     { id: 10007, title: '某某计划', start: '2024-03-15', end: '2024-03-24', progress: 70 },
     { id: 10008, title: '某某科技项目', start: '2024-03-20', end: '2024-03-29', progress: 50 },
     { id: 10009, title: '地铁建设工程', start: '2024-03-19', end: '2024-03-20', progress: 5 },
-    { id: 10010, title: '铁路修建计划', start: '2024-03-12', end: '2024-03-20', progress: 10 },
-    { id: 10011, title: '蓝天计划', start: '2024-03-02', end: '2024-03-42', progress: 0 },
-    { id: 10012, title: 'C计划', start: '2024-03-05', end: '2024-03-14', progress: 90 }
+    { id: 10010, title: '铁路修建计划', start: '2024-03-12', end: '2024-03-20', progress: 10 }
+  ],
+  menuConfig,
+  footerData: [
+    { title: '合计', start: 111, end: 222 }
   ]
 })
+
+const ganttEvents: VxeGanttListeners<RowVO> = {
+  cellMenu ({ row }) {
+    const $gantt = ganttRef.value
+    if ($gantt) {
+      $gantt.setCurrentRow(row)
+    }
+  },
+  menuClick ({ menu, row, column }) {
+    const $gantt = ganttRef.value
+    if ($gantt) {
+      switch (menu.code) {
+        case 'copy':
+          VxeUI.modal.message({ content: `点击了 "${menu.name}"`, status: 'info' })
+          break
+        case 'clear':
+          $gantt.clearData(row, column.field)
+          break
+        case 'myPrint':
+          $gantt.print()
+          break
+        case 'myExport':
+          $gantt.exportData()
+          break
+      }
+    }
+  }
+}
 </script>
