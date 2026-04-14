@@ -619,7 +619,9 @@ export default defineVxeComponent({
       const scaleList = (taskScaleConfs && taskScaleConfs.length ? taskScaleConfs : ['month', 'date'] as VxeGanttDefines.ColumnScaleType[])
       scaleList.forEach(conf => {
         const sConf = !conf || XEUtils.isString(conf) ? { type: conf } : conf
-        const { type, step } = sConf
+        const type = sConf.type
+        const step = sConf.step
+        const level = getViewTypeLevel(type)
         if (step) {
           errLog('vxe.error.errProp', [`step=${step}`, 'step=1'])
         }
@@ -631,10 +633,9 @@ export default defineVxeComponent({
           errLog('vxe.error.repeatProp', ['type', type])
           return
         }
+        const scaleObj = Object.assign({}, type ? (taskViewScaleOpts[type] || {}) : {}, sConf, { level })
         keyMaps[type] = true
-        scaleConfs.push(Object.assign({}, type ? taskViewScaleOpts[type] || {} : {}, sConf, {
-          level: getViewTypeLevel(type)
-        }))
+        scaleConfs.push(scaleObj)
       })
       reactData.taskScaleList = XEUtils.orderBy(scaleConfs, { field: 'level', order: 'desc' })
     }
