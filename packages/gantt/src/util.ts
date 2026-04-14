@@ -12,7 +12,7 @@ export function getCellRestHeight (rowRest: VxeTableDefines.RowCacheItem, cellOp
   return rowRest.resizeHeight || cellOpts.height || rowOpts.height || rowRest.height || defaultRowHeight
 }
 
-export function getStandardGapTime (type: VxeGanttDefines.ColumnScaleType | null) {
+export function getStandardGapTime (type: VxeGanttDefines.ColumnScaleType) {
   switch (type) {
     case 'hour':
       return 1000 * 60 * 60

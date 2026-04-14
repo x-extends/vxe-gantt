@@ -338,186 +338,188 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
   const minScale = $xeGantt.computeMinScale
   const scaleUnit = $xeGantt.computeScaleUnit
   const weekScale = $xeGantt.computeWeekScale
-  switch (scaleUnit) {
-    case 'year': {
-      const indexMaps: Record<string, number> = {}
-      fullCols.forEach(({ dateObj }, i) => {
-        const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy')
-        indexMaps[yyyyMM] = i
-      })
-      return (startValue: any, endValue: any) => {
-        const startDate = parseStringDate($xeGanttView, startValue)
-        const endDate = parseStringDate($xeGanttView, endValue)
-        const startStr = XEUtils.toDateString(startDate, 'yyyy')
-        const startFirstDate = XEUtils.getWhatYear(startDate, 0, 'first')
-        const endStr = XEUtils.toDateString(endDate, 'yyyy')
-        const endFirstDate = XEUtils.getWhatYear(endDate, 0, 'first')
-        const dateSize = Math.floor((XEUtils.getWhatYear(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
-        const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
-        const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
-        const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
-        return {
-          offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+  if (minScale) {
+    switch (scaleUnit) {
+      case 'year': {
+        const indexMaps: Record<string, number> = {}
+        fullCols.forEach(({ dateObj }, i) => {
+          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy')
+          indexMaps[yyyyMM] = i
+        })
+        return (startValue: any, endValue: any) => {
+          const startDate = parseStringDate($xeGanttView, startValue)
+          const endDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startDate, 'yyyy')
+          const startFirstDate = XEUtils.getWhatYear(startDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endDate, 'yyyy')
+          const endFirstDate = XEUtils.getWhatYear(endDate, 0, 'first')
+          const dateSize = Math.floor((XEUtils.getWhatYear(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
+          const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
+          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
+          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          return {
+            offsetLeftSize,
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          }
         }
       }
-    }
-    case 'quarter': {
-      const indexMaps: Record<string, number> = {}
-      fullCols.forEach(({ dateObj }, i) => {
-        const q = XEUtils.toDateString(dateObj.date, 'yyyy-q')
-        indexMaps[q] = i
-      })
-      return (startValue: any, endValue: any) => {
-        const startDate = parseStringDate($xeGanttView, startValue)
-        const endDate = parseStringDate($xeGanttView, endValue)
-        const startStr = XEUtils.toDateString(startDate, 'yyyy-q')
-        const startFirstDate = XEUtils.getWhatQuarter(startDate, 0, 'first')
-        const endStr = XEUtils.toDateString(endDate, 'yyyy-q')
-        const endFirstDate = XEUtils.getWhatQuarter(endDate, 0, 'first')
-        const dateSize = Math.floor((XEUtils.getWhatQuarter(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
-        const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
-        const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
-        const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
-        return {
-          offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+      case 'quarter': {
+        const indexMaps: Record<string, number> = {}
+        fullCols.forEach(({ dateObj }, i) => {
+          const q = XEUtils.toDateString(dateObj.date, 'yyyy-q')
+          indexMaps[q] = i
+        })
+        return (startValue: any, endValue: any) => {
+          const startDate = parseStringDate($xeGanttView, startValue)
+          const endDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startDate, 'yyyy-q')
+          const startFirstDate = XEUtils.getWhatQuarter(startDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endDate, 'yyyy-q')
+          const endFirstDate = XEUtils.getWhatQuarter(endDate, 0, 'first')
+          const dateSize = Math.floor((XEUtils.getWhatQuarter(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
+          const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
+          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
+          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          return {
+            offsetLeftSize,
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          }
         }
       }
-    }
-    case 'month': {
-      const indexMaps: Record<string, number> = {}
-      fullCols.forEach(({ dateObj }, i) => {
-        const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM')
-        indexMaps[yyyyMM] = i
-      })
-      return (startValue: any, endValue: any) => {
-        const startDate = parseStringDate($xeGanttView, startValue)
-        const endDate = parseStringDate($xeGanttView, endValue)
-        const startStr = XEUtils.toDateString(startDate, 'yyyy-MM')
-        const startFirstDate = XEUtils.getWhatMonth(startDate, 0, 'first')
-        const endStr = XEUtils.toDateString(endDate, 'yyyy-MM')
-        const endFirstDate = XEUtils.getWhatMonth(endDate, 0, 'first')
-        const dateSize = Math.floor((XEUtils.getWhatMonth(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
-        const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
-        const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
-        const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
-        return {
-          offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+      case 'month': {
+        const indexMaps: Record<string, number> = {}
+        fullCols.forEach(({ dateObj }, i) => {
+          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM')
+          indexMaps[yyyyMM] = i
+        })
+        return (startValue: any, endValue: any) => {
+          const startDate = parseStringDate($xeGanttView, startValue)
+          const endDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startDate, 'yyyy-MM')
+          const startFirstDate = XEUtils.getWhatMonth(startDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endDate, 'yyyy-MM')
+          const endFirstDate = XEUtils.getWhatMonth(endDate, 0, 'first')
+          const dateSize = Math.floor((XEUtils.getWhatMonth(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
+          const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
+          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
+          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          return {
+            offsetLeftSize,
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          }
         }
       }
-    }
-    case 'week': {
-      const indexMaps: Record<string, number> = {}
-      fullCols.forEach(({ dateObj }, i) => {
-        const yyyyW = `${dateObj.yyyy}-${dateObj.W}`
-        indexMaps[yyyyW] = i
-      })
-      return (startValue: any, endValue: any) => {
-        const startDate = parseStringDate($xeGanttView, startValue)
-        const endDate = parseStringDate($xeGanttView, endValue)
-        const startWeekObj = parseWeekObj(startDate, weekScale ? weekScale.startDay : undefined)
-        const startStr = `${startWeekObj.yyyy}-${startWeekObj.W}`
-        const startFirstDate = XEUtils.getWhatWeek(startDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
-        const endWeekObj = parseWeekObj(endDate, weekScale ? weekScale.startDay : undefined)
-        const endStr = `${endWeekObj.yyyy}-${endWeekObj.W}`
-        const endFirstDate = XEUtils.getWhatWeek(endDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
-        const dateSize = Math.floor((XEUtils.getWhatWeek(endDate, 1, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined).getTime() - endFirstDate.getTime()) / dayMs)
-        const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
-        const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
-        const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
-        return {
-          offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+      case 'week': {
+        const indexMaps: Record<string, number> = {}
+        fullCols.forEach(({ dateObj }, i) => {
+          const yyyyW = `${dateObj.yyyy}-${dateObj.W}`
+          indexMaps[yyyyW] = i
+        })
+        return (startValue: any, endValue: any) => {
+          const startDate = parseStringDate($xeGanttView, startValue)
+          const endDate = parseStringDate($xeGanttView, endValue)
+          const startWeekObj = parseWeekObj(startDate, weekScale ? weekScale.startDay : undefined)
+          const startStr = `${startWeekObj.yyyy}-${startWeekObj.W}`
+          const startFirstDate = XEUtils.getWhatWeek(startDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
+          const endWeekObj = parseWeekObj(endDate, weekScale ? weekScale.startDay : undefined)
+          const endStr = `${endWeekObj.yyyy}-${endWeekObj.W}`
+          const endFirstDate = XEUtils.getWhatWeek(endDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
+          const dateSize = Math.floor((XEUtils.getWhatWeek(endDate, 1, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined).getTime() - endFirstDate.getTime()) / dayMs)
+          const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
+          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
+          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          return {
+            offsetLeftSize,
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          }
         }
       }
-    }
-    case 'day':
-    case 'date': {
-      const indexMaps: Record<string, number> = {}
-      fullCols.forEach(({ dateObj }, i) => {
-        const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd')
-        indexMaps[yyyyMM] = i
-      })
-      return (startValue: any, endValue: any) => {
-        const startDate = parseStringDate($xeGanttView, startValue)
-        const endDate = parseStringDate($xeGanttView, endValue)
-        const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd')
-        const startFirstDate = XEUtils.getWhatDay(startDate, 0, 'first')
-        const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd')
-        const endFirstDate = XEUtils.getWhatDay(endDate, 0, 'first')
-        const minuteSize = Math.floor((XEUtils.getWhatDay(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
-        const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
-        const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
-        const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
-        // 如果最小轴为天，当存在时分秒时，在当前单元格内渲染维度；如果不存在，则填充满单元格
-        return {
-          offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + (subtract ? 0 : 1)
+      case 'day':
+      case 'date': {
+        const indexMaps: Record<string, number> = {}
+        fullCols.forEach(({ dateObj }, i) => {
+          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd')
+          indexMaps[yyyyMM] = i
+        })
+        return (startValue: any, endValue: any) => {
+          const startDate = parseStringDate($xeGanttView, startValue)
+          const endDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd')
+          const startFirstDate = XEUtils.getWhatDay(startDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd')
+          const endFirstDate = XEUtils.getWhatDay(endDate, 0, 'first')
+          const minuteSize = Math.floor((XEUtils.getWhatDay(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
+          const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
+          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          // 如果最小轴为天，当存在时分秒时，在当前单元格内渲染维度；如果不存在，则填充满单元格
+          return {
+            offsetLeftSize,
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + (subtract ? 0 : 1)
+          }
         }
       }
-    }
-    case 'hour': {
-      const indexMaps: Record<string, number> = {}
-      fullCols.forEach(({ dateObj }, i) => {
-        const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd HH')
-        indexMaps[yyyyMM] = i
-      })
-      return (startValue: any, endValue: any) => {
-        const startDate = parseStringDate($xeGanttView, startValue)
-        const endDate = parseStringDate($xeGanttView, endValue)
-        const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd HH')
-        const startFirstDate = XEUtils.getWhatHours(startDate, 0, 'first')
-        const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd HH')
-        const endFirstDate = XEUtils.getWhatHours(endDate, 0, 'first')
-        const minuteSize = Math.floor((XEUtils.getWhatHours(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
-        const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
-        const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
-        const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
-        return {
-          offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+      case 'hour': {
+        const indexMaps: Record<string, number> = {}
+        fullCols.forEach(({ dateObj }, i) => {
+          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd HH')
+          indexMaps[yyyyMM] = i
+        })
+        return (startValue: any, endValue: any) => {
+          const startDate = parseStringDate($xeGanttView, startValue)
+          const endDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd HH')
+          const startFirstDate = XEUtils.getWhatHours(startDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd HH')
+          const endFirstDate = XEUtils.getWhatHours(endDate, 0, 'first')
+          const minuteSize = Math.floor((XEUtils.getWhatHours(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
+          const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
+          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          return {
+            offsetLeftSize,
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          }
         }
       }
-    }
-    case 'minute': {
-      const indexMaps: Record<string, number> = {}
-      fullCols.forEach(({ dateObj }, i) => {
-        const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd HH:mm')
-        indexMaps[yyyyMM] = i
-      })
-      return (startValue: any, endValue: any) => {
-        const startDate = parseStringDate($xeGanttView, startValue)
-        const endDate = parseStringDate($xeGanttView, endValue)
-        const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd HH:mm')
-        const startFirstDate = XEUtils.getWhatMinutes(startDate, 0, 'first')
-        const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd HH:mm')
-        const endFirstDate = XEUtils.getWhatMinutes(endDate, 0, 'first')
-        const minuteSize = Math.floor((XEUtils.getWhatMinutes(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
-        const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
-        const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
-        const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
-        return {
-          offsetLeftSize,
-          offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+      case 'minute': {
+        const indexMaps: Record<string, number> = {}
+        fullCols.forEach(({ dateObj }, i) => {
+          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd HH:mm')
+          indexMaps[yyyyMM] = i
+        })
+        return (startValue: any, endValue: any) => {
+          const startDate = parseStringDate($xeGanttView, startValue)
+          const endDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd HH:mm')
+          const startFirstDate = XEUtils.getWhatMinutes(startDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd HH:mm')
+          const endFirstDate = XEUtils.getWhatMinutes(endDate, 0, 'first')
+          const minuteSize = Math.floor((XEUtils.getWhatMinutes(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
+          const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
+          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          return {
+            offsetLeftSize,
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+          }
         }
       }
-    }
-    case 'second': {
-      const gapTime = getStandardGapTime(minScale ? minScale.type : null)
-      return (startValue: any, endValue: any) => {
-        const startDate = parseStringDate($xeGanttView, startValue)
-        const endDate = parseStringDate($xeGanttView, endValue)
-        let offsetLeftSize = 0
-        let offsetWidthSize = 0
-        if (minViewDate) {
-          offsetLeftSize = (startDate.getTime() - minViewDate.getTime()) / gapTime
-          offsetWidthSize = ((endDate.getTime() - startDate.getTime()) / gapTime)
-        }
-        return {
-          offsetLeftSize,
-          offsetWidthSize
+      case 'second': {
+        const gapTime = getStandardGapTime(minScale.type)
+        return (startValue: any, endValue: any) => {
+          const startDate = parseStringDate($xeGanttView, startValue)
+          const endDate = parseStringDate($xeGanttView, endValue)
+          let offsetLeftSize = 0
+          let offsetWidthSize = 0
+          if (minViewDate) {
+            offsetLeftSize = (startDate.getTime() - minViewDate.getTime()) / gapTime
+            offsetWidthSize = ((endDate.getTime() - startDate.getTime()) / gapTime)
+          }
+          return {
+            offsetLeftSize,
+            offsetWidthSize
+          }
         }
       }
     }
