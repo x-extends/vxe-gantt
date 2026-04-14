@@ -124,11 +124,11 @@ export default defineVxeComponent({
       const taskViewOpts = computeTaskViewOpts.value
       const minScale = computeMinScale.value
       const { gridding } = taskViewOpts
-      const { type, startDay } = minScale
       const dateList: Date[] = []
-      if (!minViewDate || !maxViewDate) {
+      if (!minScale || !minViewDate || !maxViewDate) {
         return dateList
       }
+      const { type, startDay } = minScale
 
       const leftSize = -(ganttReactData.currLeftSpacing + XEUtils.toNumber(gridding ? gridding.leftSpacing || 0 : 0))
       const rightSize = ganttReactData.currRightSpacing + XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
@@ -270,30 +270,32 @@ export default defineVxeComponent({
       const ganttReactData = $xeGantt.reactData
       const { taskScaleList } = ganttReactData
       const minScale = computeMinScale.value
-      const weekScale = taskScaleList.find(item => item.type === 'week')
-      const isMinWeek = minScale.type === 'week'
-      const itemDate = new Date()
-      let [yyyy, M, MM, dd, HH, mm, ss] = XEUtils.toDateString(itemDate, 'yyyy-M-MM-dd-HH-mm-ss').split('-')
-      const e = itemDate.getDay()
-      const E = e + 1
-      const q = Math.ceil((itemDate.getMonth() + 1) / 3)
-      const W = `${XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)}`
-      if (isMinWeek && checkWeekOfsetYear(W, M)) {
-        yyyy = `${Number(yyyy) + 1}`
-        M = '1'
-        MM = '0' + M
-      }
-      ganttReactData.nowTime = itemDate.getTime()
-      internalData.todayDateMaps = {
-        year: yyyy,
-        quarter: `${yyyy}_q${q}`,
-        month: `${yyyy}_${MM}`,
-        week: `${yyyy}_W${W}`,
-        day: `${yyyy}_${MM}_${dd}_E${E}`,
-        date: `${yyyy}_${MM}_${dd}`,
-        hour: `${yyyy}_${MM}_${dd}_${HH}`,
-        minute: `${yyyy}_${MM}_${dd}_${HH}_${mm}`,
-        second: `${yyyy}_${MM}_${dd}_${HH}_${mm}_${ss}`
+      if (minScale) {
+        const weekScale = taskScaleList.find(item => item.type === 'week')
+        const isMinWeek = minScale.type === 'week'
+        const itemDate = new Date()
+        let [yyyy, M, MM, dd, HH, mm, ss] = XEUtils.toDateString(itemDate, 'yyyy-M-MM-dd-HH-mm-ss').split('-')
+        const e = itemDate.getDay()
+        const E = e + 1
+        const q = Math.ceil((itemDate.getMonth() + 1) / 3)
+        const W = `${XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)}`
+        if (isMinWeek && checkWeekOfsetYear(W, M)) {
+          yyyy = `${Number(yyyy) + 1}`
+          M = '1'
+          MM = '0' + M
+        }
+        ganttReactData.nowTime = itemDate.getTime()
+        internalData.todayDateMaps = {
+          year: yyyy,
+          quarter: `${yyyy}_q${q}`,
+          month: `${yyyy}_${MM}`,
+          week: `${yyyy}_W${W}`,
+          day: `${yyyy}_${MM}_${dd}_E${E}`,
+          date: `${yyyy}_${MM}_${dd}`,
+          hour: `${yyyy}_${MM}_${dd}_${HH}`,
+          minute: `${yyyy}_${MM}_${dd}_${HH}_${mm}`,
+          second: `${yyyy}_${MM}_${dd}_${HH}_${mm}_${ss}`
+        }
       }
     }
 
@@ -670,7 +672,7 @@ export default defineVxeComponent({
           }
         }
         case 'second': {
-          const gapTime = getStandardGapTime(minScale.type)
+          const gapTime = getStandardGapTime(minScale ? minScale.type : null)
           return (startValue: any, endValue: any) => {
             const startDate = parseStringDate(startValue)
             const endDate = parseStringDate(endValue)
