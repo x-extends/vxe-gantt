@@ -2117,6 +2117,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         if (isEnableConf(menuConfig)) {
           evnt.stopPropagation()
           $xeTable.handleOpenMenuEvent(evnt, 'header', params)
+          $xeTable.dispatchEvent('header-cell-menu', params, evnt)
         }
       }
     },
@@ -2130,6 +2131,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         if (isEnableConf(menuConfig)) {
           evnt.stopPropagation()
           $xeTable.handleOpenMenuEvent(evnt, 'body', params)
+          $xeTable.dispatchEvent('cell-menu', params, evnt)
         }
       }
     },
@@ -2143,6 +2145,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         if (isEnableConf(menuConfig)) {
           evnt.stopPropagation()
           $xeTable.handleOpenMenuEvent(evnt, 'footer', params)
+          $xeTable.dispatchEvent('footer-cell-menu', params, evnt)
         }
       }
     },
@@ -2156,6 +2159,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         if (isEnableConf(menuConfig)) {
           evnt.stopPropagation()
           $xeTable.handleOpenMenuEvent(evnt, 'body', params)
+          $xeTable.dispatchEvent('cell-menu', params, evnt)
         }
       }
     },
