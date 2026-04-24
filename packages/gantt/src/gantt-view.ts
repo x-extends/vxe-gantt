@@ -1503,8 +1503,8 @@ export default defineVxeComponent({
       const internalData = $xeGanttView.internalData
       const ganttReactData = $xeGantt.reactData
 
-      const { minViewDate, maxViewDate, viewCellWidth, tableColumn } = reactData
-      const { todayDateMaps } = internalData
+      const { minViewDate, maxViewDate, viewCellWidth } = reactData
+      const { visibleColumn, todayDateMaps } = internalData
       const minScale = $xeGantt.computeMinScale
       const taskViewOpts = $xeGantt.computeTaskViewOpts
       const taskNowLineOpts = $xeGantt.computeTaskNowLineOpts
@@ -1518,12 +1518,12 @@ export default defineVxeComponent({
         const todayValue = todayDateMaps[minScale.type]
         let currCol: VxeGanttDefines.ViewColumn | null = null
         let nextCol: VxeGanttDefines.ViewColumn | null = null
-        for (let i = 0; i < tableColumn.length; i++) {
-          const column = tableColumn[i]
+        for (let i = 0; i < visibleColumn.length; i++) {
+          const column = visibleColumn[i]
           if (column.field === todayValue) {
-            currCol = tableColumn[i]
+            currCol = column
             nlLeft = i * viewCellWidth
-            nextCol = tableColumn[i + 1]
+            nextCol = visibleColumn[i + 1]
             break
           }
         }
