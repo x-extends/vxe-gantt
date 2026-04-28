@@ -449,13 +449,15 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
           const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd')
           const endFirstDate = XEUtils.getWhatDay(endDate, 0, 'first')
           const minuteSize = Math.floor((XEUtils.getWhatDay(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
-          const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+          // 开始和结束时间是否存在偏移时
+          const startSubtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+          const endSubtract = (endDate.getTime() - endFirstDate.getTime()) / minuteMs / minuteSize
           const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
-          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtract
           // 如果最小轴为天，当存在时分秒时，在当前单元格内渲染维度；如果不存在，则填充满单元格
           return {
             offsetLeftSize,
-            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + (subtract ? 0 : 1)
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + (startSubtract || endSubtract ? 0 : 1)
           }
         }
       }
@@ -473,12 +475,14 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
           const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd HH')
           const endFirstDate = XEUtils.getWhatHours(endDate, 0, 'first')
           const minuteSize = Math.floor((XEUtils.getWhatHours(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
-          const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+          // 开始和结束时间是否存在偏移时
+          const startSubtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
+          const endSubtract = (endDate.getTime() - endFirstDate.getTime()) / minuteMs / minuteSize
           const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
-          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtract
           return {
             offsetLeftSize,
-            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + (startSubtract || endSubtract ? 0 : 1)
           }
         }
       }
