@@ -1,6 +1,6 @@
 {
   "name": "vxe-gantt",
-  "version": "3.3.21",
+  "version": "3.3.22",
   "description": "A vue based gantt component",
   "scripts": {
     "update": "npm install --legacy-peer-deps",
