@@ -78,7 +78,7 @@ XEUtils.each((VxeTableComponent as any).methods, (fn, name) => {
 function createInternalData (): GanttInternalData {
   return {
     linkFromConfMaps: {},
-    linkFromKeyMaps: {},
+    linkToConfMaps: {},
     linkUniqueMaps: {},
     uFoot: false,
     resizeTableWidth: 0,
