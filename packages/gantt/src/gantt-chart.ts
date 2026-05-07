@@ -29,6 +29,7 @@ export default defineVxeComponent({
     const refTaskWrapperElem = ref() as Ref<HTMLDivElement>
     const refChartBeforeWrapperElem = ref() as Ref<HTMLDivElement>
     const refChartAfterWrapperElem = ref() as Ref<HTMLDivElement>
+    const refNowLineElem = ref() as Ref<HTMLDivElement>
 
     const renderTaskBar = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number, rowChildren: any[], isExpandTree: boolean) => {
       const tableReactData = $xeTable.reactData
@@ -443,6 +444,7 @@ export default defineVxeComponent({
       }, [
         nowLineLeft > 0
           ? h('div', {
+            ref: refNowLineElem,
             class: 'vxe-gantt-view--chart-now-line',
             style: {
               left: nowLineLeft + 'px'
@@ -477,6 +479,7 @@ export default defineVxeComponent({
     onMounted(() => {
       const { elemStore } = ganttViewInternalData
       const prefix = 'main-chart-'
+      elemStore[`${prefix}now-line`] = refNowLineElem
       elemStore[`${prefix}task-wrapper`] = refTaskWrapperElem
       elemStore[`${prefix}before-wrapper`] = refChartBeforeWrapperElem
       elemStore[`${prefix}after-wrapper`] = refChartAfterWrapperElem
@@ -485,6 +488,7 @@ export default defineVxeComponent({
     onUnmounted(() => {
       const { elemStore } = ganttViewInternalData
       const prefix = 'main-chart-'
+      elemStore[`${prefix}now-line`] = null
       elemStore[`${prefix}task-wrapper`] = null
       elemStore[`${prefix}before-wrapper`] = null
       elemStore[`${prefix}after-wrapper`] = null

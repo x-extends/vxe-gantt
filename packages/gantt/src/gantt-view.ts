@@ -1351,6 +1351,11 @@ export default defineVxeComponent({
         afterSvgElem.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
       }
 
+      const nowLineElem = getRefElem(elemStore['main-chart-now-line'])
+      if (nowLineElem) {
+        nowLineElem.style.height = ySpaceHeight ? `${ySpaceHeight}px` : ''
+      }
+
       reactData.scrollYTop = scrollYTop
       reactData.scrollYHeight = scrollYHeight
       reactData.isScrollYBig = isScrollYBig
