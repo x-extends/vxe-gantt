@@ -480,6 +480,7 @@ export default defineVxeComponent({
       }, [
         nowLineLeft > 0
           ? h('div', {
+            ref: 'refNowLineElem',
             class: 'vxe-gantt-view--chart-now-line',
             style: {
               left: nowLineLeft + 'px'
@@ -518,6 +519,7 @@ export default defineVxeComponent({
 
     const { elemStore } = ganttViewInternalData
     const prefix = 'main-chart-'
+    elemStore[`${prefix}now-line`] = _vm.$refs.refNowLineElem as HTMLDivElement
     elemStore[`${prefix}task-wrapper`] = _vm.$refs.refTaskWrapperElem as HTMLDivElement
     elemStore[`${prefix}before-wrapper`] = _vm.$refs.refChartBeforeWrapperElem as HTMLDivElement
     elemStore[`${prefix}after-wrapper`] = _vm.$refs.refChartAfterWrapperElem as HTMLDivElement
@@ -529,6 +531,7 @@ export default defineVxeComponent({
 
     const { elemStore } = ganttViewInternalData
     const prefix = 'main-chart-'
+    elemStore[`${prefix}now-line`] = null
     elemStore[`${prefix}task-wrapper`] = null
     elemStore[`${prefix}before-wrapper`] = null
     elemStore[`${prefix}after-wrapper`] = null
