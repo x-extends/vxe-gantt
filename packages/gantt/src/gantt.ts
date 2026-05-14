@@ -2453,7 +2453,7 @@ export default defineVxeComponent({
             enterable: taskBarTooltipOpts.enterable,
             enterDelay: taskBarTooltipOpts.enterDelay,
             leaveDelay: taskBarTooltipOpts.leaveDelay,
-            useHTML: taskBarTooltipOpts.useHTML,
+            useHtml: XEUtils.isBoolean(taskBarTooltipOpts.useHtml) ? taskBarTooltipOpts.useHtml : taskBarTooltipOpts.useHTML,
             width: taskBarTooltipOpts.width,
             height: taskBarTooltipOpts.height,
             minWidth: taskBarTooltipOpts.minWidth,
