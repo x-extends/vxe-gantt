@@ -69,7 +69,6 @@
   }
   .vxe-gantt--table-wrapper,
   .vxe-gantt--view-wrapper {
-    display: none;
     position: relative;
     flex-grow: 1;
     overflow: hidden;
@@ -88,10 +87,12 @@
       background-color: var(--vxe-ui-gantt-view-split-bar-hover-background-color);
     }
   }
-  &.show--left {
+  &.hide--left {
     .vxe-gantt--table-wrapper {
-      display: block;
+      width: 0px;
     }
+  }
+  &.show--left {
     &.show--right {
       .vxe-gantt--table-wrapper {
         flex-grow: unset;
@@ -100,9 +101,9 @@
       }
     }
   }
-  &.show--right {
+  &.hide--right {
     .vxe-gantt--view-wrapper {
-      display: block;
+      width: 0px;
     }
   }
 }

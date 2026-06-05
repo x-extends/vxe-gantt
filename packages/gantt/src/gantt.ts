@@ -1057,13 +1057,23 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
-      reactData.showLeftView = !reactData.showLeftView
+      const showLeft = !reactData.showLeftView
+      reactData.showLeftView = showLeft
+      // 至少一个显示
+      if (!showLeft && !reactData.showRightView) {
+        reactData.showRightView = true
+      }
     },
     handleSplitRightViewEvent () {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
-      reactData.showRightView = !reactData.showRightView
+      const showRight = !reactData.showRightView
+      reactData.showRightView = showRight
+      // 至少一个显示
+      if (!showRight && !reactData.showLeftView) {
+        reactData.showLeftView = true
+      }
     },
     getDefaultFormData () {
       const $xeGantt = this
@@ -1808,6 +1818,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const reactData = $xeGantt.reactData
 
       reactData.showLeftView = false
+      // 至少显示一个
+      if (!reactData.showRightView) {
+        reactData.showRightView = true
+      }
       return $xeGantt.$nextTick()
     },
     hasTaskViewVisible () {
@@ -1828,6 +1842,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const reactData = $xeGantt.reactData
 
       reactData.showRightView = false
+      // 至少显示一个
+      if (!reactData.showLeftView) {
+        reactData.showLeftView = true
+      }
       return $xeGantt.$nextTick()
     },
     /**
@@ -1865,6 +1883,25 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
       return []
+    },
+    scrollToDateView (colDate: string | number | Date) {
+      const $xeGantt = this
+
+      const $ganttView = $xeGantt.$refs.refGanttView as VxeGanttViewInstance
+      if ($ganttView) {
+        const ganttViewReactData = $ganttView.reactData
+        const ganttViewInternalData = $ganttView.internalData
+        const { viewCellWidth } = ganttViewReactData
+        const { visibleColumn, elemStore } = ganttViewInternalData
+        const currDate = XEUtils.toStringDate(colDate)
+        const currTime = currDate.getTime()
+        const colIndex = XEUtils.findIndexOf(visibleColumn, column => currTime === column.dateObj.date.getTime())
+        const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
+        if (colIndex > -1 && bodyScrollElem) {
+          bodyScrollElem.scrollLeft = XEUtils.floor(colIndex * viewCellWidth)
+        }
+      }
+      return $xeGantt.$nextTick()
     },
     scrollToTaskView (rowOrRowid: any) {
       const $xeGantt = this
@@ -2722,7 +2759,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
           'is--maximize': reactData.isZMax,
           'is--loading': isLoading,
           'show--left': showLeftView,
-          'show--right': showRightView
+          'hide--left': !showLeftView,
+          'show--right': showRightView,
+          'hide--right': !showRightView
         }],
         style: styles
       }, $xeGantt.renderLayout(h))

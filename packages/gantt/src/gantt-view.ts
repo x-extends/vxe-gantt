@@ -1783,7 +1783,6 @@ export default defineVxeComponent({
     handleUpdateSYStatus (sYLoad: boolean) {
       const $xeGanttView = this
       const reactData = $xeGanttView.reactData
-
       reactData.scrollYLoad = sYLoad
     },
     handleGlobalResizeEvent () {
