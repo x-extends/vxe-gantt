@@ -1290,6 +1290,7 @@ export default defineVxeComponent({
     }
 
     const updateScrollYSpace = () => {
+      const { scrollYLoad, overflowY } = reactData
       const { elemStore } = internalData
       const $xeTable = internalData.xeTable
       const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
@@ -1320,6 +1321,9 @@ export default defineVxeComponent({
           scrollYTop = (maxYHeight - clientHeight) * (ySpaceTop / (scrollYHeight - clientHeight))
         }
         ySpaceHeight = maxYHeight
+      }
+      if (!(scrollYLoad && overflowY)) {
+        scrollYTop = 0
       }
 
       const bodyChartWrapperElem = getRefElem(elemStore['main-chart-task-wrapper'])

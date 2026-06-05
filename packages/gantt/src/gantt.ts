@@ -1690,6 +1690,10 @@ export default defineVxeComponent({
       },
       hideTableView () {
         reactData.showLeftView = false
+        // 至少显示一个
+        if (!reactData.showRightView) {
+          reactData.showRightView = true
+        }
         return nextTick()
       },
       hasTaskViewVisible () {
@@ -1701,6 +1705,10 @@ export default defineVxeComponent({
       },
       hideTaskView () {
         reactData.showRightView = false
+        // 至少显示一个
+        if (!reactData.showLeftView) {
+          reactData.showLeftView = true
+        }
         return nextTick()
       },
       /**
@@ -1718,6 +1726,23 @@ export default defineVxeComponent({
           })
           if ($tooltip && $tooltip.close) {
             $tooltip.close()
+          }
+        }
+        return nextTick()
+      },
+      scrollToDateView (colDate) {
+        const $ganttView = refGanttView.value
+        if ($ganttView) {
+          const ganttViewReactData = $ganttView.reactData
+          const ganttViewInternalData = $ganttView.internalData
+          const { viewCellWidth } = ganttViewReactData
+          const { visibleColumn, elemStore } = ganttViewInternalData
+          const currDate = XEUtils.toStringDate(colDate)
+          const currTime = currDate.getTime()
+          const colIndex = XEUtils.findIndexOf(visibleColumn, column => currTime === column.dateObj.date.getTime())
+          const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
+          if (colIndex > -1 && bodyScrollElem) {
+            bodyScrollElem.scrollLeft = XEUtils.floor(colIndex * viewCellWidth)
           }
         }
         return nextTick()
@@ -2493,7 +2518,9 @@ export default defineVxeComponent({
           'is--maximize': reactData.isZMax,
           'is--loading': isLoading,
           'show--left': showLeftView,
-          'show--right': showRightView
+          'hide--left': !showLeftView,
+          'show--right': showRightView,
+          'hide--right': !showRightView
         }],
         style: styles
       }, renderLayout())
