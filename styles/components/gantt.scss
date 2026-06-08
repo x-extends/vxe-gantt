@@ -89,7 +89,7 @@
   }
   &.hide--left {
     .vxe-gantt--table-wrapper {
-      width: 0px;
+      width: 0px !important;
     }
   }
   &.show--left {
@@ -103,7 +103,7 @@
   }
   &.hide--right {
     .vxe-gantt--view-wrapper {
-      width: 0px;
+      width: 0px !important;
     }
   }
 }
