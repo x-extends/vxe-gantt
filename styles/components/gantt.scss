@@ -90,6 +90,8 @@
   &.hide--left {
     .vxe-gantt--table-wrapper {
       width: 0px !important;
+      flex-shrink: 0;
+      flex-grow: unset;
     }
   }
   &.show--left {
@@ -104,6 +106,8 @@
   &.hide--right {
     .vxe-gantt--view-wrapper {
       width: 0px !important;
+      flex-shrink: 0;
+      flex-grow: unset;
     }
   }
 }
