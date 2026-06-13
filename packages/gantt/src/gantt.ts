@@ -80,6 +80,8 @@ function createReactData (): GanttReactData {
     linkList: [],
     upLinkFlag: 0,
 
+    showSplitAnimat: false,
+
     nowTime: 0,
     currLeftSpacing: 0,
     currRightSpacing: 0
@@ -1000,11 +1002,29 @@ export default defineVxeComponent({
       handleReStyle(evnt)
     }
 
+    const handleSplitAnimat = () => {
+      const taskSplitOpts = computeTaskSplitOpts.value
+      const { animation } = taskSplitOpts
+      if (animation) {
+        const { _taTime } = internalData
+        if (_taTime) {
+          clearTimeout(_taTime)
+        }
+        reactData.showSplitAnimat = true
+        internalData._taTime = setTimeout(() => {
+          reactData.showSplitAnimat = false
+          internalData._taTime = null
+        }, 350)
+      }
+    }
+
     const handleSplitLeftViewEvent = () => {
+      handleSplitAnimat()
       reactData.showLeftView = !reactData.showLeftView
     }
 
     const handleSplitRightViewEvent = () => {
+      handleSplitAnimat()
       reactData.showRightView = !reactData.showRightView
     }
 
@@ -2503,10 +2523,11 @@ export default defineVxeComponent({
     }
 
     const renderVN = () => {
-      const { showLeftView, showRightView } = reactData
+      const { showLeftView, showRightView, showSplitAnimat } = reactData
       const vSize = computeSize.value
       const styles = computeStyles.value
       const isLoading = computeIsLoading.value
+      const taskSplitOpts = computeTaskSplitOpts.value
       const tableBorder = computeTableBorder.value
       const scrollbarXToTop = computeScrollbarXToTop.value
       const scrollbarYToLeft = computeScrollbarYToLeft.value
@@ -2515,8 +2536,10 @@ export default defineVxeComponent({
         class: ['vxe-gantt', `border--${tableBorder}`, `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
           [`size--${vSize}`]: vSize,
           'is--round': props.round,
+          'show--animat': taskSplitOpts.animation,
           'is--maximize': reactData.isZMax,
           'is--loading': isLoading,
+          'is--animat': showSplitAnimat,
           'show--left': showLeftView,
           'hide--left': !showLeftView,
           'show--right': showRightView,

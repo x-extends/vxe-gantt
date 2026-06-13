@@ -40,6 +40,9 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
       width: 320
     }
   },
+  taskSplitConfig: {
+    animation: true
+  },
   columns: [
     { field: 'title', title: '任务名称', width: 120 },
     { field: 'owner', title: '负责人', width: 100 },
