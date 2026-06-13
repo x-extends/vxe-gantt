@@ -130,6 +130,8 @@ function createReactData (): GanttReactData {
     linkList: [],
     upLinkFlag: 0,
 
+    showSplitAnimat: false,
+
     nowTime: 0,
     currLeftSpacing: 0,
     currRightSpacing: 0
@@ -1053,16 +1055,33 @@ export default /* define-vxe-component start */ defineVxeComponent({
       rsSplitLineEl.style.display = 'block'
       handleReStyle(evnt)
     },
+    handleSplitAnimat () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+      const internalData = $xeGantt.internalData
+
+      const taskSplitOpts = $xeGantt.computeTaskSplitOpts
+      const { animation } = taskSplitOpts
+      if (animation) {
+        const { _taTime } = internalData
+        if (_taTime) {
+          clearTimeout(_taTime)
+        }
+        reactData.showSplitAnimat = true
+        internalData._taTime = setTimeout(() => {
+          reactData.showSplitAnimat = false
+          internalData._taTime = null
+        }, 350)
+      }
+    },
     handleSplitLeftViewEvent () {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       const showLeft = !reactData.showLeftView
       reactData.showLeftView = showLeft
-      // 至少一个显示
-      if (!showLeft && !reactData.showRightView) {
-        reactData.showRightView = true
-      }
+      $xeGantt.handleSplitAnimat()
+      reactData.showRightView = true
     },
     handleSplitRightViewEvent () {
       const $xeGantt = this
@@ -1070,10 +1089,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       const showRight = !reactData.showRightView
       reactData.showRightView = showRight
-      // 至少一个显示
-      if (!showRight && !reactData.showLeftView) {
-        reactData.showLeftView = true
-      }
+      $xeGantt.handleSplitAnimat()
+      reactData.showLeftView = true
     },
     getDefaultFormData () {
       const $xeGantt = this
@@ -2744,10 +2761,11 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const props = $xeGantt
       const reactData = $xeGantt.reactData
 
-      const { showLeftView, showRightView } = reactData
+      const { showLeftView, showRightView, showSplitAnimat } = reactData
       const vSize = $xeGantt.computeSize
       const styles = $xeGantt.computeStyles
       const isLoading = $xeGantt.computeIsLoading
+      const taskSplitOpts = $xeGantt.computeTaskSplitOpts
       const tableBorder = $xeGantt.computeTableBorder
       const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
       const scrollbarYToLeft = $xeGantt.computeScrollbarYToLeft
@@ -2756,8 +2774,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
         class: ['vxe-gantt', `border--${tableBorder}`, `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
           [`size--${vSize}`]: vSize,
           'is--round': props.round,
+          'show--animat': taskSplitOpts.animation,
           'is--maximize': reactData.isZMax,
           'is--loading': isLoading,
+          'is--animat': showSplitAnimat,
           'show--left': showLeftView,
           'hide--left': !showLeftView,
           'show--right': showRightView,

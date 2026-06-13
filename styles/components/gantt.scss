@@ -110,6 +110,20 @@
       flex-grow: unset;
     }
   }
+  &.is--animat {
+    & .vxe-gantt--table-wrapper {
+      @include baseMixin.createAnimationTransition(width, .3s);
+    }
+  }
+  &.show--animat {
+    &.hide--right {
+      .vxe-gantt--table-wrapper {
+        width: calc(100% - var(--vxe-ui-gantt-view-split-bar-width)) !important;
+        flex-shrink: 0;
+        flex-grow: unset;
+      }
+    }
+  }
 }
 
 .vxe-gantt--layout-body-wrapper {
