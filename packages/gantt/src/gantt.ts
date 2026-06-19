@@ -6,13 +6,15 @@ import { getLastZIndex, nextZIndex, isEnableConf, hasEnableConf, formatText } fr
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
 import { getRefElem } from './util'
-import { warnLog, errLog } from '../../ui/src/log'
+import { createComponentLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
 
 import type { ValueOf, VxeFormInstance, VxeFormItemProps, VxePagerInstance, VxePagerDefines, VxeComponentStyleType, VxeComponentSizeType, VxeFormDefines, VxeFormItemPropTypes } from 'vxe-pc-ui'
 import type { VxeTableMethods, VxeToolbarPropTypes, VxeTooltipInstance, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableDefines, TableReactData, VxeToolbarInstance, TableInternalData, VxeTablePropTypes, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
 import type { VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, VxeGanttViewInstance, VxeGanttDefines, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
+
+const { warnLog, errLog } = createComponentLog('gantt')
 
 const { getConfig, getIcon, getI18n, commands, globalMixins, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement } = VxeUI
 
@@ -1391,7 +1393,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
               return { status: false }
             })
           } else {
-            errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.query'])
+            errLog('vxe.error.notFunc', ['proxy-config.ajax.query'])
           }
           break
         }
@@ -1430,7 +1432,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
               return { status: false }
             })
           } else {
-            errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.queryFooter'])
+            errLog('vxe.error.notFunc', ['proxy-config.ajax.queryFooter'])
           }
           break
         }
