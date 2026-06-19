@@ -8,13 +8,15 @@ import { VxeUI } from '@vxe-ui/core'
 import { ganttEmits } from './emits'
 import { getRefElem } from './util'
 import { tableEmits } from './table-emits'
-import { warnLog, errLog } from '../../ui/src/log'
+import { createComponentLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
 
 import type { VxeGanttConstructor, VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, GanttMethods, GanttPrivateMethods, VxeGanttPrivateMethods, GanttPrivateRef, VxeGanttProps, VxeGanttPrivateComputed, VxeGanttViewInstance, VxeGanttDefines, VxeGanttViewPrivateMethods } from '../../../types'
 import type { ValueOf, VxeFormEvents, VxeFormInstance, VxeTooltipInstance, VxePagerEvents, VxeFormItemProps, VxePagerInstance, VxeComponentStyleType } from 'vxe-pc-ui'
 import type { VxeTableMethods, VxeToolbarPropTypes, VxeTableProps, VxeTablePropTypes, VxeTableConstructor, VxeTablePrivateMethods, VxeTableEvents, VxeTableDefines, VxeTableEventProps, VxeToolbarInstance, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
+
+const { warnLog, errLog } = createComponentLog('gantt')
 
 const { getConfig, getIcon, getI18n, commands, hooks, useFns, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement } = VxeUI
 
@@ -1337,7 +1339,7 @@ export default defineVxeComponent({
                 return { status: false }
               })
             } else {
-              errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.query'])
+              errLog('vxe.error.notFunc', ['proxy-config.ajax.query'])
             }
             break
           }
@@ -1376,7 +1378,7 @@ export default defineVxeComponent({
                 return { status: false }
               })
             } else {
-              errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.queryFooter'])
+              errLog('vxe.error.notFunc', ['proxy-config.ajax.queryFooter'])
             }
             break
           }
@@ -1447,7 +1449,7 @@ export default defineVxeComponent({
                 }
               }
             } else {
-              errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.delete'])
+              errLog('vxe.error.notFunc', ['proxy-config.ajax.delete'])
             }
             break
           }
@@ -1531,7 +1533,7 @@ export default defineVxeComponent({
                 }
               })
             } else {
-              errLog('vxe.error.notFunc', ['[gantt] proxy-config.ajax.save'])
+              errLog('vxe.error.notFunc', ['proxy-config.ajax.save'])
             }
             break
           }
@@ -1542,7 +1544,7 @@ export default defineVxeComponent({
               if (tCommandMethod) {
                 tCommandMethod({ code, button, $table: $xeTable, $grid: null, $gantt: $xeGantt }, ...args)
               } else {
-                errLog('vxe.error.notCommands', [`[grid] ${code}`])
+                errLog('vxe.error.notCommands', [code])
               }
             }
           }
