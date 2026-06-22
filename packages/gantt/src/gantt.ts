@@ -302,6 +302,12 @@ export default defineVxeComponent({
       return Object.assign({}, getConfig().gantt.taskLinkConfig, props.taskLinkConfig)
     })
 
+    const computeDateFormat = computed(() => {
+      const taskOpts = computeTaskOpts.value
+      const { dateFormat } = taskOpts
+      return dateFormat || ''
+    })
+
     const computeScaleUnit = computed(() => {
       const minScale = computeMinScale.value
       return minScale ? minScale.type : 'date'
@@ -587,6 +593,7 @@ export default defineVxeComponent({
       computeTaskLinkOpts,
       computeTaskViewScales,
       computeScaleUnit,
+      computeDateFormat,
       computeMinScale,
       computeWeekScale,
       computeTitleField,

@@ -19,45 +19,41 @@ interface RowVO {
 const ganttOptions = reactive<VxeGanttProps<RowVO>>({
   border: true,
   showOverflow: true,
-  showHeaderOverflow: true,
-  showFooterOverflow: true,
-  height: 600,
-  virtualYConfig: {
-    enabled: true,
-    gt: 0
+  cellConfig: {
+    height: 80
+  },
+  taskConfig: {
+    dateFormat: 'yyyy-MM-dd'
   },
   taskBarConfig: {
     showProgress: true,
-    showContent: true
+    showContent: true,
+    barStyle: {
+      round: true,
+      bgColor: '#f56565',
+      completedBgColor: '#65c16f'
+    }
   },
   taskViewConfig: {
+    scales: ['month', 'week'],
     tableStyle: {
-      width: 480
+      width: 320
+    },
+    viewStyle: {
+      cellWidth: 120
     }
   },
   columns: [
-    { type: 'seq', width: 70 },
+    { type: 'seq', field: 'seq', width: 70 },
     { field: 'title', title: '任务名称' },
-    { field: 'start', title: '开始时间', width: 100 },
-    { field: 'end', title: '结束时间', width: 100 }
+    { field: 'start', title: '开始时间', width: 160 },
+    { field: 'end', title: '结束时间', width: 160 }
   ],
-  data: []
+  data: [
+    { id: 10001, title: 'A项目', start: '2024-02-26', end: '2024-03-03', progress: 80 },
+    { id: 10002, title: '城市道路修理进度', start: '2024-03-03', end: '2024-03-08', progress: 90 },
+    { id: 10003, title: 'B大工程', start: '2024-03-06', end: '2024-03-11', progress: 90 },
+    { id: 10004, title: '超级大工程', start: '2024-03-11', end: '2024-03-18', progress: 100 }
+  ]
 })
-
-// 模拟行数据
-const loadList = (size = 200) => {
-  const dataList: RowVO[] = []
-  for (let i = 0; i < size; i++) {
-    dataList.push({
-      id: 10000 + i,
-      title: `任务计划${i + 1}`,
-      start: i % 3 ? '2024-03-03' : i % 2 ? '2024-03-05' : '2024-03-09',
-      end: i % 3 ? '2024-03-11' : i % 2 ? '2024-03-19' : '2024-03-14',
-      progress: i % 2 ? 50 : 30
-    })
-  }
-  ganttOptions.data = dataList
-}
-
-loadList(500)
 </script>
