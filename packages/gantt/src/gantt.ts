@@ -340,6 +340,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const minScale = $xeGantt.computeMinScale as VxeGanttDefines.ColumnScaleObj
       return minScale ? minScale.type : 'date'
     },
+    computeDateFormat () {
+      const $xeGantt = this
+
+      const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
+      const { dateFormat } = taskOpts
+      return dateFormat || 'yyyy-MM-dd HH:m:ss'
+    },
     computeMinScale () {
       const $xeGantt = this
       const reactData = ($xeGantt as any).reactData as GanttReactData

@@ -14,8 +14,10 @@ import type { VxeGanttViewConstructor, GanttViewReactData, VxeGanttDefines, VxeG
 const { globalEvents } = VxeUI
 
 const sourceType = 'gantt'
+const secondMs = 1000
 const minuteMs = 1000 * 60
-const dayMs = minuteMs * 60 * 24
+const hourMs = 1000 * 60 * 60
+const dayMs = hourMs * 24
 
 function createInternalData (): GanttViewInternalData {
   return {
@@ -85,8 +87,7 @@ const maxYHeight = 5e6
 function parseStringDate ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods, dateValue: any) {
   const $xeGantt = $xeGanttView.$xeGantt
 
-  const taskOpts = $xeGantt.computeTaskOpts
-  const { dateFormat } = taskOpts
+  const dateFormat = $xeGantt.computeDateFormat
   return XEUtils.toStringDate(dateValue, dateFormat || null)
 }
 
@@ -332,197 +333,271 @@ function parseWeekObj (date: any, firstDay?: 0 | 5 | 1 | 2 | 3 | 4 | 6) {
 
 function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods, fullCols: VxeGanttDefines.ViewColumn[]) {
   const $xeGantt = $xeGanttView.$xeGantt
-  const reactData = $xeGanttView.reactData
 
-  const { minViewDate } = reactData
   const minScale = $xeGantt.computeMinScale
   const scaleUnit = $xeGantt.computeScaleUnit
   const weekScale = $xeGantt.computeWeekScale
+  const dateFormat = $xeGantt.computeDateFormat
   if (minScale) {
     switch (scaleUnit) {
       case 'year': {
+        const showActualProgress = /M|d|H|mm|ss|S/.test(dateFormat)
+        const renderFormat = 'yyyy'
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
           const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy')
           indexMaps[yyyyMM] = i
         })
         return (startValue: any, endValue: any) => {
-          const startDate = parseStringDate($xeGanttView, startValue)
-          const endDate = parseStringDate($xeGanttView, endValue)
-          const startStr = XEUtils.toDateString(startDate, 'yyyy')
-          const startFirstDate = XEUtils.getWhatYear(startDate, 0, 'first')
-          const endStr = XEUtils.toDateString(endDate, 'yyyy')
+          const startValDate = parseStringDate($xeGanttView, startValue)
+          const endValDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startValDate, renderFormat)
+          const startDate = showActualProgress ? startValDate : XEUtils.getWhatYear(startValDate, 0, 'first')
+          const startFirstDate = XEUtils.getWhatYear(startValDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endValDate, renderFormat)
+          const endDate = showActualProgress ? endValDate : XEUtils.getWhatYear(endValDate, 0, 'last')
           const endFirstDate = XEUtils.getWhatYear(endDate, 0, 'first')
-          const dateSize = Math.floor((XEUtils.getWhatYear(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
-          const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
-          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
-          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          // 当前是年维度，当指定解析格式精确到天时，显示实际进度
+          let startSubtractSize = 0
+          let endSubtractSize = 1
+          if (showActualProgress) {
+            // 按年的天数比计算
+            const syDaySize = XEUtils.getDayOfYear(startDate, 0)
+            startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs / syDaySize
+            const eyDaySize = XEUtils.getDayOfYear(endDate, 0)
+            endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs / eyDaySize
+          }
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
             offsetLeftSize,
-            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + endSubtractSize
           }
         }
       }
       case 'quarter': {
+        const showActualProgress = /M|d|H|mm|ss|S/.test(dateFormat)
+        const renderFormat = 'yyyy-q'
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const q = XEUtils.toDateString(dateObj.date, 'yyyy-q')
+          const q = XEUtils.toDateString(dateObj.date, renderFormat)
           indexMaps[q] = i
         })
         return (startValue: any, endValue: any) => {
-          const startDate = parseStringDate($xeGanttView, startValue)
-          const endDate = parseStringDate($xeGanttView, endValue)
-          const startStr = XEUtils.toDateString(startDate, 'yyyy-q')
-          const startFirstDate = XEUtils.getWhatQuarter(startDate, 0, 'first')
-          const endStr = XEUtils.toDateString(endDate, 'yyyy-q')
+          const startValDate = parseStringDate($xeGanttView, startValue)
+          const endValDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startValDate, renderFormat)
+          const startDate = showActualProgress ? startValDate : XEUtils.getWhatQuarter(startValDate, 0, 'first')
+          const startFirstDate = XEUtils.getWhatQuarter(startValDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endValDate, renderFormat)
+          const endDate = showActualProgress ? endValDate : XEUtils.getWhatQuarter(endValDate, 0, 'last')
           const endFirstDate = XEUtils.getWhatQuarter(endDate, 0, 'first')
-          const dateSize = Math.floor((XEUtils.getWhatQuarter(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
-          const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
-          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
-          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          // 当前是季度维度，当指定解析格式精确到天时，显示实际进度
+          let startSubtractSize = 0
+          let endSubtractSize = 1
+          if (showActualProgress) {
+            // 按季度天数比计算
+            const sqDaySize = XEUtils.getDayOfQuarter(startDate, 0)
+            startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs / sqDaySize
+            const eqDaySize = XEUtils.getDayOfQuarter(endDate, 0)
+            endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs / eqDaySize
+          }
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
             offsetLeftSize,
-            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + endSubtractSize
           }
         }
       }
       case 'month': {
+        const renderFormat = 'yyyy-MM'
+        const showActualProgress = /d|H|mm|ss|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM')
+          const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
           indexMaps[yyyyMM] = i
         })
         return (startValue: any, endValue: any) => {
-          const startDate = parseStringDate($xeGanttView, startValue)
-          const endDate = parseStringDate($xeGanttView, endValue)
-          const startStr = XEUtils.toDateString(startDate, 'yyyy-MM')
-          const startFirstDate = XEUtils.getWhatMonth(startDate, 0, 'first')
-          const endStr = XEUtils.toDateString(endDate, 'yyyy-MM')
+          const startValDate = parseStringDate($xeGanttView, startValue)
+          const endValDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startValDate, renderFormat)
+          const startDate = showActualProgress ? startValDate : XEUtils.getWhatMonth(startValDate, 0, 'first')
+          const startFirstDate = XEUtils.getWhatMonth(startValDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endValDate, renderFormat)
+          const endDate = showActualProgress ? endValDate : XEUtils.getWhatMonth(endValDate, 0, 'last')
           const endFirstDate = XEUtils.getWhatMonth(endDate, 0, 'first')
-          const dateSize = Math.floor((XEUtils.getWhatMonth(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / dayMs)
-          const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
-          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
-          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          // 当前是月维度，当指定解析格式精确到天时，显示实际进度
+          let startSubtractSize = 0
+          let endSubtractSize = 1
+          if (showActualProgress) {
+            // 按月天数比计算
+            const smDaySize = XEUtils.getDayOfMonth(startDate, 0)
+            startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs / smDaySize
+            const emDaySize = XEUtils.getDayOfMonth(endDate, 0)
+            endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs / emDaySize
+          }
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
             offsetLeftSize,
-            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + endSubtractSize
           }
         }
       }
       case 'week': {
+        const showActualProgress = /d|mm|ss|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
           const yyyyW = `${dateObj.yyyy}-${dateObj.W}`
           indexMaps[yyyyW] = i
         })
         return (startValue: any, endValue: any) => {
-          const startDate = parseStringDate($xeGanttView, startValue)
-          const endDate = parseStringDate($xeGanttView, endValue)
-          const startWeekObj = parseWeekObj(startDate, weekScale ? weekScale.startDay : undefined)
+          const weekStartDay = weekScale ? weekScale.startDay : undefined
+          const startValDate = parseStringDate($xeGanttView, startValue)
+          const endValDate = parseStringDate($xeGanttView, endValue)
+          const startDate = showActualProgress ? startValDate : XEUtils.getWhatWeek(startValDate, 0, 'first', weekStartDay)
+          const startWeekObj = parseWeekObj(startDate, weekStartDay)
           const startStr = `${startWeekObj.yyyy}-${startWeekObj.W}`
-          const startFirstDate = XEUtils.getWhatWeek(startDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
-          const endWeekObj = parseWeekObj(endDate, weekScale ? weekScale.startDay : undefined)
+          const startFirstDate = XEUtils.getWhatWeek(startDate, 0, 'first', weekStartDay)
+          const endDate = showActualProgress ? endValDate : XEUtils.getWhatWeek(endValDate, 0, 'first', weekStartDay)
+          const endWeekObj = parseWeekObj(endDate, weekStartDay)
           const endStr = `${endWeekObj.yyyy}-${endWeekObj.W}`
-          const endFirstDate = XEUtils.getWhatWeek(endDate, 0, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined)
-          const dateSize = Math.floor((XEUtils.getWhatWeek(endDate, 1, weekScale ? weekScale.startDay : undefined, weekScale ? weekScale.startDay : undefined).getTime() - endFirstDate.getTime()) / dayMs)
-          const subtract = (startDate.getTime() - startFirstDate.getTime()) / dayMs / dateSize
-          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / dayMs + 1) / dateSize
-          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          const endFirstDate = XEUtils.getWhatWeek(endDate, 0, 'first', weekStartDay)
+          // 当前是周维度，当指定解析格式精确到天时，显示实际进度
+          let startSubtractSize = 0
+          let endSubtractSize = 1
+          if (showActualProgress) {
+            // 按周天数比计算
+            startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs / 7
+            endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs / 7
+          }
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
             offsetLeftSize,
-            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + endSubtractSize
           }
         }
       }
       case 'day':
       case 'date': {
+        const renderFormat = 'yyyy-MM-dd'
+        const showActualProgress = /mm|ss|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd')
+          const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
           indexMaps[yyyyMM] = i
         })
         return (startValue: any, endValue: any) => {
-          const startDate = parseStringDate($xeGanttView, startValue)
-          const endDate = parseStringDate($xeGanttView, endValue)
-          const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd')
+          const startValDate = parseStringDate($xeGanttView, startValue)
+          const endValDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startValDate, renderFormat)
+          const startDate = showActualProgress ? startValDate : XEUtils.getWhatDay(startValDate, 0, 'first')
           const startFirstDate = XEUtils.getWhatDay(startDate, 0, 'first')
-          const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd')
+          const endStr = XEUtils.toDateString(endValDate, renderFormat)
+          const endDate = showActualProgress ? endValDate : XEUtils.getWhatDay(endValDate, 0, 'last')
           const endFirstDate = XEUtils.getWhatDay(endDate, 0, 'first')
-          const minuteSize = Math.floor((XEUtils.getWhatDay(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
-          // 开始和结束时间是否存在偏移时
-          const startSubtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
-          const endSubtract = (endDate.getTime() - endFirstDate.getTime()) / minuteMs / minuteSize
-          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
-          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtract
-          // 如果最小轴为天，当存在时分秒时，在当前单元格内渲染维度；如果不存在，则填充满单元格
+          // 当前是天维度，当指定解析格式精确到时分秒豪秒时，显示实际进度
+          let startSubtractSize = 0
+          let endSubtractSize = 1
+          if (showActualProgress) {
+            startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs
+            endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs
+          }
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
             offsetLeftSize,
-            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + (startSubtract || endSubtract ? 0 : 1)
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + endSubtractSize
           }
         }
       }
       case 'hour': {
+        const renderFormat = 'yyyy-MM-dd HH'
+        const showActualProgress = /mm|ss|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd HH')
+          const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
           indexMaps[yyyyMM] = i
         })
         return (startValue: any, endValue: any) => {
-          const startDate = parseStringDate($xeGanttView, startValue)
-          const endDate = parseStringDate($xeGanttView, endValue)
-          const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd HH')
+          const startValDate = parseStringDate($xeGanttView, startValue)
+          const endValDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startValDate, renderFormat)
+          const startDate = showActualProgress ? startValDate : XEUtils.getWhatHours(startValDate, 0, 'first')
           const startFirstDate = XEUtils.getWhatHours(startDate, 0, 'first')
-          const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd HH')
+          const endStr = XEUtils.toDateString(endValDate, renderFormat)
+          const endDate = showActualProgress ? endValDate : XEUtils.getWhatHours(endValDate, 0, 'last')
           const endFirstDate = XEUtils.getWhatHours(endDate, 0, 'first')
-          const minuteSize = Math.floor((XEUtils.getWhatHours(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
-          // 开始和结束时间是否存在偏移时
-          const startSubtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
-          const endSubtract = (endDate.getTime() - endFirstDate.getTime()) / minuteMs / minuteSize
-          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
-          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtract
+          // 当前是小时维度，当指定解析格式精确到分秒豪秒时，显示实际进度
+          let startSubtractSize = 0
+          let endSubtractSize = 1
+          if (showActualProgress) {
+            startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / hourMs
+            endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / hourMs
+          }
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
             offsetLeftSize,
-            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize + (startSubtract || endSubtract ? 0 : 1)
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + endSubtractSize
           }
         }
       }
       case 'minute': {
+        const renderFormat = 'yyyy-MM-dd HH:mm'
+        const showActualProgress = /ss|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy-MM-dd HH:mm')
+          const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
           indexMaps[yyyyMM] = i
         })
         return (startValue: any, endValue: any) => {
-          const startDate = parseStringDate($xeGanttView, startValue)
-          const endDate = parseStringDate($xeGanttView, endValue)
-          const startStr = XEUtils.toDateString(startDate, 'yyyy-MM-dd HH:mm')
+          const startValDate = parseStringDate($xeGanttView, startValue)
+          const endValDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startValDate, renderFormat)
+          const startDate = showActualProgress ? startValDate : XEUtils.getWhatMinutes(startValDate, 0, 'first')
           const startFirstDate = XEUtils.getWhatMinutes(startDate, 0, 'first')
-          const endStr = XEUtils.toDateString(endDate, 'yyyy-MM-dd HH:mm')
+          const endStr = XEUtils.toDateString(endValDate, renderFormat)
+          const endDate = showActualProgress ? endValDate : XEUtils.getWhatMinutes(endValDate, 0, 'last')
           const endFirstDate = XEUtils.getWhatMinutes(endDate, 0, 'first')
-          const minuteSize = Math.floor((XEUtils.getWhatMinutes(endDate, 1, 'first').getTime() - endFirstDate.getTime()) / minuteMs)
-          const subtract = (startDate.getTime() - startFirstDate.getTime()) / minuteMs / minuteSize
-          const addSize = Math.max(0, (endDate.getTime() - endFirstDate.getTime()) / minuteMs + 1) / minuteSize
-          const offsetLeftSize = (indexMaps[startStr] || 0) + subtract
+          // 当前是分钟维度，当指定解析格式精确到秒豪秒时，显示实际进度
+          let startSubtractSize = 0
+          let endSubtractSize = 1
+          if (showActualProgress) {
+            startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / minuteMs
+            endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / minuteMs
+          }
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
             offsetLeftSize,
-            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + addSize
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + endSubtractSize
           }
         }
       }
       case 'second': {
-        const gapTime = getStandardGapTime(minScale.type)
+        const renderFormat = 'yyyy-MM-dd HH:mm:ss'
+        const showActualProgress = /S/.test(dateFormat)
+        const indexMaps: Record<string, number> = {}
+        fullCols.forEach(({ dateObj }, i) => {
+          const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
+          indexMaps[yyyyMM] = i
+        })
         return (startValue: any, endValue: any) => {
-          const startDate = parseStringDate($xeGanttView, startValue)
-          const endDate = parseStringDate($xeGanttView, endValue)
-          let offsetLeftSize = 0
-          let offsetWidthSize = 0
-          if (minViewDate) {
-            offsetLeftSize = (startDate.getTime() - minViewDate.getTime()) / gapTime
-            offsetWidthSize = ((endDate.getTime() - startDate.getTime()) / gapTime)
+          const startValDate = parseStringDate($xeGanttView, startValue)
+          const endValDate = parseStringDate($xeGanttView, endValue)
+          const startStr = XEUtils.toDateString(startValDate, renderFormat)
+          const startDate = showActualProgress ? startValDate : XEUtils.getWhatSeconds(startValDate, 0, 'first')
+          const startFirstDate = XEUtils.getWhatSeconds(startDate, 0, 'first')
+          const endStr = XEUtils.toDateString(endValDate, renderFormat)
+          const endDate = showActualProgress ? endValDate : XEUtils.getWhatSeconds(endValDate, 0, 'last')
+          const endFirstDate = XEUtils.getWhatSeconds(endDate, 0, 'first')
+          // 当前是秒维度，当指定解析格式精确到豪秒时，显示实际进度
+          let startSubtractSize = 0
+          let endSubtractSize = 1
+          if (showActualProgress) {
+            startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / secondMs
+            endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / secondMs
           }
+          const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
             offsetLeftSize,
-            offsetWidthSize
+            offsetWidthSize: (indexMaps[endStr] || 0) - offsetLeftSize + endSubtractSize
           }
         }
       }
