@@ -345,7 +345,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
       const { dateFormat } = taskOpts
-      return dateFormat || 'yyyy-MM-dd HH:m:ss'
+      return dateFormat || ''
     },
     computeMinScale () {
       const $xeGantt = this
