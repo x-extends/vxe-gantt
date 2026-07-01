@@ -8,9 +8,10 @@ export function createComponentLog (name: string) {
   const uiVersion = VxeUI.uiVersion ? `ui v${VxeUI.uiVersion}` : ''
   const tableVersion = VxeUI.tableVersion ? `table v${VxeUI.tableVersion}` : ''
   const designVersion = VxeUI.designVersion ? `design v${VxeUI.designVersion}` : ''
+  const versionInfo = [uiVersion, tableVersion, ganttVersion, designVersion].join(' ')
   return {
-    warnLog: log.create('warn', uiVersion + tableVersion + ganttVersion + designVersion + '] [' + name),
-    errLog: log.create('error', uiVersion + tableVersion + ganttVersion + designVersion + '] [' + name)
+    warnLog: log.create('warn', versionInfo + '] [' + name),
+    errLog: log.create('error', versionInfo + '] [' + name)
   }
 }
 
