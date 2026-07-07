@@ -71,20 +71,6 @@ export default defineVxeComponent({
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
       const renderTaskType = getTaskType(XEUtils.get(row, typeField))
 
-      const vbStyle: VxeComponentStyleType = {}
-      const vpStyle: VxeComponentStyleType = {
-        width: `${progressValue || 0}%`
-      }
-      if (isBarRowStyle) {
-        const { bgColor, completedBgColor } = barStyObj
-        if (bgColor) {
-          vbStyle.backgroundColor = bgColor
-        }
-        if (completedBgColor) {
-          vpStyle.backgroundColor = completedBgColor
-        }
-      }
-
       const ctParams = {
         $gantt: $xeGantt,
         source: sourceType,
@@ -94,6 +80,20 @@ export default defineVxeComponent({
         $rowIndex,
         rowIndex,
         _rowIndex
+      }
+
+      const vbStyle: VxeComponentStyleType = {}
+      const vpStyle: VxeComponentStyleType = {
+        width: `${progressValue || 0}%`
+      }
+      if (isBarRowStyle) {
+        const { bgColor, completedBgColor } = barStyObj
+        if (bgColor) {
+          vbStyle.backgroundColor = XEUtils.isFunction(bgColor) ? bgColor(ctParams) : bgColor
+        }
+        if (completedBgColor) {
+          vpStyle.backgroundColor = completedBgColor
+        }
       }
 
       let cbVNs: VNode[] = []
