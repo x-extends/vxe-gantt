@@ -28,10 +28,10 @@ npm install vxe-pc-ui@3 vxe-table@3 vxe-gantt@3
 import Vue from 'vue'
 // ...
 import VxeUIBase from 'vxe-pc-ui'
-import 'vxe-pc-ui/es/style.css'
+import 'vxe-pc-ui/lib/style.css'
 
 import VxeUITable from 'vxe-table'
-import 'vxe-table/es/style.css'
+import 'vxe-table/lib/style.css'
 
 import VxeUIGantt from 'vxe-gantt'
 import 'vxe-gantt/lib/style.css'

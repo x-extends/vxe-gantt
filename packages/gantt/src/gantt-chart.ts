@@ -82,6 +82,17 @@ export default defineVxeComponent({
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
       const renderTaskType = getTaskType(XEUtils.get(row, typeField))
 
+      const ctParams = {
+        $gantt: $xeGantt,
+        source: sourceType,
+        type: viewType,
+        scaleType: scaleUnit,
+        row,
+        $rowIndex,
+        rowIndex,
+        _rowIndex
+      }
+
       const vbStyle: VxeComponentStyleType = {}
       const vpStyle: VxeComponentStyleType = {
         width: `${progressValue || 0}%`
@@ -94,17 +105,6 @@ export default defineVxeComponent({
         if (completedBgColor) {
           vpStyle.backgroundColor = completedBgColor
         }
-      }
-
-      const ctParams = {
-        $gantt: $xeGantt,
-        source: sourceType,
-        type: viewType,
-        scaleType: scaleUnit,
-        row,
-        $rowIndex,
-        rowIndex,
-        _rowIndex
       }
 
       let cbVNs: VNode[] = []
