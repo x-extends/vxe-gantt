@@ -33,6 +33,9 @@ if (process.env.npm_lifecycle_event && process.env.npm_lifecycle_event.indexOf('
 module.exports = defineConfig({
   transpileDependencies: true,
   productionSourceMap: false,
+  devServer: {
+    port: 9043
+  },
   pages: {
     index: {
       title: 'Vxe Gantt',

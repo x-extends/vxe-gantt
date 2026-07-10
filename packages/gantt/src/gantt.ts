@@ -318,6 +318,12 @@ export default defineVxeComponent({
       return XEUtils.last(taskScaleList)
     })
 
+    const computeScaleStep = computed(() => {
+      const minScale = computeMinScale.value
+      const { step } = minScale
+      return XEUtils.toNumber(step || 1) || 1
+    })
+
     const computeWeekScale = computed(() => {
       const { taskScaleList } = reactData
       return taskScaleList.find(item => item.type === 'week')
@@ -595,6 +601,7 @@ export default defineVxeComponent({
       computeScaleUnit,
       computeDateFormat,
       computeMinScale,
+      computeScaleStep,
       computeWeekScale,
       computeTitleField,
       computeStartField,
@@ -631,11 +638,7 @@ export default defineVxeComponent({
       scaleList.forEach(conf => {
         const sConf = !conf || XEUtils.isString(conf) ? { type: conf } : conf
         const type = sConf.type
-        const step = sConf.step
         const level = getViewTypeLevel(type)
-        if (step) {
-          errLog('vxe.error.errProp', [`step=${step}`, 'step=1'])
-        }
         if (!type || !viewTypeLevelMaps[type]) {
           errLog('vxe.error.errProp', [`type=${type}`, XEUtils.keys(viewTypeLevelMaps).join(',')])
           return
