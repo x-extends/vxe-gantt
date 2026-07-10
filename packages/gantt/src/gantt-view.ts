@@ -335,18 +335,28 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
   const $xeGantt = $xeGanttView.$xeGantt
 
   const minScale = $xeGantt.computeMinScale
+  const scaleStep = $xeGantt.computeScaleStep
   const scaleUnit = $xeGantt.computeScaleUnit
   const weekScale = $xeGantt.computeWeekScale
   const dateFormat = $xeGantt.computeDateFormat
   if (minScale) {
+    const currRatio = scaleStep > 1 ? 1 / scaleStep : 0
     switch (scaleUnit) {
       case 'year': {
-        const showActualProgress = /M|d|H|mm|ss|S/.test(dateFormat)
+        const showActualProgress = /M|d|H|m|s|S/.test(dateFormat)
         const renderFormat = 'yyyy'
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyMM = XEUtils.toDateString(dateObj.date, 'yyyy')
-          indexMaps[yyyyMM] = i
+          const currStr = XEUtils.toDateString(dateObj.date, 'yyyy')
+          indexMaps[currStr] = i
+          if (currRatio) {
+            let currStep = scaleStep - 1
+            while (currStep) {
+              const currStr = XEUtils.toDateString(XEUtils.getWhatYear(dateObj.date, scaleStep - currStep), renderFormat)
+              indexMaps[currStr] = i + currRatio
+              currStep--
+            }
+          }
         })
         return (startValue: any, endValue: any) => {
           const startValDate = parseStringDate($xeGanttView, startValue)
@@ -366,6 +376,10 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
             startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs / syDaySize
             const eyDaySize = XEUtils.getDayOfYear(endDate, 0)
             endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs / eyDaySize
+            if (currRatio) {
+              startSubtractSize *= currRatio
+              endSubtractSize *= currRatio
+            }
           }
           const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
@@ -375,12 +389,20 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         }
       }
       case 'quarter': {
-        const showActualProgress = /M|d|H|mm|ss|S/.test(dateFormat)
+        const showActualProgress = /M|d|H|m|ss|S/.test(dateFormat)
         const renderFormat = 'yyyy-q'
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const q = XEUtils.toDateString(dateObj.date, renderFormat)
-          indexMaps[q] = i
+          const currStr = XEUtils.toDateString(dateObj.date, renderFormat)
+          indexMaps[currStr] = i
+          if (currRatio) {
+            let currStep = scaleStep - 1
+            while (currStep) {
+              const currStr = XEUtils.toDateString(XEUtils.getWhatQuarter(dateObj.date, scaleStep - currStep), renderFormat)
+              indexMaps[currStr] = i + currRatio
+              currStep--
+            }
+          }
         })
         return (startValue: any, endValue: any) => {
           const startValDate = parseStringDate($xeGanttView, startValue)
@@ -400,6 +422,10 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
             startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs / sqDaySize
             const eqDaySize = XEUtils.getDayOfQuarter(endDate, 0)
             endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs / eqDaySize
+            if (currRatio) {
+              startSubtractSize *= currRatio
+              endSubtractSize *= currRatio
+            }
           }
           const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
@@ -410,11 +436,19 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
       }
       case 'month': {
         const renderFormat = 'yyyy-MM'
-        const showActualProgress = /d|H|mm|ss|S/.test(dateFormat)
+        const showActualProgress = /d|H|m|ss|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
-          indexMaps[yyyyMM] = i
+          const currStr = XEUtils.toDateString(dateObj.date, renderFormat)
+          indexMaps[currStr] = i
+          if (currRatio) {
+            let currStep = scaleStep - 1
+            while (currStep) {
+              const currStr = XEUtils.toDateString(XEUtils.getWhatMonth(dateObj.date, scaleStep - currStep), renderFormat)
+              indexMaps[currStr] = i + currRatio
+              currStep--
+            }
+          }
         })
         return (startValue: any, endValue: any) => {
           const startValDate = parseStringDate($xeGanttView, startValue)
@@ -434,6 +468,10 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
             startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs / smDaySize
             const emDaySize = XEUtils.getDayOfMonth(endDate, 0)
             endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs / emDaySize
+            if (currRatio) {
+              startSubtractSize *= currRatio
+              endSubtractSize *= currRatio
+            }
           }
           const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
@@ -443,14 +481,28 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         }
       }
       case 'week': {
-        const showActualProgress = /d|mm|ss|S/.test(dateFormat)
+        const weekStartDay = weekScale ? weekScale.startDay : undefined
+        const showActualProgress = /d|H|m|s|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyW = `${dateObj.yyyy}-${dateObj.W}`
-          indexMaps[yyyyW] = i
+          const currStr = `${dateObj.yyyy}-${dateObj.W}`
+          indexMaps[currStr] = i
+          if (currRatio) {
+            let currStep = scaleStep - 1
+            while (currStep) {
+              const offsetDate = XEUtils.getWhatWeek(dateObj.date, scaleStep - currStep, weekStartDay, weekStartDay)
+              let [yyyy, M] = XEUtils.toDateString(offsetDate, 'yyyy-M-MM-dd-HH-mm-ss').split('-')
+              const W = `${XEUtils.getYearWeek(offsetDate, weekScale ? weekScale.startDay : undefined)}`
+              if (checkWeekOfsetYear(W, M)) {
+                yyyy = `${Number(yyyy) + 1}`
+              }
+              const currStr = `${yyyy}-${W}`
+              indexMaps[currStr] = i + currRatio
+              currStep--
+            }
+          }
         })
         return (startValue: any, endValue: any) => {
-          const weekStartDay = weekScale ? weekScale.startDay : undefined
           const startValDate = parseStringDate($xeGanttView, startValue)
           const endValDate = parseStringDate($xeGanttView, endValue)
           const startDate = showActualProgress ? startValDate : XEUtils.getWhatWeek(startValDate, 0, 'first', weekStartDay)
@@ -468,6 +520,10 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
             // 按周天数比计算
             startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs / 7
             endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs / 7
+            if (currRatio) {
+              startSubtractSize *= currRatio
+              endSubtractSize *= currRatio
+            }
           }
           const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
@@ -479,11 +535,19 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
       case 'day':
       case 'date': {
         const renderFormat = 'yyyy-MM-dd'
-        const showActualProgress = /mm|ss|S/.test(dateFormat)
+        const showActualProgress = /H|m|s|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
-          indexMaps[yyyyMM] = i
+          const currStr = XEUtils.toDateString(dateObj.date, renderFormat)
+          indexMaps[currStr] = i
+          if (currRatio) {
+            let currStep = scaleStep - 1
+            while (currStep) {
+              const currStr = XEUtils.toDateString(XEUtils.getWhatDay(dateObj.date, scaleStep - currStep), renderFormat)
+              indexMaps[currStr] = i + currRatio
+              currStep--
+            }
+          }
         })
         return (startValue: any, endValue: any) => {
           const startValDate = parseStringDate($xeGanttView, startValue)
@@ -500,6 +564,10 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
           if (showActualProgress) {
             startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / dayMs
             endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / dayMs
+            if (currRatio) {
+              startSubtractSize *= currRatio
+              endSubtractSize *= currRatio
+            }
           }
           const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
@@ -510,11 +578,19 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
       }
       case 'hour': {
         const renderFormat = 'yyyy-MM-dd HH'
-        const showActualProgress = /mm|ss|S/.test(dateFormat)
+        const showActualProgress = /m|ss|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
-          indexMaps[yyyyMM] = i
+          const currStr = XEUtils.toDateString(dateObj.date, renderFormat)
+          indexMaps[currStr] = i
+          if (currRatio) {
+            let currStep = scaleStep - 1
+            while (currStep) {
+              const currStr = XEUtils.toDateString(XEUtils.getWhatHours(dateObj.date, scaleStep - currStep), renderFormat)
+              indexMaps[currStr] = i + currRatio
+              currStep--
+            }
+          }
         })
         return (startValue: any, endValue: any) => {
           const startValDate = parseStringDate($xeGanttView, startValue)
@@ -531,6 +607,10 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
           if (showActualProgress) {
             startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / hourMs
             endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / hourMs
+            if (currRatio) {
+              startSubtractSize *= currRatio
+              endSubtractSize *= currRatio
+            }
           }
           const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
@@ -541,11 +621,19 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
       }
       case 'minute': {
         const renderFormat = 'yyyy-MM-dd HH:mm'
-        const showActualProgress = /ss|S/.test(dateFormat)
+        const showActualProgress = /s|S/.test(dateFormat)
         const indexMaps: Record<string, number> = {}
         fullCols.forEach(({ dateObj }, i) => {
-          const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
-          indexMaps[yyyyMM] = i
+          const currStr = XEUtils.toDateString(dateObj.date, renderFormat)
+          indexMaps[currStr] = i
+          if (currRatio) {
+            let currStep = scaleStep - 1
+            while (currStep) {
+              const currStr = XEUtils.toDateString(XEUtils.getWhatMinutes(dateObj.date, scaleStep - currStep), renderFormat)
+              indexMaps[currStr] = i + currRatio
+              currStep--
+            }
+          }
         })
         return (startValue: any, endValue: any) => {
           const startValDate = parseStringDate($xeGanttView, startValue)
@@ -562,6 +650,10 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
           if (showActualProgress) {
             startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / minuteMs
             endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / minuteMs
+            if (currRatio) {
+              startSubtractSize *= currRatio
+              endSubtractSize *= currRatio
+            }
           }
           const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
@@ -577,6 +669,14 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
         fullCols.forEach(({ dateObj }, i) => {
           const yyyyMM = XEUtils.toDateString(dateObj.date, renderFormat)
           indexMaps[yyyyMM] = i
+          if (currRatio) {
+            let currStep = scaleStep - 1
+            while (currStep) {
+              const yyyyMM = XEUtils.toDateString(XEUtils.getWhatSeconds(dateObj.date, scaleStep - currStep), renderFormat)
+              indexMaps[yyyyMM] = i + currRatio
+              currStep--
+            }
+          }
         })
         return (startValue: any, endValue: any) => {
           const startValDate = parseStringDate($xeGanttView, startValue)
@@ -593,6 +693,10 @@ function createChartRender ($xeGanttView: VxeGanttViewConstructor & VxeGanttView
           if (showActualProgress) {
             startSubtractSize = (startDate.getTime() - startFirstDate.getTime()) / secondMs
             endSubtractSize = (endDate.getTime() - endFirstDate.getTime()) / secondMs
+            if (currRatio) {
+              startSubtractSize *= currRatio
+              endSubtractSize *= currRatio
+            }
           }
           const offsetLeftSize = (indexMaps[startStr] || 0) + startSubtractSize
           return {
@@ -1502,6 +1606,7 @@ export default defineVxeComponent({
       const { minViewDate, maxViewDate } = reactData
       const taskViewOpts = $xeGantt.computeTaskViewOpts
       const minScale = $xeGantt.computeMinScale
+      const scaleStep = $xeGantt.computeScaleStep
       const { gridding } = taskViewOpts
       const dateList: Date[] = []
       if (!minScale || !minViewDate || !maxViewDate) {
@@ -1511,7 +1616,6 @@ export default defineVxeComponent({
 
       const leftSize = -(ganttReactData.currLeftSpacing + XEUtils.toNumber(gridding ? gridding.leftSpacing || 0 : 0))
       const rightSize = ganttReactData.currRightSpacing + XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
-      const currStep = 1// XEUtils.toNumber(step || 1) || 1
       switch (type) {
         case 'year': {
           let currDate = XEUtils.getWhatYear(minViewDate, leftSize, 'first')
@@ -1519,7 +1623,7 @@ export default defineVxeComponent({
           while (currDate <= endDate) {
             const itemDate = currDate
             dateList.push(itemDate)
-            currDate = XEUtils.getWhatYear(currDate, currStep)
+            currDate = XEUtils.getWhatYear(currDate, scaleStep)
           }
           break
         }
@@ -1529,7 +1633,7 @@ export default defineVxeComponent({
           while (currDate <= endDate) {
             const itemDate = currDate
             dateList.push(itemDate)
-            currDate = XEUtils.getWhatQuarter(currDate, currStep)
+            currDate = XEUtils.getWhatQuarter(currDate, scaleStep)
           }
           break
         }
@@ -1539,7 +1643,7 @@ export default defineVxeComponent({
           while (currDate <= endDate) {
             const itemDate = currDate
             dateList.push(itemDate)
-            currDate = XEUtils.getWhatMonth(currDate, currStep)
+            currDate = XEUtils.getWhatMonth(currDate, scaleStep)
           }
           break
         }
@@ -1549,7 +1653,7 @@ export default defineVxeComponent({
           while (currDate <= endDate) {
             const itemDate = currDate
             dateList.push(itemDate)
-            currDate = XEUtils.getWhatWeek(currDate, currStep)
+            currDate = XEUtils.getWhatWeek(currDate, scaleStep)
           }
           break
         }
@@ -1560,14 +1664,14 @@ export default defineVxeComponent({
           while (currDate <= endDate) {
             const itemDate = currDate
             dateList.push(itemDate)
-            currDate = XEUtils.getWhatDay(currDate, currStep)
+            currDate = XEUtils.getWhatDay(currDate, scaleStep)
           }
           break
         }
         case 'hour':
         case 'minute':
         case 'second': {
-          const gapTime = getStandardGapTime(minScale.type) * currStep
+          const gapTime = getStandardGapTime(minScale.type) * scaleStep
           let currTime = minViewDate.getTime() + (leftSize * gapTime)
           const endTime = maxViewDate.getTime() + (rightSize * gapTime)
           while (currTime <= endTime) {

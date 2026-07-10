@@ -354,6 +354,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const { taskScaleList } = reactData
       return XEUtils.last(taskScaleList)
     },
+    computeScaleStep () {
+      const $xeGantt = this
+
+      const minScale = $xeGantt.computeMinScale as VxeGanttDefines.ColumnScaleObj
+      const { step } = minScale
+      return XEUtils.toNumber(step || 1) || 1
+    },
     computeWeekScale () {
       const $xeGantt = this
       const reactData = ($xeGantt as any).reactData as GanttReactData
@@ -708,11 +715,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       scaleList.forEach(conf => {
         const sConf = !conf || XEUtils.isString(conf) ? { type: conf } : conf
         const type = sConf.type
-        const step = sConf.step
         const level = getViewTypeLevel(type)
-        if (step) {
-          errLog('vxe.error.errProp', [`step=${step}`, 'step=1'])
-        }
         if (!type || !viewTypeLevelMaps[type]) {
           errLog('vxe.error.errProp', [`type=${type}`, XEUtils.keys(viewTypeLevelMaps).join(',')])
           return
