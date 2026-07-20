@@ -133,8 +133,12 @@ export default defineVxeComponent({
       }
       const { type, startDay } = minScale
 
-      const leftSize = -(ganttReactData.currLeftSpacing + XEUtils.toNumber(gridding ? gridding.leftSpacing || 0 : 0))
-      const rightSize = ganttReactData.currRightSpacing + XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
+      let leftSize = -(ganttReactData.currLeftSpacing + XEUtils.toNumber(gridding ? gridding.leftSpacing || 0 : 0))
+      let rightSize = ganttReactData.currRightSpacing + XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
+      if (scaleStep > 0) {
+        leftSize *= scaleStep
+        rightSize *= rightSize
+      }
       switch (type) {
         case 'year': {
           let currDate = XEUtils.getWhatYear(minViewDate, leftSize, 'first')

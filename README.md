@@ -2,9 +2,9 @@
 
 简体中文 | [繁體中文](README.zh-TW.md) | [English](README.en.md) | [日本語](README.ja-JP.md) 
 
-[![github star](https://img.shields.io/github/stars/x-extends/vxe-gantt.svg)](https://github.com/x-extends/vxe-gantt/stargazers)
-[![gitee star](https://gitee.com/x-extends/vxe-gantt/badge/star.svg)](https://gitee.com/x-extends/vxe-gantt/stargazers)
-[![gitcode star](https://gitcode.com/x-extends/vxe-gantt/star/badge.svg)](https://gitcode.com/x-extends/vxe-gantt/stargazers)
+[![github star](https://img.shields.io/github/stars/x-extends/vxe-gantt.svg)](https://github.com/x-extends/vxe-gantt)
+[![gitee star](https://gitee.com/x-extends/vxe-gantt/badge/star.svg)](https://gitee.com/x-extends/vxe-gantt)
+[![gitcode star](https://gitcode.com/x-extends/vxe-gantt/star/badge.svg)](https://gitcode.com/x-extends/vxe-gantt)
 [![npm version](https://img.shields.io/npm/v/vxe-gantt.svg?style=flat-square)](https://www.npmjs.com/package/vxe-gantt)
 [![NodeJS with Webpack](https://github.com/x-extends/vxe-gantt/actions/workflows/webpack.yml/badge.svg)](https://github.com/x-extends/vxe-gantt/actions/workflows/webpack.yml)
 [![gzip size: JS](http://img.badgesize.io/https://unpkg.com/vxe-gantt/lib/index.umd.min.js?compression=gzip&label=gzip%20size:%20JS)](https://unpkg.com/vxe-gantt/lib/index.umd.min.js)
