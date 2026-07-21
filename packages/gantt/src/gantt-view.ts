@@ -1045,16 +1045,22 @@ export default defineVxeComponent({
       if (bodyWrapperElem) {
         overflowY = scrollYHeight > bodyWrapperElem.clientHeight
         if (yHandleEl) {
-          reactData.scrollbarWidth = scrollbarOpts.width || (yHandleEl.offsetWidth - yHandleEl.clientWidth) || 14
+          const scrollbarWidth = scrollbarOpts.width || (yHandleEl.offsetWidth - yHandleEl.clientWidth) || 14
+          reactData.scrollbarWidth = scrollbarWidth
+          ganttReactData.scrollbarWidth = scrollbarWidth
         }
         reactData.overflowY = overflowY
+        ganttReactData.overflowY = overflowY
 
         overflowX = scrollXWidth > bodyWrapperElem.clientWidth
         if (xHandleEl) {
-          reactData.scrollbarHeight = scrollbarOpts.height || (xHandleEl.offsetHeight - xHandleEl.clientHeight) || 14
+          const scrollbarHeight = scrollbarOpts.height || (xHandleEl.offsetHeight - xHandleEl.clientHeight) || 14
+          reactData.scrollbarHeight = scrollbarHeight
+          ganttReactData.scrollbarHeight = scrollbarHeight
         }
 
         reactData.overflowX = overflowX
+        ganttReactData.overflowX = overflowX
       }
     }
 
@@ -1159,6 +1165,7 @@ export default defineVxeComponent({
     }
 
     const updateStyle = () => {
+      const { showLeftView } = ganttReactData
       const { scrollbarWidth, scrollbarHeight, headerGroups, tableColumn } = reactData
       const { elemStore, visibleColumn } = internalData
       const $xeTable = internalData.xeTable
@@ -1193,7 +1200,7 @@ export default defineVxeComponent({
       }
 
       let yScrollbarVisible = 'visible'
-      if (scrollbarYToLeft || (scrollbarOpts.y && scrollbarOpts.y.visible === false)) {
+      if ((scrollbarYToLeft && showLeftView) || (scrollbarOpts.y && scrollbarOpts.y.visible === false)) {
         osbWidth = 0
         yScrollbarVisible = 'hidden'
       }

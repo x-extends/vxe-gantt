@@ -48,6 +48,14 @@ function createReactData (): GanttReactData {
   return {
     tableLoading: false,
     proxyInited: false,
+    // 是否存在纵向滚动条
+    overflowY: false,
+    // 是否存在横向滚动条
+    overflowX: false,
+    // 纵向滚动条的宽度
+    scrollbarWidth: 0,
+    // 横向滚动条的高度
+    scrollbarHeight: 0,
     isZMax: false,
     tableLinks: [],
     tableData: [],
@@ -379,9 +387,9 @@ export default defineVxeComponent({
       return !!(scrollbarOpts.y && scrollbarOpts.y.position === 'left')
     })
 
-    const computeStyles = computed(() => {
+    const computeWrapperStyle = computed(() => {
       const { height, maxHeight, taskBarSubviewConfig } = props
-      const { isZMax, tZindex } = reactData
+      const { isZMax, tZindex, overflowY, scrollbarWidth } = reactData
       const taskViewOpts = computeTaskViewOpts.value
       const { viewStyle, tableStyle } = taskViewOpts
       const taskBarOpts = computeTaskBarOpts.value
@@ -389,7 +397,9 @@ export default defineVxeComponent({
       const taskBarSubviewOpts = computeTaskBarSubviewOpts.value
       const taskNowLineOpts = computeTaskNowLineOpts.value
       const { fontColor: nlfColor, bgColor: nlbgColor, width: nlWidth } = taskNowLineOpts
-      const stys: VxeComponentStyleType = {}
+      const stys: VxeComponentStyleType = {
+        '--vxe-ui-gantt-scrollbar-width': (overflowY && scrollbarWidth ? scrollbarWidth : 0) + 'px'
+      }
       if (isZMax) {
         stys.zIndex = tZindex
       } else {
@@ -2402,7 +2412,10 @@ export default defineVxeComponent({
     }
 
     const renderChildLayout = (layoutKeys: VxeGanttDefines.LayoutKey[]) => {
+      const { showLeftView, showRightView } = reactData
       const taskSplitOpts = computeTaskSplitOpts.value
+      const scrollbarXToTop = computeScrollbarXToTop.value
+      const scrollbarYToLeft = computeScrollbarYToLeft.value
       const { autoHideCollapseButton } = taskSplitOpts
       const childVNs: VNode[] = []
       layoutKeys.forEach(key => {
@@ -2421,7 +2434,11 @@ export default defineVxeComponent({
               h('div', {
                 ref: refGanttContainerElem,
                 key: 'tv',
-                class: ['vxe-gantt--gantt-container', {
+                class: ['vxe-gantt--gantt-container', `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
+                  'show--left': showLeftView,
+                  'hide--left': !showLeftView,
+                  'show--right': showRightView,
+                  'hide--right': !showRightView,
                   'is--ah-split-btn': autoHideCollapseButton
                 }]
               }, [
@@ -2539,9 +2556,9 @@ export default defineVxeComponent({
     }
 
     const renderVN = () => {
-      const { showLeftView, showRightView, showSplitAnimat } = reactData
+      const { showLeftView, showRightView, overflowY, overflowX, showSplitAnimat } = reactData
       const vSize = computeSize.value
-      const styles = computeStyles.value
+      const wrapperStyle = computeWrapperStyle.value
       const isLoading = computeIsLoading.value
       const taskSplitOpts = computeTaskSplitOpts.value
       const tableBorder = computeTableBorder.value
@@ -2559,9 +2576,11 @@ export default defineVxeComponent({
           'show--left': showLeftView,
           'hide--left': !showLeftView,
           'show--right': showRightView,
-          'hide--right': !showRightView
+          'hide--right': !showRightView,
+          'is--scroll-y': overflowY,
+          'is--scroll-x': overflowX
         }],
-        style: styles
+        style: wrapperStyle
       }, renderLayout())
     }
 
