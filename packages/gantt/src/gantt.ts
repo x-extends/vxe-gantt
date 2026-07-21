@@ -2378,7 +2378,7 @@ export default defineVxeComponent({
           }, [
             showCollapseTableButton && showRightView
               ? h('div', {
-                class: 'vxe-gantt--view-split-bar-left-btn',
+                class: ['vxe-gantt--view-split-bar-action-btn', showLeftView ? 'is--prev' : 'is--next'],
                 onClick: handleSplitLeftViewEvent
               }, [
                 h('i', {
@@ -2388,7 +2388,7 @@ export default defineVxeComponent({
               : renderEmptyElement($xeGantt),
             showCollapseTaskButton && showLeftView
               ? h('div', {
-                class: 'vxe-gantt--view-split-bar-right-btn',
+                class: ['vxe-gantt--view-split-bar-action-btn', showRightView ? 'is--next' : 'is--prev'],
                 onClick: handleSplitRightViewEvent
               }, [
                 h('i', {
@@ -2402,6 +2402,8 @@ export default defineVxeComponent({
     }
 
     const renderChildLayout = (layoutKeys: VxeGanttDefines.LayoutKey[]) => {
+      const taskSplitOpts = computeTaskSplitOpts.value
+      const { autoHideCollapseButton } = taskSplitOpts
       const childVNs: VNode[] = []
       layoutKeys.forEach(key => {
         switch (key) {
@@ -2419,7 +2421,9 @@ export default defineVxeComponent({
               h('div', {
                 ref: refGanttContainerElem,
                 key: 'tv',
-                class: 'vxe-gantt--gantt-container'
+                class: ['vxe-gantt--gantt-container', {
+                  'is--ah-split-btn': autoHideCollapseButton
+                }]
               }, [
                 renderTableLeft(),
                 renderTable(),

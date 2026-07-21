@@ -93,6 +93,7 @@ setConfig({
     taskSplitConfig: {
       enabled: true,
       resize: true,
+      autoHideCollapseButton: true,
       showCollapseTableButton: true,
       showCollapseTaskButton: true
     },
