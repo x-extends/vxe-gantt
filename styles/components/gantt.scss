@@ -73,41 +73,11 @@
     flex-grow: 1;
     overflow: hidden;
   }
-  .vxe-gantt--view-split-bar {
-    flex-shrink: 0;
-    width: var(--vxe-ui-gantt-view-split-bar-width);
-    &.is--resize {
-      cursor: col-resize;
-    }
-  }
   .vxe-gantt--view-split-bar-handle {
     background-color: var(--vxe-ui-gantt-view-split-bar-background-color);
     &:hover,
     &:active {
       background-color: var(--vxe-ui-gantt-view-split-bar-hover-background-color);
-    }
-  }
-  &.hide--left {
-    .vxe-gantt--table-wrapper {
-      width: 0px !important;
-      flex-shrink: 0;
-      flex-grow: unset;
-    }
-  }
-  &.show--left {
-    &.show--right {
-      .vxe-gantt--table-wrapper {
-        flex-grow: unset;
-        flex-shrink: 0;
-        width: var(--vxe-ui-gantt-view-table-default-width);
-      }
-    }
-  }
-  &.hide--right {
-    .vxe-gantt--view-wrapper {
-      width: 0px !important;
-      flex-shrink: 0;
-      flex-grow: unset;
     }
   }
   &.is--animat {
@@ -123,6 +93,47 @@
         flex-grow: unset;
       }
     }
+  }
+}
+
+.vxe-gantt--gantt-container {
+  &.hide--left {
+    & > .vxe-gantt--table-wrapper {
+      width: 0px !important;
+      flex-shrink: 0;
+      flex-grow: unset;
+    }
+  }
+  &.show--left {
+    &.show--right {
+      & > .vxe-gantt--table-wrapper {
+        flex-grow: unset;
+        flex-shrink: 0;
+        width: var(--vxe-ui-gantt-view-table-default-width);
+      }
+    }
+  }
+  &.hide--right {
+    & > .vxe-gantt--view-wrapper {
+      width: 0px !important;
+      flex-shrink: 0;
+      flex-grow: unset;
+    }
+  }
+  &.show--left {
+    &.show--right {
+      .vxe-gantt--view-split-bar {
+        width: var(--vxe-ui-gantt-view-split-bar-width);
+      }
+    }
+  }
+}
+
+.vxe-gantt--view-split-bar {
+  width: 0;
+  flex-shrink: 0;
+  &.is--resize {
+    cursor: col-resize;
   }
 }
 
@@ -359,6 +370,30 @@
   }
   i {
     font-size: 0.5em;
+  }
+}
+.vxe-gantt--gantt-container {
+  &.sy-pos--right {
+    &.hide--right {
+      & > .vxe-gantt--view-split-bar {
+        .vxe-gantt--view-split-bar-action-btn {
+          &.is--prev {
+            left: calc(var(--vxe-ui-gantt-view-split-bar-action-btn-width) * -1 - var(--vxe-ui-gantt-scrollbar-width) - 0.2em);
+          }
+        }
+      }
+    }
+  }
+  &.sy-pos--left {
+    &.hide--left {
+      & > .vxe-gantt--view-split-bar {
+        .vxe-gantt--view-split-bar-action-btn {
+          &.is--next {
+            right: calc(var(--vxe-ui-gantt-view-split-bar-action-btn-width) * -1 - var(--vxe-ui-gantt-scrollbar-width) - 0.2em);
+          }
+        }
+      }
+    }
   }
 }
 

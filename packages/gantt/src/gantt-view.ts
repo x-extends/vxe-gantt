@@ -871,6 +871,7 @@ function calcScrollbar ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPriv
   const $xeGantt = $xeGanttView.$xeGantt
   const reactData = $xeGanttView.reactData
   const internalData = $xeGanttView.internalData
+  const ganttReactData = $xeGantt.reactData
 
   const { scrollXWidth, scrollYHeight } = reactData
   const { elemStore } = internalData
@@ -883,16 +884,22 @@ function calcScrollbar ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPriv
   if (bodyWrapperElem) {
     overflowY = scrollYHeight > bodyWrapperElem.clientHeight
     if (yHandleEl) {
-      reactData.scrollbarWidth = scrollbarOpts.width || (yHandleEl.offsetWidth - yHandleEl.clientWidth) || 14
+      const scrollbarWidth = scrollbarOpts.width || (yHandleEl.offsetWidth - yHandleEl.clientWidth) || 14
+      reactData.scrollbarWidth = scrollbarWidth
+      ganttReactData.scrollbarWidth = scrollbarWidth
     }
     reactData.overflowY = overflowY
+    ganttReactData.overflowY = overflowY
 
     overflowX = scrollXWidth > bodyWrapperElem.clientWidth
     if (xHandleEl) {
-      reactData.scrollbarHeight = scrollbarOpts.height || (xHandleEl.offsetHeight - xHandleEl.clientHeight) || 14
+      const scrollbarHeight = scrollbarOpts.height || (xHandleEl.offsetHeight - xHandleEl.clientHeight) || 14
+      reactData.scrollbarHeight = scrollbarHeight
+      ganttReactData.scrollbarHeight = scrollbarHeight
     }
 
     reactData.overflowX = overflowX
+    ganttReactData.overflowX = overflowX
   }
 }
 

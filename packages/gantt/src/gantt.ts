@@ -98,6 +98,14 @@ function createReactData (): GanttReactData {
   return {
     tableLoading: false,
     proxyInited: false,
+    // 是否存在纵向滚动条
+    overflowY: false,
+    // 是否存在横向滚动条
+    overflowX: false,
+    // 纵向滚动条的宽度
+    scrollbarWidth: 0,
+    // 横向滚动条的高度
+    scrollbarHeight: 0,
     isZMax: false,
     tableLinks: [],
     tableData: [],
@@ -436,13 +444,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
       return !!(scrollbarOpts.y && scrollbarOpts.y.position === 'left')
     },
-    computeStyles () {
+    computeWrapperStyle () {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
 
       const { height, maxHeight, taskBarSubviewConfig } = props
-      const { isZMax, tZindex } = reactData
+      const { isZMax, tZindex, overflowY, scrollbarWidth } = reactData
       const taskViewOpts = $xeGantt.computeTaskViewOpts as VxeGanttPropTypes.TaskViewConfig
       const { viewStyle, tableStyle } = taskViewOpts
       const taskBarOpts = $xeGantt.computeTaskBarOpts as VxeGanttPropTypes.TaskBarConfig
@@ -450,7 +458,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const taskBarSubviewOpts = $xeGantt.computeTaskBarSubviewOpts
       const taskNowLineOpts = $xeGantt.computeTaskNowLineOpts
       const { fontColor: nlfColor, bgColor: nlbgColor, width: nlWidth } = taskNowLineOpts
-      const stys: VxeComponentStyleType = {}
+      const stys: VxeComponentStyleType = {
+        '--vxe-ui-gantt-scrollbar-width': (overflowY && scrollbarWidth ? scrollbarWidth : 0) + 'px'
+      }
       if (isZMax) {
         stys.zIndex = tZindex
       } else {
@@ -2628,8 +2638,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
     },
     renderChildLayout (h: CreateElement, layoutKeys: VxeGanttDefines.LayoutKey[]) {
       const $xeGantt = this
+      const reactData = $xeGantt.reactData
 
+      const { showLeftView, showRightView } = reactData
       const taskSplitOpts = $xeGantt.computeTaskSplitOpts
+      const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
+      const scrollbarYToLeft = $xeGantt.computeScrollbarYToLeft
       const { autoHideCollapseButton } = taskSplitOpts
       const childVNs: VNode[] = []
       layoutKeys.forEach(key => {
@@ -2648,7 +2662,11 @@ export default /* define-vxe-component start */ defineVxeComponent({
               h('div', {
                 ref: 'refGanttContainerElem',
                 key: 'tv',
-                class: ['vxe-gantt--gantt-container', {
+                class: ['vxe-gantt--gantt-container', `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
+                  'show--left': showLeftView,
+                  'hide--left': !showLeftView,
+                  'show--right': showRightView,
+                  'hide--right': !showRightView,
                   'is--ah-split-btn': autoHideCollapseButton
                 }]
               }, [
@@ -2777,9 +2795,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const props = $xeGantt
       const reactData = $xeGantt.reactData
 
-      const { showLeftView, showRightView, showSplitAnimat } = reactData
+      const { showLeftView, showRightView, overflowY, overflowX, showSplitAnimat } = reactData
       const vSize = $xeGantt.computeSize
-      const styles = $xeGantt.computeStyles
+      const wrapperStyle = $xeGantt.computeWrapperStyle
       const isLoading = $xeGantt.computeIsLoading
       const taskSplitOpts = $xeGantt.computeTaskSplitOpts
       const tableBorder = $xeGantt.computeTableBorder
@@ -2797,9 +2815,11 @@ export default /* define-vxe-component start */ defineVxeComponent({
           'show--left': showLeftView,
           'hide--left': !showLeftView,
           'show--right': showRightView,
-          'hide--right': !showRightView
+          'hide--right': !showRightView,
+          'is--scroll-y': overflowY,
+          'is--scroll-x': overflowX
         }],
-        style: styles
+        style: wrapperStyle
       }, $xeGantt.renderLayout(h))
     }
   },
