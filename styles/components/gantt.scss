@@ -1,6 +1,11 @@
 @use '../helpers/baseMixin.scss';
 @use './gantt-module/all.scss';
 
+// 局部变量
+.vxe-gantt {
+  --vxe-ui-gantt-current-split-bar-action-btn-offset-left: 0px;
+}
+
 .vxe-gantt {
   position: relative;
   display: flex;
@@ -334,9 +339,9 @@
 }
 .vxe-gantt--view-split-bar-btn-wrapper {
   position: absolute;
-  left: 50%;
+  width: 100%;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
   z-index: 5;
   pointer-events: none;
 }
@@ -363,10 +368,10 @@
     transform: scale(0.9);
   }
   &.is--prev {
-    left: calc(var(--vxe-ui-gantt-view-split-bar-action-btn-width) * -1 - 0.2em);
+    left: calc(var(--vxe-ui-gantt-view-split-bar-action-btn-width) * -1 - var(--vxe-ui-gantt-current-split-bar-action-btn-offset-left) - 0.2em);
   }
   &.is--next {
-    right: calc(var(--vxe-ui-gantt-view-split-bar-action-btn-width) * -1 - 0.2em);
+    right: calc(var(--vxe-ui-gantt-view-split-bar-action-btn-width) * -1 - var(--vxe-ui-gantt-current-split-bar-action-btn-offset-left) - 0.2em);
   }
   i {
     font-size: 0.5em;
@@ -375,24 +380,12 @@
 .vxe-gantt--gantt-container {
   &.sy-pos--right {
     &.hide--right {
-      & > .vxe-gantt--view-split-bar {
-        .vxe-gantt--view-split-bar-action-btn {
-          &.is--prev {
-            left: calc(var(--vxe-ui-gantt-view-split-bar-action-btn-width) * -1 - var(--vxe-ui-gantt-scrollbar-width) - 0.2em);
-          }
-        }
-      }
+      --vxe-ui-gantt-current-split-bar-action-btn-offset-left: var(--vxe-ui-gantt-scrollbar-width);
     }
   }
   &.sy-pos--left {
     &.hide--left {
-      & > .vxe-gantt--view-split-bar {
-        .vxe-gantt--view-split-bar-action-btn {
-          &.is--next {
-            right: calc(var(--vxe-ui-gantt-view-split-bar-action-btn-width) * -1 - var(--vxe-ui-gantt-scrollbar-width) - 0.2em);
-          }
-        }
-      }
+      --vxe-ui-gantt-current-split-bar-action-btn-offset-left: var(--vxe-ui-gantt-scrollbar-width);
     }
   }
 }
