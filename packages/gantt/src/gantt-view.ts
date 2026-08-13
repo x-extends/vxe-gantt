@@ -136,6 +136,8 @@ function handleColumnHeader ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
   const minScale = $xeGantt.computeMinScale
   const weekScale = $xeGantt.computeWeekScale
   const scaleDateList = $xeGanttView.computeScaleDateList
+  const scaleStep = $xeGantt.computeScaleStep
+  const weekStartDay = weekScale ? weekScale.startDay : undefined
   const fullCols: VxeGanttDefines.ViewColumn[] = []
   const groupCols: VxeGanttDefines.GroupColumn[] = []
 
@@ -184,68 +186,93 @@ function handleColumnHeader ($xeGanttView: VxeGanttViewConstructor & VxeGanttVie
       }
     }
 
-    for (let i = 0; i < scaleDateList.length; i++) {
-      const itemDate = scaleDateList[i]
-      let [yy, yyyy, M, MM, d, dd, H, HH, m, mm, s, ss] = XEUtils.toDateString(itemDate, 'yy-yyyy-M-MM-d-dd-H-HH-m-mm-s-ss').split('-')
-      const e = itemDate.getDay()
+    const createDateObj = (date: Date) => {
+      let [yy, yyyy, M, MM, d, dd, H, HH, m, mm, s, ss] = XEUtils.toDateString(date, 'yy-yyyy-M-MM-d-dd-H-HH-m-mm-s-ss').split('-')
+      const e = date.getDay()
       const E = e + 1
-      const q = Math.ceil((itemDate.getMonth() + 1) / 3)
-      const W = `${XEUtils.getYearWeek(itemDate, weekScale ? weekScale.startDay : undefined)}`
+      const q = Math.ceil((date.getMonth() + 1) / 3)
+      const W = `${XEUtils.getYearWeek(date, weekScale ? weekScale.startDay : undefined)}`
       const WW = XEUtils.padStart(W, 2, '0')
       if (isMinWeek && checkWeekOfsetYear(W, M)) {
         yyyy = `${Number(yyyy) + 1}`
         M = '1'
         MM = '0' + M
       }
-      const dateObj: VxeGanttDefines.ScaleDateObj = { date: itemDate, yy, yyyy, M, MM, d, dd, H, HH, m, mm, s, ss, q, W, WW, E, e }
+      return { date, yy, yyyy, M, MM, d, dd, H, HH, m, mm, s, ss, q, W, WW, E, e }
+    }
+
+    for (let i = 0; i < scaleDateList.length; i++) {
+      const itemDate = scaleDateList[i]
+      const dateObj: VxeGanttDefines.ScaleDateObj = createDateObj(itemDate)
+      const { yyyy, MM, dd, HH, mm, ss, q, W, E } = dateObj
+      const startDateObj = dateObj
       const colMaps: Record<VxeGanttDefines.ColumnScaleType, VxeGanttDefines.ViewColumn> = {
         year: {
           field: yyyy,
           title: yyyy,
-          dateObj
+          dateObj,
+          startDateObj,
+          endDateObj: scaleStep > 1 ? createDateObj(XEUtils.getWhatYear(itemDate, scaleStep - 1)) : startDateObj
         },
         quarter: {
           field: `${yyyy}_q${q}`,
           title: `${q}`,
-          dateObj
+          dateObj,
+          startDateObj,
+          endDateObj: scaleStep > 1 ? createDateObj(XEUtils.getWhatQuarter(itemDate, scaleStep - 1)) : startDateObj
         },
         month: {
           field: `${yyyy}_${MM}`,
           title: MM,
-          dateObj
+          dateObj,
+          startDateObj,
+          endDateObj: scaleStep > 1 ? createDateObj(XEUtils.getWhatMonth(itemDate, scaleStep - 1)) : startDateObj
         },
         week: {
           field: `${yyyy}_W${W}`,
           title: `${W}`,
-          dateObj
+          dateObj,
+          startDateObj,
+          endDateObj: scaleStep > 1 ? createDateObj(XEUtils.getWhatWeek(itemDate, scaleStep - 1, weekStartDay, weekStartDay)) : startDateObj
         },
         day: {
           field: `${yyyy}_${MM}_${dd}_E${E}`,
           title: `${E}`,
-          dateObj
+          dateObj,
+          startDateObj,
+          endDateObj: scaleStep > 1 ? createDateObj(XEUtils.getWhatDay(itemDate, scaleStep - 1)) : startDateObj
         },
         date: {
           field: `${yyyy}_${MM}_${dd}`,
           title: dd,
-          dateObj
+          dateObj,
+          startDateObj,
+          endDateObj: scaleStep > 1 ? createDateObj(XEUtils.getWhatDay(itemDate, scaleStep - 1)) : startDateObj
         },
         hour: {
           field: `${yyyy}_${MM}_${dd}_${HH}`,
           title: HH,
-          dateObj
+          dateObj,
+          startDateObj,
+          endDateObj: scaleStep > 1 ? createDateObj(XEUtils.getWhatHours(itemDate, scaleStep - 1)) : startDateObj
         },
         minute: {
           field: `${yyyy}_${MM}_${dd}_${HH}_${mm}`,
           title: mm,
-          dateObj
+          dateObj,
+          startDateObj,
+          endDateObj: scaleStep > 1 ? createDateObj(XEUtils.getWhatMinutes(itemDate, scaleStep - 1)) : startDateObj
         },
         second: {
           field: `${yyyy}_${MM}_${dd}_${HH}_${mm}_${ss}`,
           title: ss,
-          dateObj
+          dateObj,
+          startDateObj,
+          endDateObj: scaleStep > 1 ? createDateObj(XEUtils.getWhatSeconds(itemDate, scaleStep - 1)) : startDateObj
         }
       }
       const minCol = colMaps[minScale.type]
+
       if (minScale.level < 19) {
         handleData('year', colMaps, minCol)
       }
@@ -1625,7 +1652,7 @@ export default defineVxeComponent({
       let rightSize = ganttReactData.currRightSpacing + XEUtils.toNumber(gridding ? gridding.rightSpacing || 0 : 0)
       if (scaleStep > 0) {
         leftSize *= scaleStep
-        rightSize *= rightSize
+        rightSize *= scaleStep
       }
       switch (type) {
         case 'year': {
