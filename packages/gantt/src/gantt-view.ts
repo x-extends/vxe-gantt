@@ -1759,11 +1759,13 @@ export default defineVxeComponent({
       let nlLeft = 0
       if (showNowLine && minScale && minViewDate && maxViewDate && nowTime >= minViewDate.getTime() && nowTime <= maxViewDate.getTime()) {
         const todayValue = todayDateMaps[minScale.type]
+        const todayDate = XEUtils.toStringDate(todayValue)
         let currCol: VxeGanttDefines.ViewColumn | null = null
         let nextCol: VxeGanttDefines.ViewColumn | null = null
         for (let i = 0; i < visibleColumn.length; i++) {
           const column = visibleColumn[i]
-          if (column.field === todayValue) {
+          const { startDateObj, endDateObj } = column
+          if (startDateObj.date <= todayDate && endDateObj.date >= todayDate) {
             currCol = column
             nlLeft = i * viewCellWidth
             nextCol = visibleColumn[i + 1]
