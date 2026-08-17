@@ -490,7 +490,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         stys['--vxe-ui-gantt-view-task-now-line-background-color'] = nlbgColor
       }
       if (nlWidth) {
-        stys['--vxe-ui-gantt-view-task-now-line-width'] = nlWidth
+        stys['--vxe-ui-gantt-view-task-now-line-width'] = toCssUnit(nlWidth)
       }
       if (viewStyle) {
         const { cellWidth } = viewStyle
@@ -701,8 +701,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
     computeTaskLinkStyle () {
       const $xeGantt = this as unknown as VxeGanttConstructor & VxeGanttPrivateMethods
 
-      if ($xeGantt.handleUpdateTaskLinkData) {
-        $xeGantt.handleUpdateTaskLinkData()
+      if ($xeGantt.handleUpTaskLinkData) {
+        $xeGantt.handleUpTaskLinkData()
       }
     }
   },
@@ -2917,7 +2917,17 @@ export default /* define-vxe-component start */ defineVxeComponent({
     const props = $xeGantt
 
     const proxyOpts = $xeGantt.computeProxyOpts
+    const taskBarSubviewOpts = $xeGantt.computeTaskBarSubviewOpts
 
+    const { barStyle } = taskBarSubviewOpts
+    if (barStyle) {
+      if ((barStyle as any).top) {
+        warnLog('vxe.error.delProp', ['task-bar-subview-config.barStyle.top', 'task-bar-subview-config.barStyle.style.top'])
+      }
+      if ((barStyle as any).backgroundColor) {
+        warnLog('vxe.error.delProp', ['task-bar-subview-config.barStyle.backgroundColor', 'task-bar-subview-config.barStyle.style.backgroundColor'])
+      }
+    }
     if ((props as any).toolbar) {
       errLog('vxe.error.delProp', ['grid.toolbar', 'grid.toolbar-config'])
     }
@@ -2931,7 +2941,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       warnLog('vxe.error.notProp', ['expand-config'])
     }
 
-    if (!($xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods).handleUpdateTaskLinkData) {
+    if (!($xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods).handleUpTaskLinkData) {
       if (props.taskLinkConfig) {
         warnLog('vxe.error.notProp', ['task-link-config'])
       }

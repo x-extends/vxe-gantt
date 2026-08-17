@@ -1166,7 +1166,7 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
 
   return Promise.all([
     updateTaskChartStyle($xeGanttView),
-    $xeGantt.handleUpdateTaskLinkStyle ? $xeGantt.handleUpdateTaskLinkStyle($xeGanttView) : null
+    $xeGantt.handleUpTaskLinkStyle ? $xeGantt.handleUpTaskLinkStyle($xeGanttView) : null
   ])
 }
 
