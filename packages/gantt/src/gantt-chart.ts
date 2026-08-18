@@ -93,17 +93,21 @@ export default defineVxeComponent({
       const progressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(row, progressField)))) : 0
       const renderTaskType = getTaskType(XEUtils.get(row, typeField))
 
+      const isMilestone = !!(hasEnableConf(taskBarMilestoneConfig, taskBarMilestoneOpts) && hasMilestoneTask(renderTaskType))
+
       const ctParams = { ...barParams }
 
       const vbStyle: VxeComponentStyleType = {}
       const vpStyle: VxeComponentStyleType = {
         width: `${progressValue || 0}%`
       }
-      if (barBgColor) {
-        vbStyle.backgroundColor = barBgColor
-      }
-      if (barCompletedBgColor) {
-        vpStyle.backgroundColor = barCompletedBgColor
+      if (!isMilestone) {
+        if (barBgColor) {
+          vbStyle.backgroundColor = barBgColor
+        }
+        if (barCompletedBgColor) {
+          vpStyle.backgroundColor = barCompletedBgColor
+        }
       }
       if (barHtmlStyle) {
         XEUtils.assign(vbStyle, barHtmlStyle)
@@ -117,7 +121,6 @@ export default defineVxeComponent({
           rowid
         })
       } else {
-        const isMilestone = !!(hasEnableConf(taskBarMilestoneConfig, taskBarMilestoneOpts) && hasMilestoneTask(renderTaskType))
         const isSubview = !!(hasEnableConf(taskBarSubviewConfig, taskBarSubviewOpts) && hasSubviewTask(renderTaskType))
 
         if (contentMethod) {
@@ -218,6 +221,7 @@ export default defineVxeComponent({
               let childTitle = getStringValue(XEUtils.get(childRow, titleField))
               const childProgressValue = showProgress ? Math.min(100, Math.max(0, XEUtils.toNumber(XEUtils.get(childRow, progressField)))) : 0
               const childRenderTaskType = getTaskType(XEUtils.get(childRow, typeField))
+              const isChildMilestone = !!(hasEnableConf(taskBarMilestoneConfig, taskBarMilestoneOpts) && hasMilestoneTask(childRenderTaskType))
               const isChildSubview = !!(hasEnableConf(taskBarSubviewConfig, taskBarSubviewOpts) && hasSubviewTask(childRenderTaskType))
 
               if (isChildSubview) {
@@ -228,11 +232,13 @@ export default defineVxeComponent({
               const childVpStyle: VxeComponentStyleType = {
                 width: `${childProgressValue || 0}%`
               }
-              if (childBgColor) {
-                childVbStyle.backgroundColor = childBgColor
-              }
-              if (childCompletedBgColor) {
-                childVpStyle.backgroundColor = childCompletedBgColor
+              if (!isChildMilestone) {
+                if (childBgColor) {
+                  childVbStyle.backgroundColor = childBgColor
+                }
+                if (childCompletedBgColor) {
+                  childVpStyle.backgroundColor = childCompletedBgColor
+                }
               }
 
               //  已废弃
