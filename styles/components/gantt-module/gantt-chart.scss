@@ -88,50 +88,24 @@
 }
 
 .vxe-gantt-view--chart-row {
-  &.is--progress {
-    & > .vxe-gantt-view--chart-bar,
-    & > .vxe-gantt-view--chart-custom-bar {
-      &.is--default {
-        color: #ffffff;
-        background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
-      }
-    }
-  }
-  &:not(.is--progress) {
-    & > .vxe-gantt-view--chart-bar,
-    & > .vxe-gantt-view--chart-custom-bar {
-      &.is--default {
-        color: #ffffff;
-        background-color: var(--vxe-ui-gantt-view-task-bar-completed-background-color);
-      }
+  & > .vxe-gantt-view--chart-bar,
+  & > .vxe-gantt-view--chart-custom-bar {
+    &.is--default {
+      color: #ffffff;
+      background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
     }
   }
 }
 .vxe-gantt-view--chart-subview-row {
-  &.is--progress {
-    & > .vxe-gantt-view--chart-subview-bar,
-    & > .vxe-gantt-view--chart-subview-custom-bar {
-      &.is--subview {
-        color: #ffffff;
-        background-color: var(--vxe-ui-gantt-view-task-bar-overview-background-color);
-      }
-      &.is--default {
-        color: #ffffff;
-        background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
-      }
+  & > .vxe-gantt-view--chart-subview-bar,
+  & > .vxe-gantt-view--chart-subview-custom-bar {
+    &.is--subview {
+      color: #ffffff;
+      background-color: var(--vxe-ui-gantt-view-task-bar-overview-background-color);
     }
-  }
-  &:not(.is--progress) {
-    & > .vxe-gantt-view--chart-subview-bar,
-    & > .vxe-gantt-view--chart-subview-custom-bar {
-      &.is--subview {
-        color: #ffffff;
-        background-color: var(--vxe-ui-gantt-view-task-bar-overview-background-color);
-      }
-      &.is--default {
-        color: #ffffff;
-        background-color: var(--vxe-ui-gantt-view-task-bar-completed-background-color);
-      }
+    &.is--default {
+      color: #ffffff;
+      background-color: var(--vxe-ui-gantt-view-task-bar-background-color);
     }
   }
 }

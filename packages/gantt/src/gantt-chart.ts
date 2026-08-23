@@ -80,7 +80,8 @@ export default defineVxeComponent({
         _rowIndex
       }
       const { showProgress, showContent, contentMethod, barStyle, moveable, showTooltip } = taskBarOpts
-      const barStyObj = (barStyle ? (XEUtils.isFunction(barStyle) ? barStyle(barParams) : barStyle) : {}) || {}
+      const isBarRowStyle = XEUtils.isFunction(barStyle)
+      const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
       const barRound = barStyObj.round
       const barBgColor = barStyObj.bgColor
       const barCompletedBgColor = barStyObj.completedBgColor
@@ -102,11 +103,13 @@ export default defineVxeComponent({
         width: `${progressValue || 0}%`
       }
       if (!isMilestone) {
-        if (barBgColor) {
-          vbStyle.backgroundColor = barBgColor
-        }
-        if (barCompletedBgColor) {
-          vpStyle.backgroundColor = barCompletedBgColor
+        if (isBarRowStyle) {
+          if (barBgColor) {
+            vbStyle['--vxe-ui-gantt-view-task-bar-background-color'] = barBgColor
+          }
+          if (barCompletedBgColor) {
+            vbStyle['--vxe-ui-gantt-view-task-bar-completed-background-color'] = barCompletedBgColor
+          }
         }
       }
       if (barHtmlStyle) {
@@ -207,10 +210,11 @@ export default defineVxeComponent({
                 rowIndex: $xeTable.getVMRowIndex(childRow),
                 _rowIndex: $xeTable.getVTRowIndex(childRow)
               }
+              const isChildBarRowStyle = XEUtils.isFunction(subBarStyle)
               const childBarStyObj = XEUtils.assign(
                 {},
-                (barStyle ? (XEUtils.isFunction(barStyle) ? barStyle(childBarParams) : barStyle) : {}) || {},
-                (subBarStyle ? (XEUtils.isFunction(subBarStyle) ? subBarStyle(childBarParams) : subBarStyle) : {}) || {}
+                (barStyle ? (isBarRowStyle ? barStyle(childBarParams) : barStyle) : {}) || {},
+                (subBarStyle ? (isChildBarRowStyle ? subBarStyle(childBarParams) : subBarStyle) : {}) || {}
               )
               const childRound = childBarStyObj.round
               const childBgColor = childBarStyObj.bgColor
@@ -234,10 +238,10 @@ export default defineVxeComponent({
               }
               if (!isChildMilestone) {
                 if (childBgColor) {
-                  childVbStyle.backgroundColor = childBgColor
+                  childVbStyle['--vxe-ui-gantt-view-task-bar-background-color'] = childBgColor
                 }
                 if (childCompletedBgColor) {
-                  childVpStyle.backgroundColor = childCompletedBgColor
+                  childVpStyle['--vxe-ui-gantt-view-task-bar-completed-background-color'] = childCompletedBgColor
                 }
               }
 
