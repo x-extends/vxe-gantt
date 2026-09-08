@@ -99,6 +99,14 @@ setConfig({
     },
     taskBarSubviewConfig: {
       // showOverview: false
+    },
+    taskBarMoveTooltipConfig: {
+      enterable: true,
+      enterDelay: 0
+    },
+    taskBarResizeTooltipConfig: {
+      enterable: true,
+      enterDelay: 0
     }
   }
 })
