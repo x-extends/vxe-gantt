@@ -90,7 +90,11 @@ function createInternalData (): GanttInternalData {
     dragLinkToStore: {
       rowid: null,
       type: 0
-    }
+    },
+    // 关键路径
+    criticalRowList: [],
+    criticalRowMaps: new Map(),
+    criticalLinkKeyMaps: new Map()
   }
 }
 
@@ -144,7 +148,12 @@ function createReactData (): GanttReactData {
 
     nowTime: 0,
     currLeftSpacing: 0,
-    currRightSpacing: 0
+    currRightSpacing: 0,
+
+    // 关键路径
+    criticalLinks: [],
+    criticalRowIds: [],
+    criticalPathFlag: 0
   }
 }
 
@@ -192,6 +201,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     taskLinkConfig: Object as PropType<VxeGanttPropTypes.TaskLinkConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskBarMilestoneConfig: Object as PropType<VxeGanttPropTypes.TaskBarMilestoneConfig>,
+    taskCriticalPathConfig: Object as PropType<VxeGanttPropTypes.TaskCriticalPathConfig>,
     taskBarSubviewConfig: Object as PropType<VxeGanttPropTypes.TaskBarSubviewConfig>,
     taskBarTooltipConfig: Object as PropType<VxeGanttPropTypes.TaskBarTooltipConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
@@ -223,7 +233,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
     return {
       xID,
       reactData,
-      internalData
+      internalData,
+      reViewFlag: 0
     }
   },
   computed: {
@@ -337,6 +348,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarMilestoneConfig, props.taskBarMilestoneConfig)
+    },
+    computeTaskCriticalPathOpts () {
+      const $xeGantt = this
+      const props = $xeGantt
+
+      return Object.assign({}, getConfig().gantt.taskCriticalPathConfig, props.taskCriticalPathConfig)
     },
     computeTaskBarSubviewOpts () {
       const $xeGantt = this
@@ -458,6 +475,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
       return !!(scrollbarOpts.y && scrollbarOpts.y.position === 'left')
     },
+    computeCriticalPathVisible () {
+      const $xeGantt = this
+
+      const taskBarOpts = $xeGantt.computeTaskBarOpts as VxeGanttPropTypes.TaskBarConfig
+      return taskBarOpts.showCriticalPath
+    },
     computeWrapperStyle () {
       const $xeGantt = this
       const props = $xeGantt
@@ -469,11 +492,16 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const { viewStyle, tableStyle } = taskViewOpts
       const taskBarOpts = $xeGantt.computeTaskBarOpts as VxeGanttPropTypes.TaskBarConfig
       const { barStyle } = taskBarOpts
+      const taskCriticalPathOpts = $xeGantt.computeTaskCriticalPathOpts
+      const { lineColor: cpLineColor } = taskCriticalPathOpts
       const taskBarSubviewOpts = $xeGantt.computeTaskBarSubviewOpts
       const taskNowLineOpts = $xeGantt.computeTaskNowLineOpts
       const { fontColor: nlfColor, bgColor: nlbgColor, width: nlWidth } = taskNowLineOpts
       const stys: VxeComponentStyleType = {
         '--vxe-ui-gantt-scrollbar-width': (overflowY && scrollbarWidth ? scrollbarWidth : 0) + 'px'
+      }
+      if (cpLineColor) {
+        stys['--vxe-ui-gantt-view-bar-critical-path-line-color'] = cpLineColor
       }
       if (isZMax) {
         stys.zIndex = tZindex
@@ -710,6 +738,16 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const $xeGantt = this
 
       $xeGantt.handleTaskScaleConfig()
+      $xeGantt.reViewFlag++
+    },
+    computeCriticalPathVisible () {
+      const $xeGantt = this
+
+      $xeGantt.reViewFlag++
+    },
+    reViewFlag () {
+      const $xeGantt = this
+
       $xeGantt.refreshTaskView()
     },
     computeTaskLinkStyle () {
@@ -2097,6 +2135,19 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
+    getCriticalPath () {
+      const $xeGantt = this
+      const reactData = $xeGantt.reactData
+      const internalData = $xeGantt.internalData
+
+      const { criticalRowIds, criticalLinks } = reactData
+      const { criticalRowMaps } = internalData
+      return {
+        rowIds: criticalRowIds.slice(0),
+        rows: Array.from(criticalRowMaps.values()),
+        links: criticalLinks.slice(0)
+      }
+    },
     /**
      * 获取需要排除的高度
      */
@@ -2517,7 +2568,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         // 处理插槽
         formOpts.items.forEach((item) => {
           XEUtils.each(item.slots, (func) => {
-            if (!XEUtils.isFunction(func)) {
+            if (func && !XEUtils.isFunction(func)) {
               if (slots[func]) {
                 formSlots[func] = slots[func]
               }

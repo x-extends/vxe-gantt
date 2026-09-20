@@ -1,5 +1,5 @@
-import type { VxeGanttDefines, VxeGanttTaskType } from '../../../types'
 import type { VxeTableDefines, VxeTablePropTypes } from 'vxe-table'
+import type { VxeGanttDefines, VxeGanttTaskType } from '../../../types'
 
 export function getRefElem (refEl: any) {
   if (refEl) {

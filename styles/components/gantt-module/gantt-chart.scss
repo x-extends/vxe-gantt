@@ -15,6 +15,18 @@
   height: 0;
 }
 .vxe-gantt-view--chart-row {
+  &.is--critical {
+    & > .vxe-gantt-view--chart-bar {
+      .vxe-gantt-view--chart-bar-content-wrapper {
+        border: var(--vxe-ui-gantt-view-task-line-width) solid var(--vxe-ui-gantt-view-bar-critical-path-line-color);
+      }
+    }
+    & > .vxe-gantt-view--chart-custom-bar {
+      .vxe-gantt-view--chart-custom-bar-content-wrapper {
+        border: var(--vxe-ui-gantt-view-task-line-width) solid var(--vxe-ui-gantt-view-bar-critical-path-line-color);
+      }
+    }
+  }
   &.row--pending {
     .vxe-gantt-view--chart-bar {
       color: var(--vxe-ui-font-disabled-color);

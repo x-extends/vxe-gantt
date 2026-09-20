@@ -60,7 +60,8 @@ export default defineVxeComponent({
       const taskBarOverviewSlot = ganttSlots.taskBarOverview || ganttSlots['task-bar-overview']
 
       const { treeConfig, taskBarMilestoneConfig, taskBarSubviewConfig } = ganttProps
-      const { activeLink, activeBarRowid } = ganttReactData
+      const { activeLink, activeBarRowid, criticalPathFlag } = ganttReactData
+      const { criticalRowMaps } = ganttInternalData
       const titleField = $xeGantt.computeTitleField
       const progressField = $xeGantt.computeProgressField
       const typeField = $xeGantt.computeTypeField
@@ -79,7 +80,7 @@ export default defineVxeComponent({
         rowIndex,
         _rowIndex
       }
-      const { showProgress, showContent, contentMethod, barStyle, moveable, showTooltip } = taskBarOpts
+      const { showProgress, showCriticalPath, showContent, contentMethod, barStyle, moveable, showTooltip } = taskBarOpts
       const isBarRowStyle = XEUtils.isFunction(barStyle)
       const barStyObj = (barStyle ? (isBarRowStyle ? barStyle(barParams) : barStyle) : {}) || {}
       const barRound = barStyObj.round
@@ -269,6 +270,7 @@ export default defineVxeComponent({
                   },
                   class: ['vxe-gantt-view--chart-subview-row', `is--${childRenderTaskType}`, {
                     'is--progress': showProgress,
+                    'is--critical': showCriticalPath && criticalPathFlag && criticalRowMaps.has(childRowid),
                     'is--round': childRound,
                     'is--move': moveable,
                     'row--pending': !!pendingRowFlag && !!pendingRowMaps[childRowid]
@@ -395,6 +397,7 @@ export default defineVxeComponent({
         },
         class: ['vxe-gantt-view--chart-row', `is--${renderTaskType}`, {
           'is--progress': showProgress,
+          'is--critical': showCriticalPath && criticalPathFlag && criticalRowMaps.has(rowid),
           'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid],
           'is--round': barRound,
           'is--move': moveable
