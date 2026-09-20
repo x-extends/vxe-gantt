@@ -40,7 +40,11 @@ function createInternalData (): GanttInternalData {
     dragLinkToStore: {
       rowid: null,
       type: 0
-    }
+    },
+    // 关键路径
+    criticalRowList: [],
+    criticalRowMaps: new Map(),
+    criticalLinkKeyMaps: new Map()
   }
 }
 
@@ -94,7 +98,12 @@ function createReactData (): GanttReactData {
 
     nowTime: 0,
     currLeftSpacing: 0,
-    currRightSpacing: 0
+    currRightSpacing: 0,
+
+    // 关键路径
+    criticalLinks: [],
+    criticalRowIds: [],
+    criticalPathFlag: 0
   }
 }
 
@@ -156,6 +165,7 @@ export default defineVxeComponent({
     taskLinkConfig: Object as PropType<VxeGanttPropTypes.TaskLinkConfig>,
     taskBarConfig: Object as PropType<VxeGanttPropTypes.TaskBarConfig>,
     taskBarMilestoneConfig: Object as PropType<VxeGanttPropTypes.TaskBarMilestoneConfig>,
+    taskCriticalPathConfig: Object as PropType<VxeGanttPropTypes.TaskCriticalPathConfig>,
     taskBarSubviewConfig: Object as PropType<VxeGanttPropTypes.TaskBarSubviewConfig>,
     taskBarTooltipConfig: Object as PropType<VxeGanttPropTypes.TaskBarTooltipConfig>,
     taskSplitConfig: Object as PropType<VxeGanttPropTypes.TaskSplitConfig>,
@@ -308,6 +318,10 @@ export default defineVxeComponent({
       return Object.assign({}, getConfig().gantt.taskBarMilestoneConfig, props.taskBarMilestoneConfig)
     })
 
+    const computeTaskCriticalPathOpts = computed(() => {
+      return Object.assign({}, getConfig().gantt.taskCriticalPathConfig, props.taskCriticalPathConfig)
+    })
+
     const computeTaskBarSubviewOpts = computed(() => {
       return Object.assign({}, getConfig().gantt.taskBarSubviewConfig, props.taskBarSubviewConfig)
     })
@@ -397,6 +411,11 @@ export default defineVxeComponent({
       return !!(scrollbarOpts.y && scrollbarOpts.y.position === 'left')
     })
 
+    const computeCriticalPathVisible = computed(() => {
+      const taskBarOpts = computeTaskBarOpts.value
+      return taskBarOpts.showCriticalPath
+    })
+
     const computeWrapperStyle = computed(() => {
       const { height, maxHeight, taskBarSubviewConfig } = props
       const { isZMax, tZindex, overflowY, scrollbarWidth } = reactData
@@ -404,11 +423,16 @@ export default defineVxeComponent({
       const { viewStyle, tableStyle } = taskViewOpts
       const taskBarOpts = computeTaskBarOpts.value
       const { barStyle } = taskBarOpts
+      const taskCriticalPathOpts = computeTaskCriticalPathOpts.value
+      const { lineColor: cpLineColor } = taskCriticalPathOpts
       const taskBarSubviewOpts = computeTaskBarSubviewOpts.value
       const taskNowLineOpts = computeTaskNowLineOpts.value
       const { fontColor: nlfColor, bgColor: nlbgColor, width: nlWidth } = taskNowLineOpts
       const stys: VxeComponentStyleType = {
         '--vxe-ui-gantt-scrollbar-width': (overflowY && scrollbarWidth ? scrollbarWidth : 0) + 'px'
+      }
+      if (cpLineColor) {
+        stys['--vxe-ui-gantt-view-bar-critical-path-line-color'] = cpLineColor
       }
       if (isZMax) {
         stys.zIndex = tZindex
@@ -616,6 +640,7 @@ export default defineVxeComponent({
       computeTaskBarResizeTooltipOpts,
       computeTaskSplitOpts,
       computeTaskBarMilestoneOpts,
+      computeTaskCriticalPathOpts,
       computeTaskBarSubviewOpts,
       computeTaskBarTooltipOpts,
       computeTaskLinkOpts,
@@ -1950,6 +1975,15 @@ export default defineVxeComponent({
           })
         }
         return nextTick()
+      },
+      getCriticalPath () {
+        const { criticalRowIds, criticalLinks } = reactData
+        const { criticalRowMaps } = internalData
+        return {
+          rowIds: criticalRowIds.slice(0),
+          rows: Array.from(criticalRowMaps.values()),
+          links: criticalLinks.slice(0)
+        }
       }
     }
 
@@ -2243,7 +2277,7 @@ export default defineVxeComponent({
             // 处理插槽
             formOpts.items.forEach((item) => {
               XEUtils.each(item.slots, (func) => {
-                if (!XEUtils.isFunction(func)) {
+                if (func && !XEUtils.isFunction(func)) {
                   if (slots[func]) {
                     formSlots[func] = slots[func] as any
                   }
@@ -2754,8 +2788,15 @@ export default defineVxeComponent({
       initProxy()
     })
 
+    const reViewFlag = ref(0)
     watch(computeTaskViewScales, () => {
       handleTaskScaleConfig()
+      reViewFlag.value++
+    })
+    watch(computeCriticalPathVisible, () => {
+      reViewFlag.value++
+    })
+    watch(reViewFlag, () => {
       $xeGantt.refreshTaskView()
     })
 

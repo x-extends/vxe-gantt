@@ -4,12 +4,29 @@
 // 局部变量
 .vxe-gantt {
   --vxe-ui-gantt-current-split-bar-action-btn-offset-left: 0px;
+  --vxe-ui-gantt-current-font-size: var(--vxe-ui-font-size-default);
+  &.size--xlarge {
+    --vxe-ui-gantt-current-font-size: var(--vxe-ui-font-size-xlarge);
+  }
+  &.size--large {
+    --vxe-ui-gantt-current-font-size: var(--vxe-ui-font-size-large);
+  }
+  &.size--medium {
+    --vxe-ui-gantt-current-font-size: var(--vxe-ui-font-size-medium);
+  }
+  &.size--small {
+    --vxe-ui-gantt-current-font-size: var(--vxe-ui-font-size-small);
+  }
+  &.size--mini {
+    --vxe-ui-gantt-current-font-size: var(--vxe-ui-font-size-mini);
+  }
 }
 
 .vxe-gantt {
   position: relative;
   display: flex;
   flex-direction: column;
+  font-size: var(--vxe-ui-gantt-current-font-size);
   &.is--loading {
     &:before {
       content: "";
@@ -750,18 +767,5 @@
         bottom: -0px;
       }
     }
-  }
-}
-
-.vxe-gantt {
-  font-size: var(--vxe-ui-font-size-default);
-  &.size--medium {
-    font-size: var(--vxe-ui-font-size-medium);
-  }
-  &.size--small {
-    font-size: var(--vxe-ui-font-size-small);
-  }
-  &.size--mini {
-    font-size: var(--vxe-ui-font-size-mini);
   }
 }

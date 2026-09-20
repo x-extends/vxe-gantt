@@ -100,6 +100,13 @@ setConfig({
     taskBarSubviewConfig: {
       // showOverview: false
     },
+    taskBarMoveConfig: {
+      isLimitByLink: true
+    },
+    taskBarResizeConfig: {
+      minWidthSize: 0.5,
+      isLimitByLink: true
+    },
     taskBarMoveTooltipConfig: {
       enterable: true,
       enterDelay: 0

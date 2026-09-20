@@ -3,21 +3,45 @@ import { defineVxeComponent } from '../../ui/src/comp'
 import { setScrollTop, setScrollLeft, removeClass, addClass, hasClass } from '../../ui/src/dom'
 import { VxeUI } from '@vxe-ui/core'
 import { getRefElem, getTaskBarLeft, getTaskBarWidth, hasMilestoneTask, getTaskType, hasSubviewTask } from './util'
+import { VxeGanttDependencyType } from './static'
 import XEUtils from 'xe-utils'
 import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
 import GanttViewFooterComponent from './gantt-footer'
 
 import type { VxeTableConstructor } from 'vxe-table'
-import type { VxeGanttViewConstructor, GanttViewReactData, GanttViewPrivateRef, VxeGanttDefines, VxeGanttViewPrivateMethods, GanttViewInternalData, VxeGanttViewMethods, GanttViewPrivateComputed, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
+import type { VxeGanttViewConstructor, GanttViewReactData, GanttViewPrivateRef, VxeGanttDefines, VxeGanttPropTypes, VxeGanttViewPrivateMethods, GanttViewInternalData, VxeGanttViewMethods, GanttViewPrivateComputed, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
+
+interface CpmLink extends VxeGanttPropTypes.Link {
+  raw: VxeGanttPropTypes.Link
+}
+
+interface CpmItem {
+  row: any
+  rowid: string
+  duration: number
+  incoming: CpmLink[]
+  outgoing: CpmLink[]
+  indeg: number
+  ES: number
+  EF: number
+  LS: number
+  LF: number
+}
 
 const { globalEvents } = VxeUI
+
+const { FinishToStart, StartToFinish, StartToStart, FinishToFinish } = VxeGanttDependencyType
 
 const sourceType = 'gantt'
 const secondMs = 1000
 const minuteMs = 1000 * 60
 const hourMs = 1000 * 60 * 60
 const dayMs = hourMs * 24
+
+function getTaskLinkKey (from: string | number, to: string | number, type?: VxeGanttDependencyType) {
+  return from + '_' + to + '_' + (type || 0)
+}
 
 function createInternalData (): GanttViewInternalData {
   return {
@@ -91,8 +115,10 @@ export default defineVxeComponent({
 
     const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
 
-    const { reactData: ganttReactData, internalData: ganttInternalData } = $xeGantt
-    const { computeDateFormat, computeTaskViewOpts, computeStartField, computeEndField, computeTypeField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft, computeScaleUnit, computeWeekScale, computeMinScale, computeTaskNowLineOpts, computeScaleStep } = $xeGantt.getComputeMaps()
+    const ganttProps = $xeGantt.props
+    const ganttReactData = $xeGantt.reactData
+    const ganttInternalData = $xeGantt.internalData
+    const { computeDateFormat, computeTaskBarOpts, computeTaskViewOpts, computeStartField, computeEndField, computeTypeField, computeScrollbarOpts, computeScrollbarXToTop, computeScrollbarYToLeft, computeScaleUnit, computeWeekScale, computeMinScale, computeTaskNowLineOpts, computeScaleStep } = $xeGantt.getComputeMaps()
 
     const refElem = ref<HTMLDivElement>()
 
@@ -226,7 +252,6 @@ export default defineVxeComponent({
     })
 
     const computeNowLineLeft = computed(() => {
-      const ganttReactData = $xeGantt.reactData
       const { minViewDate, maxViewDate, viewCellWidth } = reactData
       const { visibleColumn, todayDateMaps } = internalData
       const minScale = computeMinScale.value
@@ -291,7 +316,6 @@ export default defineVxeComponent({
     }
 
     const updateTodayData = () => {
-      const ganttReactData = $xeGantt.reactData
       const { taskScaleList } = ganttReactData
       const minScale = computeMinScale.value
       if (minScale) {
@@ -324,7 +348,6 @@ export default defineVxeComponent({
     }
 
     const handleColumnHeader = () => {
-      const ganttReactData = $xeGantt.reactData
       const { taskScaleList } = ganttReactData
       const scaleUnit = computeScaleUnit.value
       const minScale = computeMinScale.value
@@ -1011,7 +1034,7 @@ export default defineVxeComponent({
     }
 
     const handleUpdateData = () => {
-      const ganttProps = $xeGantt.props
+      const { linkList } = ganttReactData
       const { treeConfig } = ganttProps
       const { scrollXStore } = internalData
       const $xeTable = internalData.xeTable
@@ -1019,6 +1042,7 @@ export default defineVxeComponent({
       const edMaps: Record<string, any> = {}
       let minDate: Date | null = null
       let maxDate: Date | null = null
+      const allList: any[] = []
       if ($xeTable) {
         const startField = computeStartField.value
         const endField = computeEndField.value
@@ -1056,6 +1080,7 @@ export default defineVxeComponent({
               maxDate = endDate
             }
           }
+          allList.push(row)
         }
 
         if (isRowGroupStatus) {
@@ -1078,6 +1103,234 @@ export default defineVxeComponent({
       internalData.startMaps = sdMaps
       internalData.endMaps = edMaps
       handleParseColumn()
+      handleCriticalPath(allList, linkList)
+    }
+
+    /**
+     * 正向：后置 ES 的下连接线
+     */
+    function forwardCriticalPathLowerBound (linkType: VxeGanttDependencyType, predES: number, predEF: number, duration: number): number {
+      switch (linkType) {
+        case FinishToStart:
+          return predEF
+        case StartToFinish:
+          return predES - duration
+        case StartToStart:
+          return predES
+        case FinishToFinish:
+          return predEF - duration
+        default:
+          return 0
+      }
+    }
+
+    /**
+     * 反向：前置 LF 的上连接线
+     */
+    function backwardCriticalPathUpperBound (linkType: VxeGanttDependencyType, succLS: number, succLF: number, duration: number): number {
+      switch (linkType) {
+        case FinishToStart:
+          return succLS
+        case StartToFinish:
+          return succLF + duration
+        case StartToStart:
+          return succLS + duration
+        case FinishToFinish:
+          return succLF
+        default:
+          return -1
+      }
+    }
+
+    /**
+     * 关键边：两端都关键时，约束是否连接
+     */
+    function isCriticalPathLinkTight (linkType: VxeGanttDependencyType, fromES: number, fromEF: number, toES: number, toEF: number, tolerance: number) {
+      switch (linkType) {
+        case FinishToStart:
+          return Math.abs(fromEF - toES) < tolerance
+        case StartToFinish:
+          return Math.abs(fromES - toEF) < tolerance
+        case StartToStart:
+          return Math.abs(fromES - toES) < tolerance
+        case FinishToFinish:
+          return Math.abs(fromEF - toEF) < tolerance
+        default:
+          return false
+      }
+    }
+
+    function handleCriticalPath (data: any[], links: VxeGanttPropTypes.Links) {
+      const taskBarOpts = computeTaskBarOpts.value
+      const $xeTable = internalData.xeTable
+
+      const criticalRowList: any[] = []
+      const criticalRowMaps = new Map<string, any>()
+      const criticalLinkKeyMaps = new Map<string, VxeGanttPropTypes.Link>()
+
+      ganttInternalData.criticalRowList = criticalRowList
+      ganttInternalData.criticalRowMaps = criticalRowMaps
+      ganttInternalData.criticalLinkKeyMaps = criticalLinkKeyMaps
+      if (!taskBarOpts.showCriticalPath || !links.length || !data.length || !$xeTable) {
+        if (ganttReactData.criticalRowIds.length || ganttReactData.criticalLinks.length) {
+          ganttReactData.criticalPathFlag++
+        }
+        ganttReactData.criticalLinks = []
+        ganttReactData.criticalRowIds = []
+        return
+      }
+      const { chartMaps } = internalData
+      const tolerance = 1e-6
+
+      const nodeMap = new Map<string, CpmItem>()
+      for (const row of data) {
+        const rowid = $xeTable.getRowid(row)
+        const chartRest = chartMaps[rowid]
+        nodeMap.set(rowid, {
+          row,
+          rowid: rowid,
+          duration: chartRest ? chartRest.oWidthSize : 0,
+          incoming: [],
+          outgoing: [],
+          indeg: 0,
+          ES: 0,
+          EF: 0,
+          LS: 0,
+          LF: 0
+        })
+      }
+
+      // 边界
+      const linkList: CpmLink[] = []
+      for (const link of links) {
+        const fromKey = '' + link.from
+        const toKey = '' + link.to
+        if (!nodeMap.has(fromKey) || !nodeMap.has(toKey) || fromKey === toKey) {
+          continue
+        }
+        const lkItemitem: CpmLink = {
+          from: link.from,
+          to: link.to,
+          type: XEUtils.toNumber(link.type) || 0,
+          raw: link
+        }
+        linkList.push(lkItemitem)
+        const toObjItem = nodeMap.get('' + link.to)
+        const fromObjItem = nodeMap.get('' + link.from)
+        if (fromObjItem) {
+          fromObjItem.outgoing.push(lkItemitem)
+        }
+        if (toObjItem) {
+          toObjItem.incoming.push(lkItemitem)
+          toObjItem.indeg++
+        }
+      }
+
+      // 拓扑排序 + 环检测
+      const queueList: CpmItem[] = []
+      nodeMap.forEach(nodeitem => {
+        if (nodeitem.indeg === 0) {
+          queueList.push(nodeitem)
+        }
+      })
+
+      const orderList: CpmItem[] = []
+      for (let head = 0; head < queueList.length; head++) {
+        const node = queueList[head]
+        orderList.push(node)
+        for (const lkItemitem of node.outgoing) {
+          const toObjItem = nodeMap.get('' + lkItemitem.to)
+          if (toObjItem) {
+            const nextDeg = toObjItem.indeg - 1
+            toObjItem.indeg = nextDeg
+            if (nextDeg === 0) {
+              queueList.push(nodeMap.get('' + lkItemitem.to)!)
+            }
+          }
+        }
+      }
+
+      if (orderList.length !== nodeMap.size) {
+        // 异常数据，依赖图中存在环
+        if (ganttReactData.criticalRowIds.length || ganttReactData.criticalLinks.length) {
+          ganttReactData.criticalPathFlag++
+        }
+        ganttReactData.criticalLinks = []
+        ganttReactData.criticalRowIds = []
+        return
+      }
+
+      // 正向：ES / EF
+      let criticalDuration = 0
+      for (const node of orderList) {
+        let earliestStart = 0
+        for (const lkItem of node.incoming) {
+          const fromObjItem = nodeMap.get('' + lkItem.from)
+          if (fromObjItem) {
+            const need = forwardCriticalPathLowerBound(lkItem.type, fromObjItem.ES, fromObjItem.EF, node.duration)
+            if (need > earliestStart) {
+              earliestStart = need
+            }
+          }
+        }
+        node.ES = earliestStart
+        node.EF = earliestStart + node.duration
+        if (node.EF > criticalDuration) {
+          criticalDuration = node.EF
+        }
+      }
+
+      // 反向：LS / LF
+      for (let i = orderList.length - 1; i >= 0; i--) {
+        const node = orderList[i]
+        let latestFinish = criticalDuration
+        for (const lkItem of node.outgoing) {
+          const toObjItem = nodeMap.get('' + lkItem.to)
+          if (toObjItem) {
+            const need = backwardCriticalPathUpperBound(lkItem.type, toObjItem.LS, toObjItem.LF, node.duration)
+            if (need < latestFinish) {
+              latestFinish = need
+            }
+          }
+        }
+        node.LF = latestFinish
+        node.LS = latestFinish - node.duration
+      }
+
+      // 关键任务
+      const criticalSet = new Set<string>()
+      const criticalRowIds: string[] = []
+      for (const nodeItem of orderList) {
+        if (Math.abs(nodeItem.LS - nodeItem.ES) < tolerance) {
+          criticalSet.add(nodeItem.rowid)
+          criticalRowIds.push(nodeItem.rowid)
+          criticalRowList.push(nodeItem.row)
+          criticalRowMaps.set(nodeItem.rowid, nodeItem.row)
+        }
+      }
+
+      // 关键连接线
+      const criticalLinks: VxeGanttPropTypes.Links = []
+      for (const lkItem of linkList) {
+        const toObjItem = nodeMap.get('' + lkItem.to)
+        const fromObjItem = nodeMap.get('' + lkItem.from)
+        if (!toObjItem || !fromObjItem) {
+          continue
+        }
+        // 两端必须都是关键任务
+        if (!criticalSet.has(fromObjItem.rowid) || !criticalSet.has(toObjItem.rowid)) {
+          continue
+        }
+        // 约束必须是连接的
+        if (isCriticalPathLinkTight(lkItem.type, fromObjItem.ES, fromObjItem.EF, toObjItem.ES, toObjItem.EF, tolerance)) {
+          criticalLinks.push(lkItem.raw)
+          criticalLinkKeyMaps.set(getTaskLinkKey(lkItem.from, lkItem.to, lkItem.type), lkItem.raw)
+        }
+      }
+
+      ganttReactData.criticalLinks = criticalLinks
+      ganttReactData.criticalRowIds = criticalRowIds
+      ganttReactData.criticalPathFlag++
     }
 
     const calcScrollbar = () => {
@@ -1181,7 +1434,7 @@ export default defineVxeComponent({
                     } else {
                       childBarEl.style.left = `${getTaskBarLeft(childChartRest, viewCellWidth)}px`
                       if (!hasClass(childBarEl, 'is--milestone')) {
-                      // 里程碑不需要宽度
+                        // 里程碑不需要宽度
                         childBarEl.style.width = `${getTaskBarWidth(childChartRest, viewCellWidth)}px`
                       }
                     }

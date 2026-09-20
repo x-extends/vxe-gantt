@@ -26,6 +26,7 @@ const ganttOptions = reactive<VxeGanttProps<RowVO>>({
     showProgress: true, // 是否显示进度条
     showContent: true, // 是否在任务条显示内容
     moveable: true, // 是否允许拖拽任务移动日期
+    showCriticalPath: true,
     barStyle: {
       round: true, // 圆角
       bgColor: '#fca60b', // 任务条的背景颜色
