@@ -2,7 +2,7 @@ import { h, ref, PropType, computed, provide, reactive, onBeforeUnmount, onUnmou
 import { defineVxeComponent } from '../../ui/src/comp'
 import XEUtils from 'xe-utils'
 import { getLastZIndex, nextZIndex, isEnableConf, hasEnableConf, formatText } from '../../ui/src/utils'
-import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
+import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass, hasClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
 import { VxeUI } from '@vxe-ui/core'
 import { ganttEmits } from './emits'
@@ -2022,10 +2022,22 @@ export default defineVxeComponent({
         }
         return 0
       },
+      getParentElem () {
+        const el = refElem.value
+        if (!el) {
+          return null
+        }
+        let parentEl = el.parentElement
+        // 如果是虚拟滚动条
+        if (parentEl && hasClass(parentEl, 'vxe-scrollbar--view-inner')) {
+          parentEl = parentEl.parentElement
+        }
+        return parentEl
+      },
       getParentHeight () {
         const el = refElem.value
         if (el) {
-          const parentEl = el.parentElement as HTMLElement
+          const parentEl = $xeGantt.getParentElem()
           return (reactData.isZMax ? getDomNode().visibleHeight : (parentEl ? XEUtils.toNumber(getComputedStyle(parentEl).height) : 0)) - ganttPrivateMethods.getExcludeHeight()
         }
         return 0
