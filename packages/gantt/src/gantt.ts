@@ -3,7 +3,7 @@ import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
 import XEUtils from 'xe-utils'
 import { getLastZIndex, nextZIndex, isEnableConf, hasEnableConf, formatText } from '../../ui/src/utils'
-import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass } from '../../ui/src/dom'
+import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass, hasClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
 import { getRefElem } from './util'
 import { createComponentLog } from '../../ui/src/log'
@@ -2169,13 +2169,27 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return 0
     },
+    getParentElem () {
+      const $xeGrid = this
+
+      const el = $xeGrid.$refs.refElem as HTMLDivElement
+      if (!el) {
+        return null
+      }
+      let parentEl = el.parentElement
+      // 如果是虚拟滚动条
+      if (parentEl && hasClass(parentEl, 'vxe-scrollbar--view-inner')) {
+        parentEl = parentEl.parentElement
+      }
+      return parentEl
+    },
     getParentHeight () {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       const el = $xeGantt.$refs.refElem as HTMLDivElement
       if (el) {
-        const parentEl = el.parentElement as HTMLElement
+        const parentEl = $xeGantt.getParentElem()
         return (reactData.isZMax ? getDomNode().visibleHeight : (parentEl ? XEUtils.toNumber(getComputedStyle(parentEl).height) : 0)) - $xeGantt.getExcludeHeight()
       }
       return 0
