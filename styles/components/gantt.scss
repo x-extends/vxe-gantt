@@ -769,3 +769,158 @@
     }
   }
 }
+
+// 滚动条
+.vxe-gantt--layout-wrapper {
+  &.is--virtual-scrollbar {
+    &.ov-padding {
+      &.overflow-x {
+        &.sx-pos--top {
+          & > .vxe-gantt-view--viewport-wrapper {
+            padding-top: var(--vxe-ui-scrollbar-x-height);
+          }
+        }
+        &.sx-pos--bottom {
+          & > .vxe-gantt-view--viewport-wrapper {
+            padding-bottom: var(--vxe-ui-scrollbar-x-height);
+          }
+        }
+      }
+      &.overflow-y {
+        &.sy-pos--left {
+          & > .vxe-gantt-view--viewport-wrapper {
+            padding-left: var(--vxe-ui-scrollbar-y-width);
+          }
+        }
+        &.sy-pos--right {
+          & > .vxe-gantt-view--viewport-wrapper {
+            padding-right: var(--vxe-ui-scrollbar-y-width);
+          }
+        }
+      }
+    }
+  }
+  & > .vxe-scrollbar {
+    position: unset;
+  }
+}
+.vxe-gantt--gantt-container {
+  &.is--virtual-scrollbar {
+    &.ov-x--auto-hide {
+      &:hover {
+        & > .vxe-gantt--table-wrapper {
+          & > .vxe-table {
+            & > .vxe-table--render-wrapper {
+              & > .vxe-table--layout-wrapper {
+                & > .vxe-scrollbar {
+                  & > .vxe-scrollbar--track-x {
+                    opacity: 1;
+                  }
+                }
+              }
+            }
+          }
+        }
+        & > .vxe-gantt--view-wrapper {
+          & > .vxe-gantt-view {
+            & > .vxe-gantt-view--render-wrapper {
+              & > .vxe-gantt--layout-wrapper {
+                & > .vxe-scrollbar {
+                  & > .vxe-scrollbar--track-x {
+                    opacity: 1;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      & > .vxe-gantt--table-wrapper {
+        & > .vxe-table {
+          & > .vxe-table--render-wrapper {
+            & > .vxe-table--layout-wrapper {
+              & > .vxe-scrollbar {
+                & > .vxe-scrollbar--track-x {
+                  opacity: 0;
+                  @include baseMixin.createAnimationTransition(opacity, 0.8s);
+                }
+              }
+            }
+          }
+        }
+      }
+      & > .vxe-gantt--view-wrapper {
+        & > .vxe-gantt-view {
+          & > .vxe-gantt-view--render-wrapper {
+            & > .vxe-gantt--layout-wrapper {
+              & > .vxe-scrollbar {
+                & > .vxe-scrollbar--track-x {
+                  opacity: 0;
+                  @include baseMixin.createAnimationTransition(opacity, 0.8s);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    &.ov-y--auto-hide {
+      &:hover {
+        & > .vxe-gantt--table-wrapper {
+          & > .vxe-table {
+            & > .vxe-table--render-wrapper {
+              & > .vxe-table--layout-wrapper {
+                & > .vxe-scrollbar {
+                  & > .vxe-scrollbar--track-y {
+                    opacity: 1;
+                  }
+                }
+              }
+            }
+          }
+        }
+        & > .vxe-gantt--view-wrapper {
+          & > .vxe-gantt-view {
+            & > .vxe-gantt-view--render-wrapper {
+              & > .vxe-gantt--layout-wrapper {
+                & > .vxe-scrollbar {
+                  & > .vxe-scrollbar--track-y {
+                    opacity: 1;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      & > .vxe-gantt--table-wrapper {
+        & > .vxe-table {
+          & > .vxe-table--render-wrapper {
+            & > .vxe-table--layout-wrapper {
+              & > .vxe-scrollbar {
+                & > .vxe-scrollbar--track-y {
+                  opacity: 0;
+                  @include baseMixin.createAnimationTransition(opacity, 0.8s);
+                }
+              }
+            }
+          }
+        }
+      }
+      & > .vxe-gantt--view-wrapper {
+        & > .vxe-gantt-view {
+          & > .vxe-gantt-view--render-wrapper {
+            & > .vxe-gantt--layout-wrapper {
+              & > .vxe-scrollbar {
+                & > .vxe-scrollbar--track-y {
+                  opacity: 0;
+                  @include baseMixin.createAnimationTransition(opacity, 0.8s);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

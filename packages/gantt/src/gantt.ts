@@ -2,7 +2,7 @@ import { PropType, VNode, CreateElement, Component } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
 import XEUtils from 'xe-utils'
-import { getLastZIndex, nextZIndex, isEnableConf, hasEnableConf, formatText } from '../../ui/src/utils'
+import { getLastZIndex, nextZIndex, isEnableConf, hasEnableConf, formatText, getDefaultConfig } from '../../ui/src/utils'
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass, hasClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
 import { getRefElem } from './util'
@@ -10,7 +10,7 @@ import { createComponentLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
 
-import type { ValueOf, VxeFormInstance, VxeFormItemProps, VxePagerInstance, VxePagerDefines, VxeComponentStyleType, VxeComponentSizeType, VxeFormDefines, VxeFormItemPropTypes } from 'vxe-pc-ui'
+import type { ValueOf, VxeFormInstance, VxeFormItemProps, VxePagerInstance, VxePagerDefines, VxeComponentStyleType, VxeComponentSizeType, VxeFormDefines, VxeFormItemPropTypes, VxeScrollbarProps } from 'vxe-pc-ui'
 import type { VxeTableMethods, VxeToolbarPropTypes, VxeTooltipInstance, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableDefines, TableReactData, VxeToolbarInstance, TableInternalData, VxeTablePropTypes, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
 import type { VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, VxeGanttViewInstance, VxeGanttDefines, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
@@ -180,6 +180,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       validConfig: PropType<VxeTablePropTypes.ValidConfig>
       editRules: PropType<VxeTablePropTypes.EditRules>
       animat: PropType<VxeTablePropTypes.Animat>
+      useScrollbar: PropType<VxeTablePropTypes.UseScrollbar>
       scrollbarConfig: PropType<VxeTablePropTypes.ScrollbarConfig>
       showFooter: PropType<VxeTablePropTypes.ShowFooter>
       params: PropType<VxeTablePropTypes.Params>
@@ -230,11 +231,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
     const internalData = createInternalData()
 
+    const scrollDefaultConf = Object.assign({}, getConfig().scrollbar)
+
     return {
       xID,
       reactData,
       internalData,
-      reViewFlag: 0
+      reViewFlag: 0,
+      scrollDefaultConf
     }
   },
   computed: {
@@ -463,17 +467,61 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       return Object.assign({}, getConfig().gantt.scrollbarConfig, props.scrollbarConfig)
     },
-    computeScrollbarXToTop () {
+    computeScrollbarXOpts () {
       const $xeGantt = this
 
       const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
-      return !!(scrollbarOpts.x && scrollbarOpts.x.position === 'top')
+      return scrollbarOpts.x ? Object.assign({}, scrollbarOpts.x, scrollbarOpts.xConfig) : (scrollbarOpts.xConfig || {})
+    },
+    computeScrollbarYOpts () {
+      const $xeGantt = this
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
+      return scrollbarOpts.y ? Object.assign({}, scrollbarOpts.y, scrollbarOpts.yConfig) : (scrollbarOpts.yConfig || {})
+    },
+    computeScrollXHeight () {
+      const $xeGantt = this
+      const scrollDefaultConf = ($xeGantt as any).scrollDefaultConf as VxeScrollbarProps
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
+      const scrollbarXOpts = $xeGantt.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
+      return XEUtils.toNumber(getDefaultConfig(getDefaultConfig(scrollbarXOpts.height, scrollbarOpts.height), scrollDefaultConf.height))
+    },
+    computeScrollYWidth () {
+      const $xeGantt = this
+      const scrollDefaultConf = ($xeGantt as any).scrollDefaultConf as VxeScrollbarProps
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
+      const scrollbarYOpts = $xeGantt.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
+      return XEUtils.toNumber(getDefaultConfig(getDefaultConfig(scrollbarYOpts.width, scrollbarOpts.width), scrollDefaultConf.width))
+    },
+    computeScrollXAutoHide () {
+      const $xeGantt = this
+      const scrollDefaultConf = ($xeGantt as any).scrollDefaultConf as VxeScrollbarProps
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
+      const scrollbarXOpts = $xeGantt.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
+      return getDefaultConfig(getDefaultConfig(scrollbarXOpts.autoHide, scrollbarOpts.autoHide), scrollDefaultConf.autoHide)
+    },
+    computeScrollYAutoHide () {
+      const $xeGantt = this
+      const scrollDefaultConf = ($xeGantt as any).scrollDefaultConf as VxeScrollbarProps
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
+      const scrollbarYOpts = $xeGantt.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
+      return getDefaultConfig(getDefaultConfig(scrollbarYOpts.autoHide, scrollbarOpts.autoHide), scrollDefaultConf.autoHide)
+    },
+    computeScrollbarXToTop () {
+      const $xeGantt = this
+
+      const scrollbarXOpts = $xeGantt.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
+      return scrollbarXOpts.position === 'top'
     },
     computeScrollbarYToLeft () {
       const $xeGantt = this
 
-      const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
-      return !!(scrollbarOpts.y && scrollbarOpts.y.position === 'left')
+      const scrollbarYOpts = $xeGantt.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
+      return scrollbarYOpts.position === 'left'
     },
     computeCriticalPathVisible () {
       const $xeGantt = this
@@ -486,7 +534,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const props = $xeGantt
       const reactData = $xeGantt.reactData
 
-      const { height, maxHeight, taskBarSubviewConfig } = props
+      const { height, maxHeight, useScrollbar, taskBarSubviewConfig } = props
       const { isZMax, tZindex, overflowY, scrollbarWidth } = reactData
       const taskViewOpts = $xeGantt.computeTaskViewOpts as VxeGanttPropTypes.TaskViewConfig
       const { viewStyle, tableStyle } = taskViewOpts
@@ -497,8 +545,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const taskBarSubviewOpts = $xeGantt.computeTaskBarSubviewOpts
       const taskNowLineOpts = $xeGantt.computeTaskNowLineOpts
       const { fontColor: nlfColor, bgColor: nlbgColor, width: nlWidth } = taskNowLineOpts
+      const barWidth = $xeGantt.computeScrollYWidth
+      const barHeight = $xeGantt.computeScrollXHeight
       const stys: VxeComponentStyleType = {
-        '--vxe-ui-gantt-scrollbar-width': (overflowY && scrollbarWidth ? scrollbarWidth : 0) + 'px'
+        '--vxe-ui-gantt-scrollbar-width': (overflowY ? (useScrollbar ? 'var(--vxe-ui-scrollbar-y-width)' : (scrollbarWidth + 'px')) : '')
       }
       if (cpLineColor) {
         stys['--vxe-ui-gantt-view-bar-critical-path-line-color'] = cpLineColor
@@ -512,6 +562,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
         if (maxHeight) {
           stys.maxHeight = maxHeight === 'auto' || maxHeight === '100%' ? '100%' : toCssUnit(maxHeight)
         }
+      }
+      if (barWidth || barHeight) {
+        stys['--vxe-ui-scrollbar-y-width'] = toCssUnit(barWidth || barHeight)
+        stys['--vxe-ui-scrollbar-x-height'] = toCssUnit(barHeight || barWidth)
       }
       if (barStyle && !XEUtils.isFunction(barStyle)) {
         const { bgColor, completedBgColor, overviewBgColor } = barStyle
@@ -2833,8 +2887,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
     },
     renderChildLayout (h: CreateElement, layoutKeys: VxeGanttDefines.LayoutKey[]) {
       const $xeGantt = this
+      const props = $xeGantt
       const reactData = $xeGantt.reactData
 
+      const { useScrollbar } = props
       const { showLeftView, showRightView } = reactData
       const taskSplitOpts = $xeGantt.computeTaskSplitOpts
       const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
@@ -2858,6 +2914,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                 ref: 'refGanttContainerElem',
                 key: 'tv',
                 class: ['vxe-gantt--gantt-container', `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
+                  'is--virtual-scrollbar': useScrollbar,
                   'show--left': showLeftView,
                   'hide--left': !showLeftView,
                   'show--right': showRightView,

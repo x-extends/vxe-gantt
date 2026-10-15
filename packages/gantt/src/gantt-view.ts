@@ -1,6 +1,7 @@
 import { VNode, CreateElement } from 'vue'
 import { defineVxeComponent } from '../../ui/src/comp'
 import { VxeUI } from '@vxe-ui/core'
+import { getDefaultConfig } from '../../ui/src/utils'
 import { setScrollTop, setScrollLeft, removeClass, addClass, hasClass } from '../../ui/src/dom'
 import { getRefElem, getTaskBarLeft, getTaskBarWidth, hasMilestoneTask, getTaskType, hasSubviewTask } from './util'
 import { VxeGanttDependencyType } from './static'
@@ -9,7 +10,8 @@ import GanttViewHeaderComponent from './gantt-header'
 import GanttViewBodyComponent from './gantt-body'
 import GanttViewFooterComponent from './gantt-footer'
 
-import type { TableReactData, TableInternalData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
+import type { TableReactData, TableInternalData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods, VxeTablePropTypes } from 'vxe-table'
+import type { VxeScrollbarProps } from 'vxe-pc-ui'
 import type { VxeGanttViewConstructor, GanttViewReactData, VxeGanttDefines, VxeGanttPropTypes, VxeGanttViewPrivateMethods, GanttViewInternalData, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 interface CpmLink extends VxeGanttPropTypes.Link {
@@ -29,7 +31,9 @@ interface CpmItem {
   LF: number
 }
 
-const { globalEvents } = VxeUI
+const { getConfig, domUtils, scrollbarUtils, globalResize, globalEvents, renderEmptyElement } = VxeUI
+
+const { getThumbOffsetSize, getThumbSize, getScrollFromClick, getScrollFromDrag } = scrollbarUtils
 
 const { FinishToStart, StartToFinish, StartToStart, FinishToFinish } = VxeGanttDependencyType
 
@@ -62,7 +66,12 @@ function createInternalData (): GanttViewInternalData {
       startIndex: 0,
       endIndex: 0
     },
-    // 最后滚动位置
+    // 滚动条
+    // scrollObserver: undefined,
+    // isThumbDrag: false,
+    thumbDragOffset: 0,
+    yThumbTop: 0,
+    xThumbLeft: 0,
     lastScrollTop: 0,
     lastScrollLeft: 0
   }
@@ -86,6 +95,10 @@ function createReactData (): GanttViewReactData {
     // 最后滚动时间戳
     lastScrollTime: 0,
     lazScrollLoading: false,
+
+    // 滚动条
+    yThumbHeight: 0,
+    xThumbWidth: 0,
 
     scrollVMLoading: false,
     scrollYHeight: 0,
@@ -1301,7 +1314,9 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   const $xeGantt = $xeGanttView.$xeGantt as VxeGanttConstructor & VxeGanttPrivateMethods
   const reactData = $xeGanttView.reactData
   const internalData = $xeGanttView.internalData
+  const ganttReactData = $xeGantt.reactData
 
+  const { showLeftView } = ganttReactData
   const { scrollbarWidth, scrollbarHeight, headerGroups, tableColumn } = reactData
   const { elemStore, visibleColumn } = internalData
   const $xeTable = internalData.xeTable
@@ -1314,7 +1329,7 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
     return
   }
 
-  const scrollbarOpts = $xeGantt.computeScrollbarOpts
+  const scrollYVisible = $xeGanttView.computeScrollYVisible
   const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
   const scrollbarYToLeft = $xeGantt.computeScrollbarYToLeft
 
@@ -1336,7 +1351,8 @@ function updateStyle ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivat
   }
 
   let yScrollbarVisible = 'visible'
-  if (scrollbarYToLeft || (scrollbarOpts.y && scrollbarOpts.y.visible === false)) {
+  const hideYScroll = scrollYVisible === false || scrollYVisible === 'hidden'
+  if (hideYScroll || (scrollbarYToLeft && showLeftView)) {
     osbWidth = 0
     yScrollbarVisible = 'hidden'
   }
@@ -1460,6 +1476,7 @@ function handleLazyRecalculate ($xeGanttView: VxeGanttViewConstructor & VxeGantt
       const resizeOpts = $xeTable.computeResizeOpts
       refreshDelay = resizeOpts.refreshDelay || refreshDelay
     }
+    $xeGanttView.updateScrollbar()
     if (rceTimeout) {
       clearTimeout(rceTimeout)
       if (rceRunTime && rceRunTime + (refreshDelay - 5) < Date.now()) {
@@ -1758,92 +1775,6 @@ function handleScrollData ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewP
   checkLastSyncScroll($xeGanttView, isRollX, isRollY)
 }
 
-function handleScrollEvent ($xeGanttView: VxeGanttViewConstructor & VxeGanttViewPrivateMethods, evnt: Event, isRollY: boolean, isRollX: boolean, scrollTop: number, scrollLeft: number) {
-  const $xeGantt = $xeGanttView.$xeGantt
-  const internalData = $xeGanttView.internalData
-  const $xeTable = internalData.xeTable
-
-  const { lastScrollLeft, lastScrollTop } = internalData
-  const xHandleEl = $xeGanttView.$refs.refScrollXHandleElem as HTMLDivElement
-  const yHandleEl = $xeGanttView.$refs.refScrollYHandleElem as HTMLDivElement
-  if (!xHandleEl || !yHandleEl) {
-    return
-  }
-  if (!$xeTable) {
-    return
-  }
-  const bodyHeight = yHandleEl.clientHeight
-  const bodyWidth = xHandleEl.clientWidth
-  const scrollHeight = yHandleEl.scrollHeight
-  const scrollWidth = xHandleEl.scrollWidth
-  let isTop = false
-  let isBottom = false
-  let isLeft = false
-  let isRight = false
-  let direction = ''
-  let isTopBoundary = false
-  let isBottomBoundary = false
-  let isLeftBoundary = false
-  let isRightBoundary = false
-  if (isRollX) {
-    const xThreshold = $xeTable.computeScrollXThreshold
-    isLeft = scrollLeft <= 0
-    if (!isLeft) {
-      isRight = scrollLeft + bodyWidth >= scrollWidth - 1
-    }
-    if (scrollLeft > lastScrollLeft) {
-      direction = 'right'
-      if (scrollLeft + bodyWidth >= scrollWidth - xThreshold) {
-        isRightBoundary = true
-      }
-    } else {
-      direction = 'left'
-      if (scrollLeft <= xThreshold) {
-        isLeftBoundary = true
-      }
-    }
-  }
-  if (isRollY) {
-    const yThreshold = $xeTable.computeScrollYThreshold
-    isTop = scrollTop <= 0
-    if (!isTop) {
-      isBottom = scrollTop + bodyHeight >= scrollHeight - 1
-    }
-    if (scrollTop > lastScrollTop) {
-      direction = 'bottom'
-      if (scrollTop + bodyHeight >= scrollHeight - yThreshold) {
-        isBottomBoundary = true
-      }
-    } else {
-      direction = 'top'
-      if (scrollTop <= yThreshold) {
-        isTopBoundary = true
-      }
-    }
-  }
-  handleScrollData($xeGanttView, isRollY, isRollX, scrollTop, scrollLeft)
-  const evntParams = {
-    source: sourceType,
-    scrollTop,
-    scrollLeft,
-    bodyHeight,
-    bodyWidth,
-    scrollHeight,
-    scrollWidth,
-    isX: isRollX,
-    isY: isRollY,
-    isTop,
-    isBottom,
-    isLeft,
-    isRight,
-    direction
-  }
-  if (isBottomBoundary || isTopBoundary || isRightBoundary || isLeftBoundary) {
-    $xeGantt.dispatchEvent('scroll-boundary', evntParams, evnt)
-  }
-  $xeGantt.dispatchEvent('scroll', evntParams, evnt)
-}
-
 /**
  * 同步表格滚动
  */
@@ -1883,16 +1814,120 @@ export default defineVxeComponent({
 
     const internalData = createInternalData()
 
+    const scrollDefaultConf = Object.assign({}, getConfig().scrollbar)
+
     return {
       xID,
       reactData,
-      internalData
+      internalData,
+      scrollDefaultConf,
+
+      reScrollFlag: 0
     }
   },
   computed: {
     ...({} as {
       $xeGantt(): (VxeGanttConstructor & VxeGanttPrivateMethods)
     }),
+    computeScrollbarXOpts  () {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
+      return scrollbarOpts.x ? Object.assign({}, scrollbarOpts.x, scrollbarOpts.xConfig) : (scrollbarOpts.xConfig || {})
+    },
+    computeScrollbarYOpts  () {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
+      return scrollbarOpts.y ? Object.assign({}, scrollbarOpts.y, scrollbarOpts.yConfig) : (scrollbarOpts.yConfig || {})
+    },
+    computeScrollXHeight  () {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+      const scrollDefaultConf = ($xeGanttView as any).scrollDefaultConf as VxeScrollbarProps
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
+      const scrollbarXOpts = $xeGanttView.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
+      return XEUtils.toNumber(getDefaultConfig(getDefaultConfig(scrollbarXOpts.height, scrollbarOpts.height), scrollDefaultConf.height))
+    },
+    computeScrollYWidth  () {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+      const scrollDefaultConf = ($xeGanttView as any).scrollDefaultConf as VxeScrollbarProps
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
+      const scrollbarYOpts = $xeGanttView.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
+      return XEUtils.toNumber(getDefaultConfig(getDefaultConfig(scrollbarYOpts.width, scrollbarOpts.width), scrollDefaultConf.width))
+    },
+    computeScrollXVisible  () {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
+      const scrollbarXOpts = $xeGanttView.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
+      return getDefaultConfig(scrollbarXOpts.visible, scrollbarOpts.visible)
+    },
+    computeScrollYVisible  () {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
+      const scrollbarYOpts = $xeGanttView.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
+      return getDefaultConfig(scrollbarYOpts.visible, scrollbarOpts.visible)
+    },
+    computeScrollXAutoHide  () {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+      const scrollDefaultConf = ($xeGanttView as any).scrollDefaultConf as VxeScrollbarProps
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
+      const scrollbarXOpts = $xeGanttView.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
+      return getDefaultConfig(getDefaultConfig(scrollbarXOpts.autoHide, scrollbarOpts.autoHide), scrollDefaultConf.autoHide)
+    },
+    computeScrollYAutoHide  () {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+      const scrollDefaultConf = ($xeGanttView as any).scrollDefaultConf as VxeScrollbarProps
+
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
+      const scrollbarYOpts = $xeGanttView.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
+      return getDefaultConfig(getDefaultConfig(scrollbarYOpts.autoHide, scrollbarOpts.autoHide), scrollDefaultConf.autoHide)
+    },
+    computeScrollbarXToTop  () {
+      const $xeGanttView = this
+
+      const scrollbarXOpts = $xeGanttView.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
+      return scrollbarXOpts.position === 'top'
+    },
+    computeScrollbarYToLeft  () {
+      const $xeGanttView = this
+
+      const scrollbarYOpts = $xeGanttView.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
+      return scrollbarYOpts.position === 'left'
+    },
+    computeScrollbarWrapperClss () {
+      const $xeGanttView = this
+      const reactData = ($xeGanttView as any).reactData as GanttViewReactData
+      const $xeGantt = $xeGanttView.$xeGantt
+
+      const { yThumbHeight, xThumbWidth } = reactData
+      const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
+      const scrollbarYToLeft = $xeGantt.computeScrollbarYToLeft
+      const scrollXVisible = $xeGanttView.computeScrollXVisible
+      const scrollYVisible = $xeGanttView.computeScrollYVisible
+      return domUtils.buildClass([
+        'vxe-scrollbar is--virtual',
+        `ov-x--${scrollXVisible === false ? 'hidden' : 'visible'}`,
+        `ov-y--${scrollYVisible === false ? 'hidden' : 'visible'}`,
+        `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`,
+        `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`
+      ], {
+        'overflow-y': yThumbHeight,
+        'overflow-x': xThumbWidth
+      })
+    },
     computeScaleDateList () {
       const $xeGanttView = this
       const $xeGantt = $xeGanttView.$xeGantt
@@ -2142,6 +2177,92 @@ export default defineVxeComponent({
         }
       }
     },
+    handleScrollEvent (evnt: Event, isRollY: boolean, isRollX: boolean, scrollTop: number, scrollLeft: number) {
+      const $xeGanttView = this
+      const internalData = $xeGanttView.internalData
+      const $xeGantt = $xeGanttView.$xeGantt
+      const $xeTable = internalData.xeTable
+
+      const { elemStore, lastScrollLeft, lastScrollTop } = internalData
+      const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
+      if (!bodyScrollElem) {
+        return
+      }
+      if (!$xeTable) {
+        return
+      }
+      const bodyHeight = bodyScrollElem.clientHeight
+      const bodyWidth = bodyScrollElem.clientWidth
+      const scrollHeight = bodyScrollElem.scrollHeight
+      const scrollWidth = bodyScrollElem.scrollWidth
+      let isTop = false
+      let isBottom = false
+      let isLeft = false
+      let isRight = false
+      let direction = ''
+      let isTopBoundary = false
+      let isBottomBoundary = false
+      let isLeftBoundary = false
+      let isRightBoundary = false
+      if (isRollX) {
+        const xThreshold = $xeTable.computeScrollXThreshold
+        isLeft = scrollLeft <= 0
+        if (!isLeft) {
+          isRight = scrollLeft + bodyWidth >= scrollWidth - 1
+        }
+        if (scrollLeft > lastScrollLeft) {
+          direction = 'right'
+          if (scrollLeft + bodyWidth >= scrollWidth - xThreshold) {
+            isRightBoundary = true
+          }
+        } else {
+          direction = 'left'
+          if (scrollLeft <= xThreshold) {
+            isLeftBoundary = true
+          }
+        }
+      }
+      if (isRollY) {
+        const yThreshold = $xeTable.computeScrollYThreshold
+        isTop = scrollTop <= 0
+        if (!isTop) {
+          isBottom = scrollTop + bodyHeight >= scrollHeight - 1
+        }
+        if (scrollTop > lastScrollTop) {
+          direction = 'bottom'
+          if (scrollTop + bodyHeight >= scrollHeight - yThreshold) {
+            isBottomBoundary = true
+          }
+        } else {
+          direction = 'top'
+          if (scrollTop <= yThreshold) {
+            isTopBoundary = true
+          }
+        }
+      }
+      $xeGanttView.updateThumbOffset()
+      handleScrollData($xeGanttView, isRollY, isRollX, scrollTop, scrollLeft)
+      const evntParams = {
+        source: sourceType,
+        scrollTop,
+        scrollLeft,
+        bodyHeight,
+        bodyWidth,
+        scrollHeight,
+        scrollWidth,
+        isX: isRollX,
+        isY: isRollY,
+        isTop,
+        isBottom,
+        isLeft,
+        isRight,
+        direction
+      }
+      if (isBottomBoundary || isTopBoundary || isRightBoundary || isLeftBoundary) {
+        $xeGantt.dispatchEvent('scroll-boundary', evntParams, evnt)
+      }
+      $xeGantt.dispatchEvent('scroll', evntParams, evnt)
+    },
     triggerHeaderScrollEvent (evnt: Event) {
       const $xeGanttView = this
       const internalData = $xeGanttView.internalData
@@ -2163,7 +2284,7 @@ export default defineVxeComponent({
         internalData.inHeaderScroll = true
         setScrollLeft(xHandleEl, currLeftNum)
         setScrollLeft(bodyScrollElem, currLeftNum)
-        handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
+        $xeGanttView.handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
       }
     },
     triggerBodyScrollEvent (evnt: Event) {
@@ -2201,7 +2322,7 @@ export default defineVxeComponent({
           triggerScrollXEvent($xeGanttView)
         }
       }
-      handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, wrapperEl.scrollTop, scrollLeft)
+      $xeGanttView.handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, scrollLeft)
     },
     // triggerFooterScrollEvent (evnt: Event) {
     //   const $xeGanttView = this
@@ -2219,7 +2340,7 @@ export default defineVxeComponent({
     //     const isRollX = true
     //     const isRollY = false
     //     const currLeftNum = wrapperEl.scrollLeft
-    //     handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
+    //     $xeGanttView.handleScrollEvent(, evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
     //   }
     // },
     triggerVirtualScrollXEvent (evnt: Event) {
@@ -2245,7 +2366,7 @@ export default defineVxeComponent({
         if (scrollXLoad) {
           triggerScrollXEvent($xeGanttView)
         }
-        handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
+        $xeGanttView.handleScrollEvent(evnt, isRollY, isRollX, wrapperEl.scrollTop, currLeftNum)
       }
     },
     triggerVirtualScrollYEvent (evnt: Event) {
@@ -2265,7 +2386,7 @@ export default defineVxeComponent({
         internalData.inVirtualScroll = true
         setScrollTop(bodyScrollElem, currTopNum)
         syncTableScrollTop($xeGanttView, currTopNum)
-        handleScrollEvent($xeGanttView, evnt, isRollY, isRollX, currTopNum, wrapperEl.scrollLeft)
+        $xeGanttView.handleScrollEvent(evnt, isRollY, isRollX, currTopNum, wrapperEl.scrollLeft)
       }
     },
     handleUpdateSXSpace () {
@@ -2283,10 +2404,222 @@ export default defineVxeComponent({
       const reactData = $xeGanttView.reactData
       reactData.scrollYLoad = sYLoad
     },
+    /**
+     * @private
+     */
+    updateScrollbar () {
+      const $xeGanttView = this
+
+      $xeGanttView.updateThumbSize()
+      $xeGanttView.updateThumbOffset()
+    },
     handleGlobalResizeEvent () {
       const $xeGanttView = this
 
       handleLazyRecalculate($xeGanttView)
+    },
+    // 滚动条
+    updateThumbSize () {
+      const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
+
+      const { elemStore } = internalData
+      const viewEl = getRefElem(elemStore['main-body-scroll'])
+      if (!viewEl) {
+        return
+      }
+      if (!viewEl.clientHeight || !viewEl.clientHeight) {
+        return
+      }
+      const trackXEl = $xeGanttView.$refs.refTrackXElem as HTMLDivElement
+      const xThumbWidth = trackXEl ? getThumbSize(viewEl.clientWidth, viewEl.scrollWidth, trackXEl.clientWidth) : 0
+      const thumbXElem = $xeGanttView.$refs.refThumbXElem as HTMLDivElement
+      if (thumbXElem) {
+        thumbXElem.style.width = xThumbWidth + 'px'
+      }
+      reactData.xThumbWidth = xThumbWidth
+
+      const trackYEl = $xeGanttView.$refs.refTrackYElem as HTMLDivElement
+
+      const yThumbHeight = trackYEl ? getThumbSize(viewEl.clientHeight, viewEl.scrollHeight, trackYEl.clientHeight) : 0
+      const thumbYElem = $xeGanttView.$refs.refThumbYElem as HTMLDivElement
+      if (thumbYElem) {
+        thumbYElem.style.height = yThumbHeight + 'px'
+      }
+      reactData.yThumbHeight = yThumbHeight
+    },
+    updateThumbOffset () {
+      const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
+
+      const { elemStore } = internalData
+      const viewEl = getRefElem(elemStore['main-body-scroll'])
+      if (!viewEl) {
+        return
+      }
+      if (!viewEl.clientHeight || !viewEl.clientHeight) {
+        return
+      }
+      const { xThumbWidth, yThumbHeight } = reactData
+      const trackXEl = $xeGanttView.$refs.refTrackXElem as HTMLDivElement
+      const thumbXElem = $xeGanttView.$refs.refThumbXElem as HTMLDivElement
+      const xThumbLeft = trackXEl && xThumbWidth ? getThumbOffsetSize(viewEl.scrollLeft, viewEl.clientWidth, viewEl.scrollWidth, trackXEl.clientWidth, xThumbWidth) : 0
+      internalData.xThumbLeft = xThumbLeft
+      if (thumbXElem && xThumbWidth) {
+        thumbXElem.style.width = xThumbWidth + 'px'
+        thumbXElem.style.transform = `translateX(${xThumbLeft}px)`
+      }
+
+      const trackYEl = $xeGanttView.$refs.refTrackYElem as HTMLDivElement
+      const thumbYElem = $xeGanttView.$refs.refThumbYElem as HTMLDivElement
+      const yThumbTop = trackYEl && yThumbHeight ? getThumbOffsetSize(viewEl.scrollTop, viewEl.clientHeight, viewEl.scrollHeight, trackYEl.clientHeight, yThumbHeight) : 0
+      internalData.yThumbTop = yThumbTop
+      if (thumbYElem && yThumbHeight) {
+        thumbYElem.style.height = yThumbHeight + 'px'
+        thumbYElem.style.transform = `translateY(${yThumbTop}px)`
+      }
+    },
+    clickTrackXEvent (evnt: MouseEvent) {
+      const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
+
+      const trackEl = evnt.currentTarget as HTMLDivElement
+      if (trackEl !== evnt.target) {
+        return
+      }
+      const { elemStore } = internalData
+      const viewEl = getRefElem(elemStore['main-body-scroll'])
+      if (!viewEl) {
+        return
+      }
+      const { xThumbWidth } = reactData
+      const trackRect = trackEl.getBoundingClientRect()
+      viewEl.scrollTo({
+        left: getScrollFromClick(evnt.clientX - trackRect.left, viewEl.clientWidth, viewEl.scrollWidth, trackEl.clientWidth, xThumbWidth),
+        behavior: 'auto'
+      })
+    },
+    clickTrackYEvent (evnt: MouseEvent) {
+      const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
+
+      const trackEl = evnt.currentTarget as HTMLDivElement
+      if (trackEl !== evnt.target) {
+        return
+      }
+      const { elemStore } = internalData
+      const viewEl = getRefElem(elemStore['main-body-scroll'])
+      if (!viewEl) {
+        return
+      }
+      const { yThumbHeight } = reactData
+      const trackRect = trackEl.getBoundingClientRect()
+      viewEl.scrollTo({
+        top: getScrollFromClick(evnt.clientY - trackRect.top, viewEl.clientHeight, viewEl.scrollHeight, trackEl.clientHeight, yThumbHeight),
+        behavior: 'auto'
+      })
+    },
+    pointerdownThumbXEvent (evnt: PointerEvent) {
+      const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
+
+      const thumbEl = evnt.currentTarget as HTMLDivElement
+      internalData.isThumbDrag = true
+      thumbEl.setPointerCapture(evnt.pointerId)
+
+      const { elemStore } = internalData
+      const viewEl = getRefElem(elemStore['main-body-scroll'])
+      if (!viewEl) {
+        return
+      }
+      const { xThumbWidth } = reactData
+      const trackEl = thumbEl.parentElement as HTMLDivElement
+      const trackRect = trackEl.getBoundingClientRect()
+      const pointerPosition = evnt.clientX - trackRect.left
+      // 记录 thumb 的偏移
+      const thumbOffset = getThumbOffsetSize(viewEl.scrollLeft, viewEl.clientWidth, viewEl.scrollWidth, trackEl.clientWidth, xThumbWidth)
+      internalData.thumbDragOffset = pointerPosition - thumbOffset
+    },
+    pointermoveThumbXEvent (evnt: PointerEvent) {
+      const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
+
+      const thumbEl = evnt.currentTarget as HTMLDivElement
+      if (!thumbEl.hasPointerCapture(evnt.pointerId)) {
+        return
+      }
+      const { elemStore, isThumbDrag, thumbDragOffset } = internalData
+      if (isThumbDrag) {
+        const viewEl = getRefElem(elemStore['main-body-scroll'])
+        if (!viewEl) {
+          return
+        }
+        const { xThumbWidth } = reactData
+        const thumbEl = evnt.currentTarget as HTMLDivElement
+        const trackEl = thumbEl.parentElement as HTMLDivElement
+        const trackRect = trackEl.getBoundingClientRect()
+        // 更新偏移
+        viewEl.scrollLeft = getScrollFromDrag(evnt.clientX - trackRect.left, thumbDragOffset, viewEl.clientWidth, viewEl.scrollWidth, trackEl.clientWidth, xThumbWidth)
+      }
+    },
+    cleatPointerThumbEvent (evnt: PointerEvent) {
+      const $xeGanttView = this
+      const internalData = $xeGanttView.internalData
+
+      const thumbEl = evnt.currentTarget as HTMLDivElement
+      thumbEl.releasePointerCapture(evnt.pointerId)
+      internalData.isThumbDrag = false
+    },
+    pointerdownThumbYEvent (evnt: PointerEvent) {
+      const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
+
+      const thumbEl = evnt.currentTarget as HTMLDivElement
+      internalData.isThumbDrag = true
+      thumbEl.setPointerCapture(evnt.pointerId)
+
+      const { elemStore } = internalData
+      const viewEl = getRefElem(elemStore['main-body-scroll'])
+      if (!viewEl) {
+        return
+      }
+      const { yThumbHeight } = reactData
+      const trackEl = thumbEl.parentElement as HTMLDivElement
+      const trackRect = trackEl.getBoundingClientRect()
+      const pointerPosition = evnt.clientY - trackRect.top
+      // 记录 thumb 的偏移
+      const thumbOffset = getThumbOffsetSize(viewEl.scrollTop, viewEl.clientHeight, viewEl.scrollHeight, trackEl.clientHeight, yThumbHeight)
+      internalData.thumbDragOffset = pointerPosition - thumbOffset
+    },
+    pointermoveThumbYEvent (evnt: PointerEvent) {
+      const $xeGanttView = this
+      const reactData = $xeGanttView.reactData
+      const internalData = $xeGanttView.internalData
+
+      const thumbEl = evnt.currentTarget as HTMLDivElement
+      if (!thumbEl.hasPointerCapture(evnt.pointerId)) {
+        return
+      }
+      const { elemStore, isThumbDrag, thumbDragOffset } = internalData
+      if (isThumbDrag) {
+        const viewEl = getRefElem(elemStore['main-body-scroll'])
+        if (!viewEl) {
+          return
+        }
+        const { yThumbHeight } = reactData
+        const thumbEl = evnt.currentTarget as HTMLDivElement
+        const trackEl = thumbEl.parentElement as HTMLDivElement
+        const trackRect = trackEl.getBoundingClientRect()
+        // 更新偏移
+        viewEl.scrollTop = getScrollFromDrag(evnt.clientY - trackRect.top, thumbDragOffset, viewEl.clientHeight, viewEl.scrollHeight, trackEl.clientHeight, yThumbHeight)
+      }
     },
 
     //
@@ -2376,7 +2709,7 @@ export default defineVxeComponent({
         h(GanttViewFooterComponent)
       ])
     },
-    renderBody (h: CreateElement) {
+    renderNativeBody (h: CreateElement) {
       const $xeGanttView = this
       const $xeGantt = $xeGanttView.$xeGantt
 
@@ -2393,11 +2726,92 @@ export default defineVxeComponent({
             $xeGanttView.renderScrollY(h)
           ])
     },
+    renderVirtualBody (h: CreateElement) {
+      const $xeGanttView = this
+      const $xeGantt = $xeGanttView.$xeGantt
+      const reactData = $xeGanttView.reactData
+      const ganttReactData = $xeGantt.reactData
+
+      const ganttProps = $xeGantt
+
+      const { showLeftView } = ganttReactData
+      const { useScrollbar } = ganttProps
+      const { xThumbWidth, yThumbHeight } = reactData
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
+      const scrollXAutoHide = $xeGanttView.computeScrollXAutoHide
+      const scrollYAutoHide = $xeGanttView.computeScrollYAutoHide
+      const scrollXVisible = $xeGanttView.computeScrollXVisible
+      const scrollYVisible = $xeGanttView.computeScrollYVisible
+      const scrollbarXToTop = $xeGanttView.computeScrollbarXToTop
+      const scrollbarYToLeft = $xeGantt.computeScrollbarYToLeft
+      const scrollbarWrapperClss = $xeGanttView.computeScrollbarWrapperClss
+      return h('div', {
+        key: 'lvb',
+        class: ['vxe-gantt--layout-wrapper', `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
+          'is--virtual-scrollbar': useScrollbar,
+          'ov-padding': useScrollbar && scrollbarOpts.padding,
+          'ov-x--auto-hide': useScrollbar && scrollXAutoHide,
+          'ov-y--auto-hide': useScrollbar && scrollYAutoHide,
+          'overflow-y': yThumbHeight,
+          'overflow-x': xThumbWidth
+        }]
+      }, [
+        $xeGanttView.renderViewport(h),
+        h('div', {
+          class: scrollbarWrapperClss
+        }, [
+          scrollXVisible === false
+            ? renderEmptyElement($xeGantt)
+            : h('div', {
+              ref: 'refTrackXElem',
+              class: 'vxe-scrollbar--track-x',
+              on: {
+                click: $xeGanttView.clickTrackXEvent
+              }
+            }, [
+              h('div', {
+                ref: 'refThumbXElem',
+                class: 'vxe-scrollbar--thumb-x',
+                on: {
+                  pointerdown: $xeGanttView.pointerdownThumbXEvent,
+                  pointermove: $xeGanttView.pointermoveThumbXEvent,
+                  pointerup: $xeGanttView.cleatPointerThumbEvent,
+                  pointercancel: $xeGanttView.cleatPointerThumbEvent,
+                  lostpointercapture: $xeGanttView.cleatPointerThumbEvent
+                }
+              })
+            ]),
+          (scrollbarYToLeft && showLeftView) || scrollYVisible === false
+            ? renderEmptyElement($xeGantt)
+            : h('div', {
+              ref: 'refTrackYElem',
+              class: 'vxe-scrollbar--track-y',
+              on: {
+                click: $xeGanttView.clickTrackYEvent
+              }
+            }, [
+              h('div', {
+                ref: 'refThumbYElem',
+                class: 'vxe-scrollbar--thumb-y',
+                on: {
+                  pointerdown: $xeGanttView.pointerdownThumbYEvent,
+                  pointermove: $xeGanttView.pointermoveThumbYEvent,
+                  pointerup: $xeGanttView.cleatPointerThumbEvent,
+                  pointercancel: $xeGanttView.cleatPointerThumbEvent,
+                  lostpointercapture: $xeGanttView.cleatPointerThumbEvent
+                }
+              })
+            ])
+        ])
+      ])
+    },
     renderVN (h: CreateElement): VNode {
       const $xeGanttView = this
       const $xeGantt = $xeGanttView.$xeGantt
       const reactData = $xeGanttView.reactData
+      const ganttProps = $xeGantt
 
+      const { useScrollbar } = ganttProps
       const { overflowX, overflowY, scrollXLoad, scrollYLoad } = reactData
       const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
       return h('div', {
@@ -2411,15 +2825,19 @@ export default defineVxeComponent({
       }, [
         h('div', {
           class: 'vxe-gantt-view--render-wrapper'
-        }, scrollbarXToTop
-          ? [
-              $xeGanttView.renderScrollX(h),
-              $xeGanttView.renderBody(h)
-            ]
-          : [
-              $xeGanttView.renderBody(h),
-              $xeGanttView.renderScrollX(h)
-            ]),
+        }, useScrollbar
+          ? [$xeGanttView.renderVirtualBody(h)]
+          : (scrollbarXToTop
+              ? [
+                  $xeGanttView.renderScrollX(h),
+                  $xeGanttView.renderNativeBody(h)
+                ]
+              : [
+                  $xeGanttView.renderNativeBody(h),
+                  $xeGanttView.renderScrollX(h)
+                ]
+            )
+        ),
         h('div', {
           class: 'vxe-gantt-view--render-vars'
         }, [
@@ -2431,9 +2849,72 @@ export default defineVxeComponent({
       ])
     }
   },
+  watch: {
+    computeScrollbarXToTop () {
+      const $xeGanttView = this
+
+      $xeGanttView.reScrollFlag++
+    },
+    computeScrollbarYToLeft () {
+      const $xeGanttView = this
+
+      $xeGanttView.reScrollFlag++
+    },
+    computeScrollXVisible () {
+      const $xeGanttView = this
+
+      $xeGanttView.reScrollFlag++
+    },
+    computeScrollYVisible () {
+      const $xeGanttView = this
+
+      $xeGanttView.reScrollFlag++
+    },
+    computeScrollXHeight () {
+      const $xeGanttView = this
+
+      $xeGanttView.reScrollFlag++
+    },
+    computeScrollYWidth () {
+      const $xeGanttView = this
+
+      $xeGanttView.reScrollFlag++
+    },
+    reScrollFlag () {
+      const $xeGanttView = this
+
+      $xeGanttView.$nextTick(() => {
+        $xeGanttView.updateScrollbar()
+        $xeGanttView.$nextTick(() => {
+          $xeGanttView.updateScrollbar()
+        })
+      })
+    }
+  },
   mounted () {
     const $xeGanttView = this
+    const $xeGantt = $xeGanttView.$xeGantt
+    const internalData = $xeGanttView.internalData
 
+    $xeGanttView.$nextTick(() => {
+      const ganttProps = $xeGantt
+      const { useScrollbar } = ganttProps
+      const { elemStore } = internalData
+      const el = $xeGanttView.$refs.refElem as HTMLDivElement
+      if (useScrollbar) {
+        const viewInnerEl = getRefElem(elemStore['main-body-table'])
+        const scrollObserver = globalResize.create(() => {
+          $xeGanttView.reScrollFlag++
+        })
+        if (el) {
+          scrollObserver.observe(el)
+        }
+        if (viewInnerEl) {
+          scrollObserver.observe(viewInnerEl)
+        }
+        internalData.scrollObserver = scrollObserver
+      }
+    })
     globalEvents.on($xeGanttView, 'resize', $xeGanttView.handleGlobalResizeEvent)
   },
   beforeDestroy () {
@@ -2441,6 +2922,10 @@ export default defineVxeComponent({
     const reactData = $xeGanttView.reactData
     const internalData = $xeGanttView.internalData
 
+    const { scrollObserver } = internalData
+    if (scrollObserver) {
+      scrollObserver.disconnect()
+    }
     globalEvents.off($xeGanttView, 'keydown')
     XEUtils.assign(reactData, createReactData())
     XEUtils.assign(internalData, createInternalData())

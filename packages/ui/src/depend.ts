@@ -3,7 +3,7 @@ import { errLog } from './log'
 
 export function checkDependVersion () {
   const pVersion = 3
-  const sVersion = 19
+  const sVersion = 25
   if (VxeUI.checkVersion) {
     if (!VxeUI.checkVersion(VxeUI.tableVersion, pVersion, sVersion)) {
       errLog('vxe.error.errorVersion', [`vxe-table@${VxeUI.tableVersion || '?'}`, `vxe-table v${pVersion}.${sVersion}+`])
