@@ -6,6 +6,12 @@ export function isEnableConf (conf: any): boolean {
   return conf && conf.enabled !== false
 }
 
+/**
+ * 用于开关类型的配置项
+ * 局部启用规则：conf={}
+ * 局部禁用规则：conf={enabled:false}
+ * 全局默认启用规则：conf.enabled=true
+ */
 export function hasEnableConf (conf: any, opts: any): boolean {
   return opts && (conf ? opts.enabled !== false : opts.enabled)
 }
@@ -66,4 +72,8 @@ export function getStringValue (cellValue: any) {
 
 export function getClass (property: any, params: any) {
   return property ? XEUtils.isFunction(property) ? property(params) : property : ''
+}
+
+export function getDefaultConfig <T = any, D = any> (val1: T, def1: D): (T | D) {
+  return XEUtils.eqNull(val1) ? def1 : val1
 }
