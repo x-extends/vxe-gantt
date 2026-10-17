@@ -2142,6 +2142,19 @@ export default defineVxeComponent({
         }
       }
     },
+    handleSyncScrollTop (params: {
+      scrollTop: number
+    }) {
+      const $xeGanttView = this
+      const internalData = $xeGanttView.internalData
+
+      const { scrollTop } = params
+      const { elemStore } = internalData
+      const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
+      if (bodyScrollElem) {
+        bodyScrollElem.scrollTop = scrollTop
+      }
+    },
     triggerHeaderScrollEvent (evnt: Event) {
       const $xeGanttView = this
       const internalData = $xeGanttView.internalData
