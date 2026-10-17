@@ -2027,7 +2027,11 @@ export default defineVxeComponent({
       }
     }
 
-    const ganttViewPrivateMethods: VxeGanttViewPrivateMethods = {
+    const ganttViewPrivateMethods: VxeGanttViewPrivateMethods & {
+      handleSyncScrollTop(params: {
+        scrollTop: number
+      }): void
+    } = {
       handleUpdateStyle: updateStyle,
       handleLazyRecalculate,
       handleUpdateCurrentRow (row) {
@@ -2055,6 +2059,14 @@ export default defineVxeComponent({
           } else {
             XEUtils.arrayEach(el.querySelectorAll('.vxe-gantt-view--body-row.row--hover'), elem => removeClass(elem, 'row--hover'))
           }
+        }
+      },
+      handleSyncScrollTop (params) {
+        const { scrollTop } = params
+        const { elemStore } = internalData
+        const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
+        if (bodyScrollElem) {
+          bodyScrollElem.scrollTop = scrollTop
         }
       },
       triggerHeaderScrollEvent (evnt) {
