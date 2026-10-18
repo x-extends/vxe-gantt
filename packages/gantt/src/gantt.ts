@@ -195,6 +195,7 @@ export default defineVxeComponent({
     const scrollDefaultConf = Object.assign({}, getConfig().scrollbar)
 
     const { computeSize } = useFns.useSize(props)
+    const { computeIsVScrollbar } = useFns.useVScrollbar(props)
 
     const reactData = reactive(createReactData())
 
@@ -454,8 +455,9 @@ export default defineVxeComponent({
     })
 
     const computeWrapperStyle = computed(() => {
-      const { height, maxHeight, useScrollbar, taskBarSubviewConfig } = props
+      const { height, maxHeight, taskBarSubviewConfig } = props
       const { isZMax, tZindex, overflowY, scrollbarWidth } = reactData
+      const isVScrollbar = computeIsVScrollbar.value
       const taskViewOpts = computeTaskViewOpts.value
       const { viewStyle, tableStyle } = taskViewOpts
       const taskBarOpts = computeTaskBarOpts.value
@@ -468,7 +470,7 @@ export default defineVxeComponent({
       const barWidth = computeScrollYWidth.value
       const barHeight = computeScrollXHeight.value
       const stys: VxeComponentStyleType = {
-        '--vxe-ui-gantt-scrollbar-width': (overflowY ? (useScrollbar ? 'var(--vxe-ui-scrollbar-y-width)' : (scrollbarWidth + 'px')) : '')
+        '--vxe-ui-gantt-scrollbar-width': (overflowY ? (isVScrollbar ? 'var(--vxe-ui-scrollbar-y-width)' : (scrollbarWidth + 'px')) : '')
       }
       if (cpLineColor) {
         stys['--vxe-ui-gantt-view-bar-critical-path-line-color'] = cpLineColor
@@ -667,6 +669,8 @@ export default defineVxeComponent({
     }
 
     const computeMaps: VxeGanttPrivateComputed = {
+      computeSize,
+      computeIsVScrollbar,
       computeProxyOpts,
       computePagerOpts,
       computeFormOpts,
@@ -2642,8 +2646,8 @@ export default defineVxeComponent({
     }
 
     const renderChildLayout = (layoutKeys: VxeGanttDefines.LayoutKey[]) => {
-      const { useScrollbar } = props
       const { showLeftView, showRightView } = reactData
+      const isVScrollbar = computeIsVScrollbar.value
       const taskSplitOpts = computeTaskSplitOpts.value
       const scrollbarXToTop = computeScrollbarXToTop.value
       const scrollbarYToLeft = computeScrollbarYToLeft.value
@@ -2668,9 +2672,9 @@ export default defineVxeComponent({
                 ref: refGanttContainerElem,
                 key: 'tv',
                 class: ['vxe-gantt--gantt-container', `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
-                  'is--virtual-scrollbar': useScrollbar,
-                  'ov-x--auto-hide': useScrollbar && scrollXAutoHide,
-                  'ov-y--auto-hide': useScrollbar && scrollYAutoHide,
+                  'is--virtual-scrollbar': isVScrollbar,
+                  'ov-x--auto-hide': isVScrollbar && scrollXAutoHide,
+                  'ov-y--auto-hide': isVScrollbar && scrollYAutoHide,
                   'show--left': showLeftView,
                   'hide--left': !showLeftView,
                   'show--right': showRightView,
@@ -2794,6 +2798,7 @@ export default defineVxeComponent({
     const renderVN = () => {
       const { showLeftView, showRightView, overflowY, overflowX, showSplitAnimat } = reactData
       const vSize = computeSize.value
+      const isVScrollbar = computeIsVScrollbar.value
       const wrapperStyle = computeWrapperStyle.value
       const isLoading = computeIsLoading.value
       const taskSplitOpts = computeTaskSplitOpts.value
@@ -2804,6 +2809,7 @@ export default defineVxeComponent({
         ref: refElem,
         class: ['vxe-gantt', `border--${tableBorder}`, `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
           [`size--${vSize}`]: vSize,
+          'is--virtual-scrollbar': isVScrollbar,
           'is--round': props.round,
           'show--animat': taskSplitOpts.animation,
           'is--maximize': reactData.isZMax,

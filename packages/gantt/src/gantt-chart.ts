@@ -272,8 +272,8 @@ export default defineVxeComponent({
                     },
                     onMousedown (evnt: MouseEvent) {
                       evnt.stopPropagation()
-                      if ($xeGantt.handleTaskBarMousedownEvent) {
-                        $xeGantt.handleTaskBarMousedownEvent(evnt, childCtParams)
+                      if ($xeGantt.handleTaskBarModnEvent) {
+                        $xeGantt.handleTaskBarModnEvent(evnt, childCtParams)
                       }
                     }
                   }, [
@@ -404,8 +404,8 @@ export default defineVxeComponent({
             $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
           },
           onMousedown (evnt: MouseEvent) {
-            if ($xeGantt.handleTaskBarMousedownEvent) {
-              $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
+            if ($xeGantt.handleTaskBarModnEvent) {
+              $xeGantt.handleTaskBarModnEvent(evnt, barParams)
             }
           }
         }, cbVNs)
