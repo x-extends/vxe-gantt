@@ -5,7 +5,7 @@ import { getClass } from '../../ui/src/utils'
 import XEUtils from 'xe-utils'
 import GanttViewChartComponent from './gantt-chart'
 
-import type { TableInternalData, TableReactData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods, VxeTableDefines } from 'vxe-table'
+import type { VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods, VxeTableDefines } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods, VxeGanttDefines } from '../../../types'
 
 const sourceType = 'gantt'
@@ -37,9 +37,9 @@ export default defineVxeComponent({
       const $xeGantt = _vm.$xeGantt
       const { reactData, internalData } = $xeGanttView
 
-      const tableReactData = $xeTable as unknown as TableReactData
+      const tableReactData = $xeTable.getReactData()
       const { resizeHeightFlag } = tableReactData
-      const tableInternalData = $xeTable as unknown as TableInternalData
+      const tableInternalData = $xeTable.getInternalData()
       const { fullAllDataRowIdData, visibleColumn } = tableInternalData
       const cellOpts = $xeTable.computeCellOpts
       const rowOpts = $xeTable.computeRowOpts
@@ -149,9 +149,9 @@ export default defineVxeComponent({
 
       const tableProps = $xeTable
       const { treeConfig, stripe, highlightHoverRow, editConfig } = tableProps
-      const tableReactData = $xeTable as unknown as TableReactData
+      const tableReactData = $xeTable.getReactData()
       const { treeExpandedFlag, selectRadioRow, pendingRowFlag, isRowGroupStatus } = tableReactData
-      const tableInternalData = $xeTable as unknown as TableInternalData
+      const tableInternalData = $xeTable.getInternalData()
       const { fullAllDataRowIdData, treeExpandedMaps, pendingRowMaps } = tableInternalData
       const radioOpts = $xeTable.computeRadioOpts
       const checkboxOpts = $xeTable.computeCheckboxOpts

@@ -10,8 +10,8 @@ import { createComponentLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
 
-import type { ValueOf, VxeFormInstance, VxeFormItemProps, VxePagerInstance, VxePagerDefines, VxeComponentStyleType, VxeComponentSizeType, VxeFormDefines, VxeFormItemPropTypes, VxeScrollbarProps } from 'vxe-pc-ui'
-import type { VxeTableMethods, VxeToolbarPropTypes, VxeTooltipInstance, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableDefines, TableReactData, VxeToolbarInstance, TableInternalData, VxeTablePropTypes, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
+import type { ValueOf, VxeFormInstance, VxeFormItemProps, VxePagerInstance, VxePagerDefines, VxeComponentStyleType, VxeComponentSizeType, VxeComponentIsVScrollbar, VxeFormDefines, VxeFormItemPropTypes, VxeScrollbarProps } from 'vxe-pc-ui'
+import type { VxeTableMethods, VxeToolbarPropTypes, VxeTooltipInstance, VxeTableProps, VxeTableConstructor, VxeTablePrivateMethods, VxeTableDefines, VxeToolbarInstance, VxeTablePropTypes, VxeGridPropTypes, VxeGridDefines } from 'vxe-table'
 import type { VxeGanttEmits, GanttReactData, GanttInternalData, VxeGanttPropTypes, VxeGanttViewInstance, VxeGanttDefines, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 const { warnLog, errLog } = createComponentLog('gantt')
@@ -160,7 +160,8 @@ function createReactData (): GanttReactData {
 export default /* define-vxe-component start */ defineVxeComponent({
   name: 'VxeGantt',
   mixins: [
-    globalMixins.sizeMixin
+    globalMixins.sizeMixin,
+    globalMixins.vScrollbarMixin
   ],
   props: {
     ...(tableProps as unknown as {
@@ -244,6 +245,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
   computed: {
     ...({} as {
       computeSize(): VxeComponentSizeType
+      computeIsVScrollbar(): VxeComponentIsVScrollbar
     }),
     computeProxyOpts () {
       const $xeGantt = this
@@ -534,8 +536,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const props = $xeGantt
       const reactData = $xeGantt.reactData
 
-      const { height, maxHeight, useScrollbar, taskBarSubviewConfig } = props
+      const { height, maxHeight, taskBarSubviewConfig } = props
       const { isZMax, tZindex, overflowY, scrollbarWidth } = reactData
+      const isVScrollbar = $xeGantt.computeIsVScrollbar
       const taskViewOpts = $xeGantt.computeTaskViewOpts as VxeGanttPropTypes.TaskViewConfig
       const { viewStyle, tableStyle } = taskViewOpts
       const taskBarOpts = $xeGantt.computeTaskBarOpts as VxeGanttPropTypes.TaskBarConfig
@@ -548,7 +551,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const barWidth = $xeGantt.computeScrollYWidth
       const barHeight = $xeGantt.computeScrollXHeight
       const stys: VxeComponentStyleType = {
-        '--vxe-ui-gantt-scrollbar-width': (overflowY ? (useScrollbar ? 'var(--vxe-ui-scrollbar-y-width)' : (scrollbarWidth + 'px')) : '')
+        '--vxe-ui-gantt-scrollbar-width': (overflowY ? (isVScrollbar ? 'var(--vxe-ui-scrollbar-y-width)' : (scrollbarWidth + 'px')) : '')
       }
       if (cpLineColor) {
         stys['--vxe-ui-gantt-view-bar-critical-path-line-color'] = cpLineColor
@@ -1402,7 +1405,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                 reactData.formData = formData
               }
               if ($xeTable) {
-                const tableInternalData = $xeTable as unknown as TableInternalData
+                const tableInternalData = $xeTable.getInternalData()
                 const { tableFullColumn, fullColumnFieldData } = tableInternalData
                 const sortOpts = $xeTable.computeSortOpts
                 let defaultSort = sortOpts.defaultSort
@@ -2297,7 +2300,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if ($xeTable) {
         const tableProps = $xeTable
         const { highlightCurrentRow } = tableProps
-        const tableReactData = $xeTable as unknown as TableReactData
+        const tableReactData = $xeTable.getReactData()
         const { radioColumn, checkboxColumn } = tableReactData
         const radioOpts = $xeTable.computeRadioOpts
         const checkboxOpts = $xeTable.computeCheckboxOpts
@@ -2887,11 +2890,10 @@ export default /* define-vxe-component start */ defineVxeComponent({
     },
     renderChildLayout (h: CreateElement, layoutKeys: VxeGanttDefines.LayoutKey[]) {
       const $xeGantt = this
-      const props = $xeGantt
       const reactData = $xeGantt.reactData
 
-      const { useScrollbar } = props
       const { showLeftView, showRightView } = reactData
+      const isVScrollbar = $xeGantt.computeIsVScrollbar
       const taskSplitOpts = $xeGantt.computeTaskSplitOpts
       const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
       const scrollbarYToLeft = $xeGantt.computeScrollbarYToLeft
@@ -2914,7 +2916,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                 ref: 'refGanttContainerElem',
                 key: 'tv',
                 class: ['vxe-gantt--gantt-container', `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
-                  'is--virtual-scrollbar': useScrollbar,
+                  'is--virtual-scrollbar': isVScrollbar,
                   'show--left': showLeftView,
                   'hide--left': !showLeftView,
                   'show--right': showRightView,
@@ -3049,6 +3051,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       const { showLeftView, showRightView, overflowY, overflowX, showSplitAnimat } = reactData
       const vSize = $xeGantt.computeSize
+      const isVScrollbar = $xeGantt.computeIsVScrollbar
       const wrapperStyle = $xeGantt.computeWrapperStyle
       const isLoading = $xeGantt.computeIsLoading
       const taskSplitOpts = $xeGantt.computeTaskSplitOpts
@@ -3059,6 +3062,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         ref: 'refElem',
         class: ['vxe-gantt', `border--${tableBorder}`, `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
           [`size--${vSize}`]: vSize,
+          'is--virtual-scrollbar': isVScrollbar,
           'is--round': props.round,
           'show--animat': taskSplitOpts.animation,
           'is--maximize': reactData.isZMax,

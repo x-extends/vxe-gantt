@@ -6,7 +6,7 @@ import { getCellRestHeight, hasMilestoneTask, getTaskType, hasSubviewTask } from
 import { getStringValue, isEnableConf, hasEnableConf } from '../../ui/src/utils'
 
 import type { VxeComponentStyleType } from 'vxe-pc-ui'
-import type { TableInternalData, TableReactData, VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
+import type { VxeTableConstructor, VxeTableMethods, VxeTablePrivateMethods } from 'vxe-table'
 import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConstructor, VxeGanttPrivateMethods } from '../../../types'
 
 const { getIcon, renderEmptyElement } = VxeUI
@@ -42,9 +42,9 @@ export default defineVxeComponent({
       const _vm = this
       const $xeGantt = _vm.$xeGantt
 
-      const tableReactData = $xeTable as unknown as TableReactData
+      const tableReactData = $xeTable.getReactData()
       const { resizeHeightFlag, pendingRowFlag } = tableReactData
-      const tableInternalData = $xeTable as unknown as TableInternalData
+      const tableInternalData = $xeTable.getInternalData()
       const { fullAllDataRowIdData, pendingRowMaps } = tableInternalData
       const cellOpts = $xeTable.computeCellOpts
       const rowOpts = $xeTable.computeRowOpts
@@ -293,8 +293,8 @@ export default defineVxeComponent({
                       },
                       mousedown (evnt: MouseEvent) {
                         evnt.stopPropagation()
-                        if ($xeGantt.handleTaskBarMousedownEvent) {
-                          $xeGantt.handleTaskBarMousedownEvent(evnt, childCtParams)
+                        if ($xeGantt.handleTaskBarModnEvent) {
+                          $xeGantt.handleTaskBarModnEvent(evnt, childCtParams)
                         }
                       }
                     }
@@ -433,8 +433,8 @@ export default defineVxeComponent({
               $xeGantt.handleTaskBarDblclickEvent(evnt, barParams)
             },
             mousedown (evnt: MouseEvent) {
-              if ($xeGantt.handleTaskBarMousedownEvent) {
-                $xeGantt.handleTaskBarMousedownEvent(evnt, barParams)
+              if ($xeGantt.handleTaskBarModnEvent) {
+                $xeGantt.handleTaskBarModnEvent(evnt, barParams)
               }
             }
           }
@@ -448,9 +448,9 @@ export default defineVxeComponent({
 
       const tableProps = $xeTable
       const { treeConfig } = tableProps
-      const tableReactData = $xeTable as unknown as TableReactData
+      const tableReactData = $xeTable.getReactData()
       const { treeExpandedFlag } = tableReactData
-      const tableInternalData = $xeTable as unknown as TableInternalData
+      const tableInternalData = $xeTable.getInternalData()
       const { fullAllDataRowIdData, treeExpandedMaps } = tableInternalData
       const treeOpts = $xeTable.computeTreeOpts
       const { transform } = treeOpts
