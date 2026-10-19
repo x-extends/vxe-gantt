@@ -2897,6 +2897,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const taskSplitOpts = $xeGantt.computeTaskSplitOpts
       const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
       const scrollbarYToLeft = $xeGantt.computeScrollbarYToLeft
+      const scrollXAutoHide = $xeGantt.computeScrollXAutoHide
+      const scrollYAutoHide = $xeGantt.computeScrollYAutoHide
       const { autoHideCollapseButton } = taskSplitOpts
       const childVNs: VNode[] = []
       layoutKeys.forEach(key => {
@@ -2917,6 +2919,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
                 key: 'tv',
                 class: ['vxe-gantt--gantt-container', `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
                   'is--virtual-scrollbar': isVScrollbar,
+                  'ov-x--auto-hide': isVScrollbar && scrollXAutoHide,
+                  'ov-y--auto-hide': isVScrollbar && scrollYAutoHide,
                   'show--left': showLeftView,
                   'hide--left': !showLeftView,
                   'show--right': showRightView,

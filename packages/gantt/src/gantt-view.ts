@@ -1957,12 +1957,14 @@ export default defineVxeComponent({
       const $xeGantt = $xeGanttView.$xeGantt
 
       const { yThumbHeight, xThumbWidth } = reactData
+      const scrollbarOpts = $xeGantt.computeScrollbarOpts
       const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
       const scrollbarYToLeft = $xeGantt.computeScrollbarYToLeft
       const scrollXVisible = $xeGanttView.computeScrollXVisible
       const scrollYVisible = $xeGanttView.computeScrollYVisible
       return domUtils.buildClass([
         'vxe-scrollbar is--virtual',
+        scrollbarOpts.fluentOverlay ? 'is--fluent-overlay' : 'is--default-mode',
         `ov-x--${scrollXVisible === false ? 'hidden' : 'visible'}`,
         `ov-y--${scrollYVisible === false ? 'hidden' : 'visible'}`,
         `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`,
