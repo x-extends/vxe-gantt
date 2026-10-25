@@ -51,6 +51,7 @@ const {
   umdEntry,
   umdFile,
   umdMinFile,
+  doStripDefineWrapper,
   // 构建时间戳（用于 iconfont 文件改名，避免浏览器缓存）
   buildTime
 } = require('./build-config')
@@ -279,7 +280,7 @@ async function buildDistStyle () {
     fsp.writeFile(path.join(LIB_DIR, 'style.mini.css'), cssMin)
   ])
 
-  return `${OUT_DIST}/style.css + ${OUT_LIB}/style.css`
+  return `${OUT_DIST}, ${OUT_LIB}`
 }
 
 /* ------------------------------ 图标资源复制 ------------------------------ */
@@ -351,11 +352,9 @@ async function copyIconAssets () {
 
   await Promise.all(outDirs.map(d => cleanupOldIconFonts(d)))
 
-  let renamed = 0
   await Promise.all(files.flatMap(file => {
     const relPath = path.relative(ICON_DIR, file)
     const outRelPath = getRenamedRelPath(relPath)
-    if (outRelPath !== relPath) renamed++
     return outDirs.map(dir => {
       const target = path.join(dir, outRelPath)
       return fsp.mkdir(path.dirname(target), { recursive: true })
@@ -363,7 +362,55 @@ async function copyIconAssets () {
     })
   }))
 
-  return `${files.length} files${renamed ? `, ${renamed} renamed` : ''} -> ${OUT_ES} + ${OUT_LIB} + ${OUT_DIST}`
+  return `iicon: ${files.length} -> ${OUT_ES}, ${OUT_LIB}, ${OUT_DIST}`
+}
+
+/* ------------------------------ 移除 defineVxeComponent 包裹 ------------------------------ */
+
+// defineVxeComponent 包裹移除相关
+const SRC_TMPL_PREFIX = SRC_TMPL_DIR + path.sep
+const DEFINE_VXE_COMPONENT_START = '/* define-vxe-component start */ defineVxeComponent({'
+
+/**
+ * 组件源码以如下形式书写：
+ *
+ *   export default /* define-vxe-component start *\/ defineVxeComponent({
+ *     // 组件选项
+ *   }) /* define-vxe-component end *\/
+ *
+ * 编译后移除包裹，仅保留内部组件选项对象：
+ *
+ *   export default {
+ *     // 组件选项
+ *   };
+ *
+ * 说明：
+ * - 未匹配时静默保留原样（运行时仍可工作）
+ * - 只匹配一半时语法错误，esbuild 会直接报错
+ * - .d.ts 由 tsc 生成，不经过此插件，类型约束完整保留
+ */
+function stripDefineVxeComponent (source) {
+  return source
+    // 1. 移除起包裹，保留内部对象
+    .replace(DEFINE_VXE_COMPONENT_START, '{')
+    // 2. 结尾兼容「有分号 / 无分号」两种写法，并补上分号避免 ASI 边界问题
+    .replace(/\}\)\s*;?\s*\/\*\s*define-vxe-component end\s*\*\//, '};')
+}
+
+const stripDefineVxeComponentPlugin = {
+  name: 'strip-define-vxe-component',
+  setup (build) {
+    build.onLoad({ filter: /\.(ts|tsx)$/ }, async args => {
+      // 只处理临时目录内的源码，不碰 node_modules
+      if (!args.path.startsWith(SRC_TMPL_PREFIX)) return null
+      const source = await fsp.readFile(args.path, 'utf8')
+      if (!source.includes(DEFINE_VXE_COMPONENT_START)) return null
+      return {
+        contents: stripDefineVxeComponent(source),
+        loader: args.path.endsWith('.tsx') ? 'tsx' : 'ts'
+      }
+    })
+  }
 }
 
 /* ------------------------------ Bundle（all.esm.js） ------------------------------ */
@@ -407,7 +454,7 @@ async function buildBundle () {
     tsconfig: TSCONFIG,
     loader: { '.ts': 'ts', '.tsx': 'tsx' },
     define: DEFINE,
-    plugins: [scssStubPlugin]
+    plugins: doStripDefineWrapper ? [scssStubPlugin, stripDefineVxeComponentPlugin] : []
   })
 
   return `${OUT_DIST}/all.esm.js`
@@ -495,7 +542,7 @@ async function buildUmdBundle () {
     tsconfig: TSCONFIG,
     loader: { '.ts': 'ts', '.tsx': 'tsx' },
     define: DEFINE,
-    plugins: [scssStubPlugin],
+    plugins: [scssStubPlugin, stripDefineVxeComponentPlugin],
     banner: { js: bannerJs },
     footer: { js: footerJs }
   })
@@ -592,7 +639,8 @@ function esbuildTranspile (format, outdir) {
     charset: 'utf8',
     tsconfig: TSCONFIG,
     loader: { '.ts': 'ts', '.tsx': 'tsx' },
-    define: DEFINE
+    define: DEFINE,
+    plugins: [stripDefineVxeComponentPlugin]
   })
 }
 

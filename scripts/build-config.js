@@ -14,6 +14,8 @@ exports.outDist = 'dist'
 exports.doClean = true
 // 组件目录前缀，用于生成 vxe-${name} 别名入口
 exports.componentPrefix = 'vxe'
+// 是否移除 DefineVxeComponent 包裹
+exports.doStripDefineWrapper = false
 /* ========================================================= */
 
 /* ======================== 图标资源 ======================== */
