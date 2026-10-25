@@ -1,6 +1,7 @@
 import XEUtils from 'xe-utils'
 import { VxeUI } from '@vxe-ui/core'
-import DomZIndex from 'dom-zindex'
+
+const { zIndex } = VxeUI
 
 export function isEnableConf (conf: any): boolean {
   return conf && conf.enabled !== false
@@ -29,11 +30,11 @@ export function parseFile (file: File) {
 }
 
 export function nextZIndex () {
-  return DomZIndex.getNext()
+  return zIndex.next()
 }
 
 export function getLastZIndex () {
-  return DomZIndex.getCurrent()
+  return zIndex.getLast()
 }
 
 export function getGlobalDefaultConfig (value: any, globalValue: any) {
