@@ -1,13 +1,14 @@
 {
   "name": "vxe-gantt",
-  "version": "3.9.1",
+  "version": "3.9.2",
   "description": "A vue based gantt component",
   "scripts": {
     "update": "npm install --legacy-peer-deps",
     "serve": "vue-cli-service serve",
     "lib:pack": "vue-cli-service build --target lib --name index --dest lib_temp index.ts",
     "lib:modules": "gulp build",
-    "lib": "npm run lib:pack && npm run lib:modules"
+    "lib:old": "npm run lib:pack && npm run lib:modules",
+    "lib": "node scripts/build-modules.js"
   },
   "files": [
     "lib",
@@ -42,6 +43,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-vue": "^8.0.3",
+    "esbuild": "~0.28.2",
     "gulp": "^4.0.2",
     "gulp-autoprefixer": "^8.0.0",
     "gulp-babel": "^8.0.0",
@@ -55,13 +57,14 @@
     "gulp-uglify": "^3.0.2",
     "sass": "~1.101.7",
     "sass-loader": "^14.2.1",
+    "sass-embedded": "^1.106.1",
     "typescript": "~5.9.3",
     "vue-template-compiler": "2.6.14",
     "vue": "~2.6.14",
     "vue-i18n": "^8.15.1",
     "vue-router": "^3.5.1",
-    "vxe-pc-ui": "3.20.12",
-    "vxe-table": "3.25.1"
+    "vxe-pc-ui": "3.20.21",
+    "vxe-table": "3.25.5"
   },
   "vetur": {
     "tags": "helper/vetur/tags.json",

@@ -1,8 +1,7 @@
 import XEUtils from 'xe-utils'
 import { VxeUI } from '@vxe-ui/core'
-import DomZIndex from 'dom-zindex'
 
-const { getConfig } = VxeUI
+const { getConfig, zIndex } = VxeUI
 
 export function isEnableConf (conf: any): boolean {
   return conf && conf.enabled !== false
@@ -23,19 +22,11 @@ export function isEmptyValue (cellValue: any) {
 }
 
 export function nextZIndex () {
-  return DomZIndex.getNext()
+  return zIndex.next()
 }
 
 export function getLastZIndex () {
-  return DomZIndex.getCurrent()
-}
-
-export function nextSubZIndex () {
-  return DomZIndex.getSubNext()
-}
-
-export function getSubLastZIndex () {
-  return DomZIndex.getSubCurrent()
+  return zIndex.getLast()
 }
 
 export function getGlobalDefaultConfig (value: any, globalValue: any) {
