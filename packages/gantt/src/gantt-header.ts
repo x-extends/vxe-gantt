@@ -23,15 +23,15 @@ export default defineVxeComponent({
   },
   computed: {
     ...({} as {
-        $xeGantt(): (VxeGanttConstructor & VxeGanttPrivateMethods)
-        $xeGanttView(): (VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
-      })
+      $xeGantt(): VxeGanttConstructor & VxeGanttPrivateMethods
+      $xeGanttView(): VxeGanttViewConstructor & VxeGanttViewPrivateMethods
+    })
   },
   methods: {
     //
     // Render
     //
-    renderVN (h: CreateElement) {
+    renderVN(h: CreateElement) {
       const _vm = this
       const $xeGantt = _vm.$xeGantt
       const $xeGanttView = _vm.$xeGanttView
@@ -44,120 +44,151 @@ export default defineVxeComponent({
       const minScale = $xeGantt.computeMinScale
       const scaleStep = $xeGantt.computeScaleStep
       const { showNowLine } = taskViewOpts
-      return h('div', {
-        ref: 'refElem',
-        class: 'vxe-gantt-view--header-wrapper'
-      }, [
-        h('div', {
-          ref: 'refHeaderScroll',
-          class: 'vxe-gantt-view--header-inner-wrapper',
-          on: {
-            scroll: $xeGanttView.triggerHeaderScrollEvent
-          }
-        }, [
-          h('div', {
-            ref: 'refHeaderXSpace',
-            class: 'vxe-body--x-space'
-          }),
-          h('table', {
-            ref: 'refHeaderTable',
-            class: 'vxe-gantt-view--header-table'
-          }, [
-            h('colgroup', {}, visibleColumn.map((column, cIndex) => {
-              return h('col', {
-                key: cIndex,
-                style: {
-                  width: `${viewCellWidth}px`
-                }
-              })
-            })),
-            h('thead', {}, headerGroups.map(({ scaleItem, columns }, $rowIndex) => {
-              const { type, titleFormat, titleMethod, headerCellStyle, slots } = scaleItem
-              const titleSlot = slots ? slots.title : null
-              const isLast = $rowIndex === headerGroups.length - 1
-              const todayValue = isLast && showNowLine ? todayDateMaps[type] : null
-              return h('tr', {
-                key: $rowIndex
-              }, columns.map((column, cIndex) => {
-                const { field, childCount, dateObj, startDateObj, endDateObj } = column
-                let label = `${column.title}`
-                if ((isLast || (minScale && (minScale.type === 'date' || minScale.type === 'day') && (type === 'date' || type === 'day'))) && scaleStep > 1) {
-                  label = getI18n(`vxe.gantt.stepFormat.${type}`, {
-                    start: startDateObj,
-                    end: endDateObj,
-                    eStartLabel: getI18n(`vxe.gantt.dayss.w${startDateObj.e}`),
-                    eEndLabel: getI18n(`vxe.gantt.dayss.w${endDateObj.e}`)
-                  })
-                } else {
-                  if (type === 'day') {
-                    if ($rowIndex) {
-                      label = getI18n(`vxe.gantt.tSimpleFormat.${type}`, {
-                        eLabel: getI18n(`vxe.gantt.dayss.w${dateObj.e}`)
+      return h(
+        'div',
+        {
+          ref: 'refElem',
+          class: 'vxe-gantt-view--header-wrapper'
+        },
+        [
+          h(
+            'div',
+            {
+              ref: 'refHeaderScroll',
+              class: 'vxe-gantt-view--header-inner-wrapper',
+              on: {
+                scroll: $xeGanttView.triggerHeaderScrollEvent
+              }
+            },
+            [
+              h('div', {
+                ref: 'refHeaderXSpace',
+                class: 'vxe-body--x-space'
+              }),
+              h(
+                'table',
+                {
+                  ref: 'refHeaderTable',
+                  class: 'vxe-gantt-view--header-table'
+                },
+                [
+                  h(
+                    'colgroup',
+                    {},
+                    visibleColumn.map((column, cIndex) => {
+                      return h('col', {
+                        key: cIndex,
+                        style: {
+                          width: `${viewCellWidth}px`
+                        }
                       })
-                    } else {
-                      label = getI18n(`vxe.gantt.tFullFormat.${type}`, {
-                        eLabel: getI18n(`vxe.gantt.dayss.w${dateObj.e}`)
-                      })
-                    }
-                  } else {
-                    if ($rowIndex) {
-                      label = getI18n(`vxe.gantt.tSimpleFormat.${type}`, dateObj)
-                    } else {
-                      label = getI18n(`vxe.gantt.tFullFormat.${type}`, dateObj)
-                    }
-                  }
-                }
-                let cellVNs: string | VxeComponentSlotType[] = label
-                const ctParams = {
-                  source: sourceType,
-                  type: viewType,
-                  column,
-                  scaleObj: scaleItem,
-                  title: label,
-                  dateObj,
-                  startDateObj,
-                  endDateObj,
-                  $rowIndex
-                }
-                if (titleSlot) {
-                  cellVNs = $xeGantt.callSlot(titleSlot, ctParams, h)
-                } else if (titleMethod) {
-                  cellVNs = `${titleMethod(ctParams)}`
-                } else if (titleFormat) {
-                  cellVNs = XEUtils.toDateString(dateObj.date, titleFormat)
-                }
-                let cellStys: Partial<CSSStyleDeclaration> | null = {}
-                if (headerCellStyle) {
-                  if (XEUtils.isFunction(headerCellStyle)) {
-                    cellStys = headerCellStyle(ctParams) || null
-                  } else {
-                    cellStys = headerCellStyle
-                  }
-                }
-                return h('th', {
-                  key: cIndex,
-                  class: ['vxe-gantt-view--header-column', {
-                    'is--now': showNowLine && todayValue && todayValue === field
-                  }],
-                  attrs: {
-                    colspan: childCount || null,
-                    title: titleSlot ? null : label
-                  },
-                  style: cellStys || undefined,
-                  on: {
-                    contextmenu (evnt: Event) {
-                      $xeGantt.handleTaskHeaderContextmenuEvent(evnt, ctParams)
-                    }
-                  }
-                }, cellVNs)
-              }))
-            }))
-          ])
-        ])
-      ])
+                    })
+                  ),
+                  h(
+                    'thead',
+                    {},
+                    headerGroups.map(({ scaleItem, columns }, $rowIndex) => {
+                      const { type, titleFormat, titleMethod, headerCellStyle, slots } = scaleItem
+                      const titleSlot = slots ? slots.title : null
+                      const isLast = $rowIndex === headerGroups.length - 1
+                      const todayValue = isLast && showNowLine ? todayDateMaps[type] : null
+                      return h(
+                        'tr',
+                        {
+                          key: $rowIndex
+                        },
+                        columns.map((column, cIndex) => {
+                          const { field, childCount, dateObj, startDateObj, endDateObj } = column
+                          let label = `${column.title}`
+                          if ((isLast || (minScale && (minScale.type === 'date' || minScale.type === 'day') && (type === 'date' || type === 'day'))) && scaleStep > 1) {
+                            label = getI18n(`vxe.gantt.stepFormat.${type}`, {
+                              start: startDateObj,
+                              end: endDateObj,
+                              eStartLabel: getI18n(`vxe.gantt.dayss.w${startDateObj.e}`),
+                              eEndLabel: getI18n(`vxe.gantt.dayss.w${endDateObj.e}`)
+                            })
+                          } else {
+                            if (type === 'day') {
+                              if ($rowIndex) {
+                                label = getI18n(`vxe.gantt.tSimpleFormat.${type}`, {
+                                  eLabel: getI18n(`vxe.gantt.dayss.w${dateObj.e}`)
+                                })
+                              } else {
+                                label = getI18n(`vxe.gantt.tFullFormat.${type}`, {
+                                  eLabel: getI18n(`vxe.gantt.dayss.w${dateObj.e}`)
+                                })
+                              }
+                            } else {
+                              if ($rowIndex) {
+                                label = getI18n(`vxe.gantt.tSimpleFormat.${type}`, dateObj)
+                              } else {
+                                label = getI18n(`vxe.gantt.tFullFormat.${type}`, dateObj)
+                              }
+                            }
+                          }
+                          let cellVNs: string | VxeComponentSlotType[] = label
+                          const ctParams = {
+                            source: sourceType,
+                            type: viewType,
+                            column,
+                            scaleObj: scaleItem,
+                            title: label,
+                            dateObj,
+                            startDateObj,
+                            endDateObj,
+                            $rowIndex
+                          }
+                          if (titleSlot) {
+                            cellVNs = $xeGantt.callSlot(titleSlot, ctParams, h)
+                          } else if (titleMethod) {
+                            cellVNs = `${titleMethod(ctParams)}`
+                          } else if (titleFormat) {
+                            cellVNs = XEUtils.toDateString(dateObj.date, titleFormat)
+                          }
+                          let cellStys: Partial<CSSStyleDeclaration> | null = {}
+                          if (headerCellStyle) {
+                            if (XEUtils.isFunction(headerCellStyle)) {
+                              cellStys = headerCellStyle(ctParams) || null
+                            } else {
+                              cellStys = headerCellStyle
+                            }
+                          }
+                          return h(
+                            'th',
+                            {
+                              key: cIndex,
+                              class: [
+                                'vxe-gantt-view--header-column',
+                                {
+                                  'is--now': showNowLine && todayValue && todayValue === field
+                                }
+                              ],
+                              attrs: {
+                                colspan: childCount || null,
+                                title: titleSlot ? null : label
+                              },
+                              style: cellStys || undefined,
+                              on: {
+                                contextmenu(evnt: Event) {
+                                  $xeGantt.handleTaskHeaderContextmenuEvent(evnt, ctParams)
+                                }
+                              }
+                            },
+                            cellVNs
+                          )
+                        })
+                      )
+                    })
+                  )
+                ]
+              )
+            ]
+          )
+        ]
+      )
     }
   },
-  mounted () {
+  mounted() {
     const _vm = this
     const $xeGanttView = _vm.$xeGanttView
     const { internalData } = $xeGanttView
@@ -169,7 +200,7 @@ export default defineVxeComponent({
     elemStore[`${prefix}table`] = _vm.$refs.refHeaderTable as HTMLDivElement
     elemStore[`${prefix}xSpace`] = _vm.$refs.refHeaderXSpace as HTMLDivElement
   },
-  destroyed () {
+  destroyed() {
     const _vm = this
     const $xeGanttView = _vm.$xeGanttView
     const { internalData } = $xeGanttView
@@ -181,7 +212,7 @@ export default defineVxeComponent({
     elemStore[`${prefix}table`] = null
     elemStore[`${prefix}xSpace`] = null
   },
-  render (this: any, h) {
+  render(this: any, h) {
     return this.renderVN(h)
   }
 })

@@ -1,35 +1,35 @@
 import type { VxeTableDefines, VxeTablePropTypes } from 'vxe-table'
 import type { VxeGanttDefines, VxeGanttTaskType } from '../../../types'
 
-export function getRefElem (refEl: any) {
+export function getRefElem(refEl: any) {
   if (refEl) {
     return (refEl.$el || refEl) as HTMLElement
   }
   return null
 }
 
-export function getCellRestHeight (rowRest: VxeTableDefines.RowCacheItem, cellOpts: VxeTablePropTypes.CellConfig, rowOpts: VxeTablePropTypes.RowConfig, defaultRowHeight: number) {
+export function getCellRestHeight(rowRest: VxeTableDefines.RowCacheItem, cellOpts: VxeTablePropTypes.CellConfig, rowOpts: VxeTablePropTypes.RowConfig, defaultRowHeight: number) {
   return rowRest.resizeHeight || cellOpts.height || rowOpts.height || rowRest.height || defaultRowHeight
 }
 
-export function getTaskBarLeft (chartRest: VxeGanttDefines.RowCacheItem | null, viewCellWidth: number) {
+export function getTaskBarLeft(chartRest: VxeGanttDefines.RowCacheItem | null, viewCellWidth: number) {
   return chartRest ? viewCellWidth * chartRest.oLeftSize : 0
 }
 
-export function getTaskBarWidth (chartRest: VxeGanttDefines.RowCacheItem | null, viewCellWidth: number) {
-  return chartRest && chartRest.oWidthSize ? Math.max(1, chartRest ? (Math.floor(viewCellWidth * chartRest.oWidthSize) - 1) : 0) : 0
+export function getTaskBarWidth(chartRest: VxeGanttDefines.RowCacheItem | null, viewCellWidth: number) {
+  return chartRest && chartRest.oWidthSize ? Math.max(1, chartRest ? Math.floor(viewCellWidth * chartRest.oWidthSize) - 1 : 0) : 0
 }
 
 const taskTypeMaps: Record<VxeGanttTaskType, boolean> = {
   milestone: true,
   subview: true
 }
-export function hasMilestoneTask (type: string) {
+export function hasMilestoneTask(type: string) {
   return type === 'milestone'
 }
-export function hasSubviewTask (type: string) {
+export function hasSubviewTask(type: string) {
   return type === 'subview'
 }
-export function getTaskType (type: string) {
-  return taskTypeMaps[type as VxeGanttTaskType] ? type as VxeGanttTaskType : 'default'
+export function getTaskType(type: string) {
+  return taskTypeMaps[type as VxeGanttTaskType] ? (type as VxeGanttTaskType) : 'default'
 }

@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-export function install (app: VueConstructor, options?: VxeGlobalConfig): void
+export function install(app: VueConstructor, options?: VxeGlobalConfig): void
 
 interface AllComponents {
   /**

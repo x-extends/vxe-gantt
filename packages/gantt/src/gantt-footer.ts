@@ -19,35 +19,43 @@ export default defineVxeComponent({
   props: {},
   computed: {
     ...({} as {
-      $xeGantt(): (VxeGanttConstructor & VxeGanttPrivateMethods)
-      $xeGanttView(): (VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
+      $xeGantt(): VxeGanttConstructor & VxeGanttPrivateMethods
+      $xeGanttView(): VxeGanttViewConstructor & VxeGanttViewPrivateMethods
     })
   },
   methods: {
     //
     // Render
     //
-    renderVN (h: CreateElement) {
+    renderVN(h: CreateElement) {
       const _vm = this
       const $xeGantt = _vm.$xeGantt
 
-      return h('div', {
-        ref: 'refElem',
-        class: 'vxe-gantt-view--footer-wrapper'
-      }, [
-        h('div', {
-          ref: 'refHeaderScroll',
-          class: 'vxe-gantt-view--footer-inner-wrapper',
-          on: {
-            contextmenu (evnt: Event) {
-              $xeGantt.handleTaskFooterContextmenuEvent(evnt, { source: sourceType, type: viewType, $rowIndex: -1 })
-            }
-          }
-        }, [])
-      ])
+      return h(
+        'div',
+        {
+          ref: 'refElem',
+          class: 'vxe-gantt-view--footer-wrapper'
+        },
+        [
+          h(
+            'div',
+            {
+              ref: 'refHeaderScroll',
+              class: 'vxe-gantt-view--footer-inner-wrapper',
+              on: {
+                contextmenu(evnt: Event) {
+                  $xeGantt.handleTaskFooterContextmenuEvent(evnt, { source: sourceType, type: viewType, $rowIndex: -1 })
+                }
+              }
+            },
+            []
+          )
+        ]
+      )
     }
   },
-  mounted () {
+  mounted() {
     const _vm = this
     const $xeGanttView = _vm.$xeGanttView
     const { internalData } = $xeGanttView
@@ -57,7 +65,7 @@ export default defineVxeComponent({
     elemStore[`${prefix}wrapper`] = _vm.$refs.refElem as HTMLDivElement
     elemStore[`${prefix}scroll`] = _vm.$refs.refHeaderScroll as HTMLDivElement
   },
-  destroyed () {
+  destroyed() {
     const _vm = this
     const $xeGanttView = _vm.$xeGanttView
     const { internalData } = $xeGanttView
@@ -67,7 +75,7 @@ export default defineVxeComponent({
     elemStore[`${prefix}wrapper`] = null
     elemStore[`${prefix}scroll`] = null
   },
-  render (this: any, h) {
+  render(this: any, h) {
     return this.renderVN(h)
   }
 })

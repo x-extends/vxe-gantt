@@ -1,7 +1,7 @@
 import { VxeUI } from '@vxe-ui/core'
 import { errLog } from './log'
 
-export function checkDependVersion () {
+export function checkDependVersion() {
   const pVersion = 3
   const sVersion = 25
   if (VxeUI.checkVersion) {

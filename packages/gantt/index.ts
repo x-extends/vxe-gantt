@@ -6,7 +6,7 @@ import VxeGanttComponent from './src/gantt'
 let isReg = false
 
 export const VxeGantt = Object.assign({}, VxeGanttComponent, {
-  install (app: VueConstructor) {
+  install(app: VueConstructor) {
     if (typeof window !== 'undefined') {
       const VxeGanttExtendGanttChart = (window as any).VxeGanttExtendGanttChart
       if (VxeGanttExtendGanttChart && VxeGanttExtendGanttChart.use) {

@@ -37,11 +37,11 @@ const viewTypeLevelMaps = {
   second: 3
 }
 
-function getViewTypeLevel (type: VxeGanttDefines.ColumnScaleType) {
+function getViewTypeLevel(type: VxeGanttDefines.ColumnScaleType) {
   return viewTypeLevelMaps[type || 'date'] || viewTypeLevelMaps.date
 }
 
-function getTableOns ($xeGantt: VxeGanttConstructor) {
+function getTableOns($xeGantt: VxeGanttConstructor) {
   const _vm = $xeGantt as any
   const $listeners = _vm.$listeners
 
@@ -77,7 +77,7 @@ XEUtils.each((VxeTableComponent as any).methods, (fn, name) => {
   }
 })
 
-function createInternalData (): GanttInternalData {
+function createInternalData(): GanttInternalData {
   return {
     linkFromConfMaps: {},
     linkToConfMaps: {},
@@ -98,7 +98,7 @@ function createInternalData (): GanttInternalData {
   }
 }
 
-function createReactData (): GanttReactData {
+function createReactData(): GanttReactData {
   return {
     tableLoading: false,
     proxyInited: false,
@@ -159,10 +159,7 @@ function createReactData (): GanttReactData {
 
 export default /* define-vxe-component start */ defineVxeComponent({
   name: 'VxeGantt',
-  mixins: [
-    globalMixins.sizeMixin,
-    globalMixins.vScrollbarMixin
-  ],
+  mixins: [globalMixins.sizeMixin, globalMixins.vScrollbarMixin],
   props: {
     ...(tableProps as unknown as {
       border: PropType<VxeTablePropTypes.Border>
@@ -216,7 +213,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       default: () => getConfig().gantt.size || getConfig().size
     }
   },
-  provide () {
+  provide() {
     const $xeGantt = this
     const $xeGrid = null
 
@@ -225,7 +222,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       $xeGantt
     }
   },
-  data () {
+  data() {
     const xID = XEUtils.uniqueId()
 
     const reactData = createReactData()
@@ -247,180 +244,180 @@ export default /* define-vxe-component start */ defineVxeComponent({
       computeSize(): VxeComponentSizeType
       computeIsVScrollbar(): VxeComponentIsVScrollbar
     }),
-    computeProxyOpts () {
+    computeProxyOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return XEUtils.merge({}, XEUtils.clone(getConfig().gantt.proxyConfig, true), props.proxyConfig)
     },
-    computeIsRespMsg () {
+    computeIsRespMsg() {
       const $xeGantt = this
 
       const proxyOpts = $xeGantt.computeProxyOpts as VxeGanttPropTypes.ProxyConfig
       return !!(XEUtils.isBoolean(proxyOpts.message) ? proxyOpts.message : proxyOpts.showResponseMsg)
     },
-    computeIsActiveMsg () {
+    computeIsActiveMsg() {
       const $xeGantt = this
 
       const proxyOpts = $xeGantt.computeProxyOpts as VxeGanttPropTypes.ProxyConfig
       return XEUtils.isBoolean(proxyOpts.showActionMsg) ? proxyOpts.showActionMsg : !!proxyOpts.showActiveMsg
     },
-    computePagerOpts () {
+    computePagerOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.pagerConfig, props.pagerConfig)
     },
-    computeFormOpts () {
+    computeFormOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.formConfig, props.formConfig)
     },
-    computeToolbarOpts () {
+    computeToolbarOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.toolbarConfig, props.toolbarConfig)
     },
-    computeZoomOpts () {
+    computeZoomOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.zoomConfig, props.zoomConfig)
     },
-    computeTaskOpts () {
+    computeTaskOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskConfig, props.taskConfig)
     },
-    computeTaskViewScaleOpts () {
+    computeTaskViewScaleOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return XEUtils.merge({}, getConfig().gantt.taskViewScaleConfig, props.taskViewScaleConfig)
     },
-    computeTaskNowLineOpts  () {
+    computeTaskNowLineOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskNowLineConfig, props.taskNowLineConfig)
     },
-    computeTaskViewOpts () {
+    computeTaskViewOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskViewConfig, props.taskViewConfig)
     },
-    computeTaskBarOpts () {
+    computeTaskBarOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarConfig, props.taskBarConfig)
     },
-    computeTaskBarMoveOpts () {
+    computeTaskBarMoveOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarMoveConfig, props.taskBarMoveConfig)
     },
-    computeTaskBarMoveTooltipOpts () {
+    computeTaskBarMoveTooltipOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarMoveTooltipConfig, props.taskBarMoveTooltipConfig)
     },
-    computeTaskBarResizeOpts () {
+    computeTaskBarResizeOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarResizeConfig, props.taskBarResizeConfig)
     },
-    computeTaskBarResizeTooltipOpts () {
+    computeTaskBarResizeTooltipOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarResizeTooltipConfig, props.taskBarResizeTooltipConfig)
     },
-    computeTaskSplitOpts () {
+    computeTaskSplitOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskSplitConfig, props.taskSplitConfig)
     },
-    computeTaskBarMilestoneOpts () {
+    computeTaskBarMilestoneOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarMilestoneConfig, props.taskBarMilestoneConfig)
     },
-    computeTaskCriticalPathOpts () {
+    computeTaskCriticalPathOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskCriticalPathConfig, props.taskCriticalPathConfig)
     },
-    computeTaskBarSubviewOpts () {
+    computeTaskBarSubviewOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarSubviewConfig, props.taskBarSubviewConfig)
     },
-    computeTaskBarTooltipOpts () {
+    computeTaskBarTooltipOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskBarTooltipConfig, props.taskBarTooltipConfig)
     },
-    computeTaskLinkOpts () {
+    computeTaskLinkOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.taskLinkConfig, props.taskLinkConfig)
     },
-    computeScaleUnit () {
+    computeScaleUnit() {
       const $xeGantt = this
 
       const minScale = $xeGantt.computeMinScale as VxeGanttDefines.ColumnScaleObj
       return minScale ? minScale.type : 'date'
     },
-    computeDateFormat () {
+    computeDateFormat() {
       const $xeGantt = this
 
       const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
       const { dateFormat } = taskOpts
       return dateFormat || ''
     },
-    computeMinScale () {
+    computeMinScale() {
       const $xeGantt = this
       const reactData = ($xeGantt as any).reactData as GanttReactData
 
       const { taskScaleList } = reactData
       return XEUtils.last(taskScaleList)
     },
-    computeScaleStep () {
+    computeScaleStep() {
       const $xeGantt = this
 
       const minScale = $xeGantt.computeMinScale as VxeGanttDefines.ColumnScaleObj
       const { step } = minScale
       return XEUtils.toNumber(step || 1) || 1
     },
-    computeWeekScale () {
+    computeWeekScale() {
       const $xeGantt = this
       const reactData = ($xeGantt as any).reactData as GanttReactData
 
       const { taskScaleList } = reactData
-      return taskScaleList.find(item => item.type === 'week')
+      return taskScaleList.find((item) => item.type === 'week')
     },
-    computeTaskViewScales () {
+    computeTaskViewScales() {
       const $xeGantt = this
 
       const taskViewOpts = $xeGantt.computeTaskViewOpts as VxeGanttPropTypes.TaskViewConfig
       const { scales } = taskViewOpts
       return scales
     },
-    computeTaskLinkStyle () {
+    computeTaskLinkStyle() {
       const $xeGantt = this
 
       const { lineType, lineWidth, lineStatus, lineColor } = $xeGantt.computeTaskLinkOpts as VxeGanttPropTypes.TaskLinkConfig
@@ -430,58 +427,58 @@ export default /* define-vxe-component start */ defineVxeComponent({
      * 已废弃，保留兼容
      * @deprecated
      */
-    computeTaskScaleConfs () {
+    computeTaskScaleConfs() {
       return this.computeTaskViewScales
     },
-    computeTitleField () {
+    computeTitleField() {
       const $xeGantt = this
 
       const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
       return taskOpts.titleField || 'title'
     },
-    computeStartField () {
+    computeStartField() {
       const $xeGantt = this
 
       const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
       return taskOpts.startField || 'start'
     },
-    computeEndField () {
+    computeEndField() {
       const $xeGantt = this
 
       const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
       return taskOpts.endField || 'end'
     },
-    computeTypeField () {
+    computeTypeField() {
       const $xeGantt = this
 
       const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
       return taskOpts.typeField || 'type'
     },
-    computeProgressField () {
+    computeProgressField() {
       const $xeGantt = this
 
       const taskOpts = $xeGantt.computeTaskOpts as VxeGanttPropTypes.TaskConfig
       return taskOpts.progressField || 'progress'
     },
-    computeScrollbarOpts () {
+    computeScrollbarOpts() {
       const $xeGantt = this
       const props = $xeGantt
 
       return Object.assign({}, getConfig().gantt.scrollbarConfig, props.scrollbarConfig)
     },
-    computeScrollbarXOpts () {
+    computeScrollbarXOpts() {
       const $xeGantt = this
 
       const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
-      return scrollbarOpts.x ? Object.assign({}, scrollbarOpts.x, scrollbarOpts.xConfig) : (scrollbarOpts.xConfig || {})
+      return scrollbarOpts.x ? Object.assign({}, scrollbarOpts.x, scrollbarOpts.xConfig) : scrollbarOpts.xConfig || {}
     },
-    computeScrollbarYOpts () {
+    computeScrollbarYOpts() {
       const $xeGantt = this
 
       const scrollbarOpts = $xeGantt.computeScrollbarOpts as VxeTablePropTypes.ScrollbarConfig
-      return scrollbarOpts.y ? Object.assign({}, scrollbarOpts.y, scrollbarOpts.yConfig) : (scrollbarOpts.yConfig || {})
+      return scrollbarOpts.y ? Object.assign({}, scrollbarOpts.y, scrollbarOpts.yConfig) : scrollbarOpts.yConfig || {}
     },
-    computeScrollXHeight () {
+    computeScrollXHeight() {
       const $xeGantt = this
       const scrollDefaultConf = ($xeGantt as any).scrollDefaultConf as VxeScrollbarProps
 
@@ -489,7 +486,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const scrollbarXOpts = $xeGantt.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
       return XEUtils.toNumber(getDefaultConfig(getDefaultConfig(scrollbarXOpts.height, scrollbarOpts.height), scrollDefaultConf.height))
     },
-    computeScrollYWidth () {
+    computeScrollYWidth() {
       const $xeGantt = this
       const scrollDefaultConf = ($xeGantt as any).scrollDefaultConf as VxeScrollbarProps
 
@@ -497,7 +494,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const scrollbarYOpts = $xeGantt.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
       return XEUtils.toNumber(getDefaultConfig(getDefaultConfig(scrollbarYOpts.width, scrollbarOpts.width), scrollDefaultConf.width))
     },
-    computeScrollXAutoHide () {
+    computeScrollXAutoHide() {
       const $xeGantt = this
       const scrollDefaultConf = ($xeGantt as any).scrollDefaultConf as VxeScrollbarProps
 
@@ -505,7 +502,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const scrollbarXOpts = $xeGantt.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
       return getDefaultConfig(getDefaultConfig(scrollbarXOpts.autoHide, scrollbarOpts.autoHide), scrollDefaultConf.autoHide)
     },
-    computeScrollYAutoHide () {
+    computeScrollYAutoHide() {
       const $xeGantt = this
       const scrollDefaultConf = ($xeGantt as any).scrollDefaultConf as VxeScrollbarProps
 
@@ -513,25 +510,25 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const scrollbarYOpts = $xeGantt.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
       return getDefaultConfig(getDefaultConfig(scrollbarYOpts.autoHide, scrollbarOpts.autoHide), scrollDefaultConf.autoHide)
     },
-    computeScrollbarXToTop () {
+    computeScrollbarXToTop() {
       const $xeGantt = this
 
       const scrollbarXOpts = $xeGantt.computeScrollbarXOpts as VxeTablePropTypes.ScrollbarXConfig
       return scrollbarXOpts.position === 'top'
     },
-    computeScrollbarYToLeft () {
+    computeScrollbarYToLeft() {
       const $xeGantt = this
 
       const scrollbarYOpts = $xeGantt.computeScrollbarYOpts as VxeTablePropTypes.ScrollbarYConfig
       return scrollbarYOpts.position === 'left'
     },
-    computeCriticalPathVisible () {
+    computeCriticalPathVisible() {
       const $xeGantt = this
 
       const taskBarOpts = $xeGantt.computeTaskBarOpts as VxeGanttPropTypes.TaskBarConfig
       return taskBarOpts.showCriticalPath
     },
-    computeWrapperStyle () {
+    computeWrapperStyle() {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -551,7 +548,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const barWidth = $xeGantt.computeScrollYWidth
       const barHeight = $xeGantt.computeScrollXHeight
       const stys: VxeComponentStyleType = {
-        '--vxe-ui-gantt-scrollbar-width': (overflowY ? (isVScrollbar ? 'var(--vxe-ui-scrollbar-y-width)' : (scrollbarWidth + 'px')) : '')
+        '--vxe-ui-gantt-scrollbar-width': overflowY ? (isVScrollbar ? 'var(--vxe-ui-scrollbar-y-width)' : scrollbarWidth + 'px') : ''
       }
       if (cpLineColor) {
         stys['--vxe-ui-gantt-view-bar-critical-path-line-color'] = cpLineColor
@@ -605,20 +602,20 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return stys
     },
-    computeTableExtendProps () {
+    computeTableExtendProps() {
       const $xeGantt = this
       const props = $xeGantt
 
       const rest: any = {}
       const gridProps: any = props
-      propKeys.forEach(key => {
+      propKeys.forEach((key) => {
         if (gridProps[key] !== undefined) {
           rest[key] = gridProps[key]
         }
       })
       return rest
     },
-    computeTableProps () {
+    computeTableProps() {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -668,12 +665,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return tProps
     },
-    tableProps () {
+    tableProps() {
       const $xeGantt = this
 
       return $xeGantt.computeTableProps
     },
-    computeCurrLayoutConf () {
+    computeCurrLayoutConf() {
       const $xeGantt = this
       const props = $xeGantt
 
@@ -702,32 +699,32 @@ export default /* define-vxe-component start */ defineVxeComponent({
         footKeys
       }
     },
-    computeCustomCurrentPageFlag () {
+    computeCustomCurrentPageFlag() {
       const $xeGantt = this
 
       const pagerOpts = $xeGantt.computePagerOpts as VxeGanttPropTypes.PagerConfig
       return pagerOpts.currentPage
     },
-    computeCustomPageSizeFlag () {
+    computeCustomPageSizeFlag() {
       const $xeGantt = this
 
       const pagerOpts = $xeGantt.computePagerOpts as VxeGanttPropTypes.PagerConfig
       return pagerOpts.pageSize
     },
-    computeCustomTotalFlag () {
+    computeCustomTotalFlag() {
       const $xeGantt = this
 
       const pagerOpts = $xeGantt.computePagerOpts as VxeGanttPropTypes.PagerConfig
       return pagerOpts.total
     },
-    computePageCount () {
+    computePageCount() {
       const $xeGantt = this
       const reactData = ($xeGantt as any).reactData
 
       const { tablePage } = reactData
       return Math.max(Math.ceil(tablePage.total / tablePage.pageSize), 1)
     },
-    computeIsLoading () {
+    computeIsLoading() {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = ($xeGantt as any).reactData
@@ -738,7 +735,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const { showLoading } = proxyOpts
       return loading || (tableLoading && showLoading && proxyConfig && isEnableConf(proxyOpts))
     },
-    computeTableBorder () {
+    computeTableBorder() {
       const $xeGantt = this
       const props = $xeGantt
 
@@ -760,54 +757,54 @@ export default /* define-vxe-component start */ defineVxeComponent({
     }
   },
   watch: {
-    columns () {
+    columns() {
       const $xeGantt = this
       const props = $xeGantt
 
       $xeGantt.$nextTick(() => $xeGantt.loadColumn(props.columns || []))
     },
-    toolbarConfig () {
+    toolbarConfig() {
       const $xeGantt = this
 
       $xeGantt.initToolbar()
     },
-    computeCustomCurrentPageFlag () {
+    computeCustomCurrentPageFlag() {
       const $xeGantt = this
 
       $xeGantt.initPages('currentPage')
     },
-    computeCustomPageSizeFlag () {
+    computeCustomPageSizeFlag() {
       const $xeGantt = this
 
       $xeGantt.initPages('pageSize')
     },
-    computeCustomTotalFlag () {
+    computeCustomTotalFlag() {
       const $xeGantt = this
 
       $xeGantt.initPages('total')
     },
-    proxyConfig () {
+    proxyConfig() {
       const $xeGantt = this
 
       $xeGantt.initProxy()
     },
-    computeTaskViewScales () {
+    computeTaskViewScales() {
       const $xeGantt = this
 
       $xeGantt.handleTaskScaleConfig()
       $xeGantt.reViewFlag++
     },
-    computeCriticalPathVisible () {
+    computeCriticalPathVisible() {
       const $xeGantt = this
 
       $xeGantt.reViewFlag++
     },
-    reViewFlag () {
+    reViewFlag() {
       const $xeGantt = this
 
       $xeGantt.refreshTaskView()
     },
-    computeTaskLinkStyle () {
+    computeTaskLinkStyle() {
       const $xeGantt = this as unknown as VxeGanttConstructor & VxeGanttPrivateMethods
 
       if ($xeGantt.handleUpTaskLinkData) {
@@ -817,12 +814,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
   },
   methods: {
     ...tableMethods,
-    dispatchEvent (type: ValueOf<VxeGanttEmits>, params: Record<string, any>, evnt: Event | null) {
+    dispatchEvent(type: ValueOf<VxeGanttEmits>, params: Record<string, any>, evnt: Event | null) {
       const $xeGantt = this
 
       $xeGantt.$emit(type, createEvent(evnt, { $grid: null, $gantt: $xeGantt }, params))
     },
-    handleTaskScaleConfig () {
+    handleTaskScaleConfig() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -830,8 +827,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const taskViewScaleOpts = $xeGantt.computeTaskViewScaleOpts
       const scaleConfs: VxeGanttDefines.ColumnScaleObj[] = []
       const keyMaps: Record<string, boolean> = {}
-      const scaleList = (taskScaleConfs && taskScaleConfs.length ? taskScaleConfs : ['month', 'date'] as VxeGanttDefines.ColumnScaleType[])
-      scaleList.forEach(conf => {
+      const scaleList = taskScaleConfs && taskScaleConfs.length ? taskScaleConfs : (['month', 'date'] as VxeGanttDefines.ColumnScaleType[])
+      scaleList.forEach((conf) => {
         const sConf = !conf || XEUtils.isString(conf) ? { type: conf } : conf
         const type = sConf.type
         const level = getViewTypeLevel(type)
@@ -843,13 +840,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
           errLog('vxe.error.repeatProp', ['type', type])
           return
         }
-        const scaleObj = Object.assign({}, type ? (taskViewScaleOpts[type] || {}) : {}, sConf, { level })
+        const scaleObj = Object.assign({}, type ? taskViewScaleOpts[type] || {} : {}, sConf, { level })
         keyMaps[type] = true
         scaleConfs.push(scaleObj)
       })
       reactData.taskScaleList = XEUtils.orderBy(scaleConfs, { field: 'level', order: 'desc' })
     },
-    initToolbar () {
+    initToolbar() {
       const $xeGantt = this
 
       $xeGantt.$nextTick(() => {
@@ -860,7 +857,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       })
     },
-    initGanttView () {
+    initGanttView() {
       const $xeGantt = this
 
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
@@ -869,7 +866,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         $xeTable.handleConnectGanttView($ganttView)
       }
     },
-    initPages (propKey?: 'currentPage' | 'pageSize' | 'total') {
+    initPages(propKey?: 'currentPage' | 'pageSize' | 'total') {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -896,7 +893,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
     },
-    triggerPendingEvent (code: string) {
+    triggerPendingEvent(code: string) {
       const $xeGantt = this
 
       const isActiveMsg = $xeGantt.computeIsActiveMsg
@@ -913,7 +910,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
     },
-    getRespMsg (rest: any, defaultMsg: string) {
+    getRespMsg(rest: any, defaultMsg: string) {
       const $xeGantt = this as unknown as VxeGanttConstructor & VxeGanttPrivateMethods
 
       const proxyOpts = $xeGantt.computeProxyOpts
@@ -926,7 +923,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return msg || getI18n(defaultMsg)
     },
-    handleDeleteRow (code: string, alertKey: string, callback: () => void): Promise<void> {
+    handleDeleteRow(code: string, alertKey: string, callback: () => void): Promise<void> {
       const $xeGantt = this
 
       const isActiveMsg = $xeGantt.computeIsActiveMsg
@@ -952,7 +949,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return Promise.resolve()
     },
-    pageChangeEvent (params: VxePagerDefines.PageChangeEventParams) {
+    pageChangeEvent(params: VxePagerDefines.PageChangeEventParams) {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -970,7 +967,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         })
       }
     },
-    handleSortEvent (params: VxeTableDefines.SortChangeEventParams) {
+    handleSortEvent(params: VxeTableDefines.SortChangeEventParams) {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -990,19 +987,19 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
     },
-    sortChangeEvent (params: VxeTableDefines.SortChangeEventParams) {
+    sortChangeEvent(params: VxeTableDefines.SortChangeEventParams) {
       const $xeGantt = this
 
       $xeGantt.handleSortEvent(params)
       $xeGantt.dispatchEvent('sort-change', params, params.$event)
     },
-    clearAllSortEvent (params: VxeTableDefines.SortChangeEventParams) {
+    clearAllSortEvent(params: VxeTableDefines.SortChangeEventParams) {
       const $xeGantt = this
 
       $xeGantt.handleSortEvent(params)
       $xeGantt.dispatchEvent('clear-all-sort', params, params.$event)
     },
-    handleFilterEvent (params: VxeTableDefines.ClearAllFilterEventParams) {
+    handleFilterEvent(params: VxeTableDefines.ClearAllFilterEventParams) {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -1026,19 +1023,19 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
     },
-    filterChangeEvent (params: VxeTableDefines.ClearAllFilterEventParams) {
+    filterChangeEvent(params: VxeTableDefines.ClearAllFilterEventParams) {
       const $xeGantt = this
 
       $xeGantt.handleFilterEvent(params)
       $xeGantt.dispatchEvent('filter-change', params, params.$event)
     },
-    clearAllFilterEvent (params: VxeTableDefines.ClearAllFilterEventParams) {
+    clearAllFilterEvent(params: VxeTableDefines.ClearAllFilterEventParams) {
       const $xeGantt = this
 
       $xeGantt.handleFilterEvent(params)
       $xeGantt.dispatchEvent('clear-all-filter', params, params.$event)
     },
-    submitFormEvent (params: VxeFormDefines.SubmitEventParams) {
+    submitFormEvent(params: VxeFormDefines.SubmitEventParams) {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -1059,7 +1056,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       $xeGantt.dispatchEvent('form-submit', params, params.$event)
     },
-    resetFormEvent (params: VxeFormDefines.ResetEventParams) {
+    resetFormEvent(params: VxeFormDefines.ResetEventParams) {
       const $xeGantt = this
       const props = $xeGantt
       const internalData = $xeGantt.internalData
@@ -1079,19 +1076,19 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       $xeGantt.dispatchEvent('form-reset', params, $event)
     },
-    submitInvalidEvent (params: VxeFormDefines.SubmitInvalidEventParams) {
+    submitInvalidEvent(params: VxeFormDefines.SubmitInvalidEventParams) {
       const $xeGantt = this
 
       $xeGantt.dispatchEvent('form-submit-invalid', params, params.$event)
     },
-    collapseEvent (params: VxeFormDefines.CollapseEventParams) {
+    collapseEvent(params: VxeFormDefines.CollapseEventParams) {
       const $xeGantt = this
 
       const { $event } = params
       $xeGantt.dispatchEvent('form-toggle-collapse', params, $event)
       $xeGantt.dispatchEvent('form-collapse', params, $event)
     },
-    handleZoom (isMax?: boolean) {
+    handleZoom(isMax?: boolean) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -1102,14 +1099,15 @@ export default /* define-vxe-component start */ defineVxeComponent({
           reactData.tZindex = nextZIndex()
         }
       }
-      return $xeGantt.$nextTick()
+      return $xeGantt
+        .$nextTick()
         .then(() => $xeGantt.recalculate(true))
         .then(() => {
           setTimeout(() => $xeGantt.recalculate(true), 15)
           return reactData.isZMax
         })
     },
-    dragSplitEvent (evnt: MouseEvent) {
+    dragSplitEvent(evnt: MouseEvent) {
       const $xeGantt = this
 
       const el = $xeGantt.$refs.refElem as HTMLDivElement
@@ -1168,7 +1166,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
       document.onmousemove = (evnt) => {
         evnt.preventDefault()
-        offsetLeft = (evnt.clientX - disX)
+        offsetLeft = evnt.clientX - disX
         targetTableWidth = Math.min(ganttWidth - 80, Math.max(tableMinWidth, tableWidth + offsetLeft))
         handleReStyle(evnt)
       }
@@ -1186,7 +1184,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       rsSplitLineEl.style.display = 'block'
       handleReStyle(evnt)
     },
-    handleSplitAnimat () {
+    handleSplitAnimat() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
       const internalData = $xeGantt.internalData
@@ -1205,7 +1203,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }, 350)
       }
     },
-    handleSplitLeftViewEvent () {
+    handleSplitLeftViewEvent() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -1214,7 +1212,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       $xeGantt.handleSplitAnimat()
       reactData.showRightView = true
     },
-    handleSplitRightViewEvent () {
+    handleSplitRightViewEvent() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -1223,13 +1221,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
       $xeGantt.handleSplitAnimat()
       reactData.showLeftView = true
     },
-    getDefaultFormData () {
+    getDefaultFormData() {
       const $xeGantt = this
 
       const formOpts = $xeGantt.computeFormOpts
       if (formOpts.items) {
         const fData: any = {}
-        formOpts.items.forEach(item => {
+        formOpts.items.forEach((item) => {
           const { field, itemRender } = item
           if (field) {
             let itemValue: any = null
@@ -1248,7 +1246,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return {}
     },
-    initProxy () {
+    initProxy() {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -1265,20 +1263,23 @@ export default /* define-vxe-component start */ defineVxeComponent({
         if (!proxyInited) {
           reactData.proxyInited = true
           if (proxyOpts.autoLoad !== false) {
-            $xeGantt.$nextTick().then(() => {
-              internalData.uFoot = true
-              const rest = $xeGantt.commitProxy('initial')
-              internalData.uFoot = false
-              $xeGantt.updateQueryFooter()
-              return rest
-            }).then((rest) => {
-              $xeGantt.dispatchEvent('proxy-query', { ...rest, isInited: true }, new Event('initial'))
-            })
+            $xeGantt
+              .$nextTick()
+              .then(() => {
+                internalData.uFoot = true
+                const rest = $xeGantt.commitProxy('initial')
+                internalData.uFoot = false
+                $xeGantt.updateQueryFooter()
+                return rest
+              })
+              .then((rest) => {
+                $xeGantt.dispatchEvent('proxy-query', { ...rest, isInited: true }, new Event('initial'))
+              })
           }
         }
       }
     },
-    updateQueryFooter () {
+    updateQueryFooter() {
       const $xeGantt = this
 
       const proxyOpts = $xeGantt.computeProxyOpts
@@ -1287,7 +1288,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         return $xeGantt.commitProxy('queryFooter')
       }
     },
-    handleGlobalKeydownEvent (evnt: KeyboardEvent) {
+    handleGlobalKeydownEvent(evnt: KeyboardEvent) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -1297,7 +1298,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         $xeGantt.triggerZoomEvent(evnt)
       }
     },
-    getEl () {
+    getEl() {
       const $xeGantt = this
 
       return $xeGantt.$refs.refElem as HTMLDivElement
@@ -1306,7 +1307,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
      * 提交指令，支持 code 或 button
      * @param {String/Object} code 字符串或对象
      */
-    commitProxy (proxyTarget: string | VxeToolbarPropTypes.ButtonConfig, ...args: any[]): Promise<any> {
+    commitProxy(proxyTarget: string | VxeToolbarPropTypes.ButtonConfig, ...args: any[]): Promise<any> {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -1334,7 +1335,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if (XEUtils.isString(proxyTarget)) {
         const { buttons } = toolbarOpts
         const matchObj = (toolbarConfig || toolbar) && isEnableConf(toolbarOpts) && buttons ? XEUtils.findTree(buttons, (item) => item.code === proxyTarget, { children: 'dropdowns' }) : null
-        button = matchObj ? matchObj.item as any : null
+        button = matchObj ? (matchObj.item as any) : null
         code = proxyTarget
       } else {
         button = proxyTarget
@@ -1347,7 +1348,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         case 'insert_edit':
           return $xeTable.insert({}).then(({ row }) => $xeTable.setEditRow(row, true))
 
-          // 已废弃
+        // 已废弃
         case 'insert_actived':
           return $xeTable.insert({}).then(({ row }) => $xeTable.setEditRow(row, true))
           // 已废弃
@@ -1464,75 +1465,74 @@ export default /* define-vxe-component start */ defineVxeComponent({
               reactData.sortData = sortList
               reactData.filterData = filterList
               reactData.tableLoading = true
-              return Promise.all([
-                Promise.resolve((oldBeforeQuery || qMethod)(commitParams, ...args)),
-                operPromise
-              ]).then(([rest]) => {
-                reactData.tableLoading = false
-                if (aqMethod) {
-                  aqMethod({ ...commitParams, response: rest, status: 'success' }, ...args)
-                } else {
-                  let tableData: any[] = []
-                  if (rest) {
-                    const reParams = { data: rest, $grid: null, $table: $xeTable, $gantt: $xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods }
-                    if (pagerConfig && isEnableConf(pagerOpts)) {
-                      const totalProp = resConfigs.total
-                      const total = (XEUtils.isFunction(totalProp) ? totalProp(reParams) : XEUtils.get(rest, totalProp || 'page.total')) || 0
-                      tablePage.total = XEUtils.toNumber(total)
-                      const resultProp = resConfigs.result
-                      tableData = (XEUtils.isFunction(resultProp) ? resultProp(reParams) : XEUtils.get(rest, resultProp || 'result')) || []
-                      // 检验当前页码，不能超出当前最大页数
-                      const pageCount = Math.max(Math.ceil(total / tablePage.pageSize), 1)
-                      if (tablePage.currentPage > pageCount) {
-                        tablePage.currentPage = pageCount
-                      }
-                    } else {
-                      const listProp = resConfigs.list
-                      if (XEUtils.isArray(rest)) {
-                        tableData = rest
-                      } else if (listProp) {
-                        tableData = (XEUtils.isFunction(listProp) ? listProp(reParams) : XEUtils.get(rest, listProp)) || []
-                      }
-                    }
-                    if (showFooter) {
-                      const fdProp = resConfigs.footerData
-                      const footerList = fdProp ? (XEUtils.isFunction(fdProp) ? fdProp(reParams) : XEUtils.get(rest, fdProp)) : []
-                      if (XEUtils.isArray(footerList)) {
-                        reactData.footerData = footerList
-                      }
-                    }
-                  }
-                  if ($xeTable) {
-                    $xeTable.loadData(tableData)
+              return Promise.all([Promise.resolve((oldBeforeQuery || qMethod)(commitParams, ...args)), operPromise])
+                .then(([rest]) => {
+                  reactData.tableLoading = false
+                  if (aqMethod) {
+                    aqMethod({ ...commitParams, response: rest, status: 'success' }, ...args)
                   } else {
-                    $xeGantt.$nextTick(() => {
-                      const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
-                      if ($xeTable) {
-                        $xeTable.loadData(tableData)
+                    let tableData: any[] = []
+                    if (rest) {
+                      const reParams = { data: rest, $grid: null, $table: $xeTable, $gantt: $xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods }
+                      if (pagerConfig && isEnableConf(pagerOpts)) {
+                        const totalProp = resConfigs.total
+                        const total = (XEUtils.isFunction(totalProp) ? totalProp(reParams) : XEUtils.get(rest, totalProp || 'page.total')) || 0
+                        tablePage.total = XEUtils.toNumber(total)
+                        const resultProp = resConfigs.result
+                        tableData = (XEUtils.isFunction(resultProp) ? resultProp(reParams) : XEUtils.get(rest, resultProp || 'result')) || []
+                        // 检验当前页码，不能超出当前最大页数
+                        const pageCount = Math.max(Math.ceil(total / tablePage.pageSize), 1)
+                        if (tablePage.currentPage > pageCount) {
+                          tablePage.currentPage = pageCount
+                        }
+                      } else {
+                        const listProp = resConfigs.list
+                        if (XEUtils.isArray(rest)) {
+                          tableData = rest
+                        } else if (listProp) {
+                          tableData = (XEUtils.isFunction(listProp) ? listProp(reParams) : XEUtils.get(rest, listProp)) || []
+                        }
                       }
-                    })
+                      if (showFooter) {
+                        const fdProp = resConfigs.footerData
+                        const footerList = fdProp ? (XEUtils.isFunction(fdProp) ? fdProp(reParams) : XEUtils.get(rest, fdProp)) : []
+                        if (XEUtils.isArray(footerList)) {
+                          reactData.footerData = footerList
+                        }
+                      }
+                    }
+                    if ($xeTable) {
+                      $xeTable.loadData(tableData)
+                    } else {
+                      $xeGantt.$nextTick(() => {
+                        const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
+                        if ($xeTable) {
+                          $xeTable.loadData(tableData)
+                        }
+                      })
+                    }
+                    if (oldAfterQuery) {
+                      oldAfterQuery({ ...commitParams, response: rest }, ...args)
+                    }
                   }
-                  if (oldAfterQuery) {
-                    oldAfterQuery({ ...commitParams, response: rest }, ...args)
+                  if (qsMethod) {
+                    qsMethod({ ...commitParams, response: rest })
                   }
-                }
-                if (qsMethod) {
-                  qsMethod({ ...commitParams, response: rest })
-                }
-                return { status: true }
-              }).catch((rest) => {
-                reactData.tableLoading = false
-                if (aqMethod) {
-                  aqMethod({ ...commitParams, response: rest, status: 'error' }, ...args)
-                }
-                if (qeMethod) {
-                  qeMethod({ ...commitParams, response: rest })
-                }
-                return { status: false }
-              })
+                  return { status: true }
+                })
+                .catch((rest) => {
+                  reactData.tableLoading = false
+                  if (aqMethod) {
+                    aqMethod({ ...commitParams, response: rest, status: 'error' }, ...args)
+                  }
+                  if (qeMethod) {
+                    qeMethod({ ...commitParams, response: rest })
+                  }
+                  return { status: false }
+                })
             }
             if (bqMethod) {
-              return Promise.resolve(bqMethod(commitParams, ...args)).then(status => {
+              return Promise.resolve(bqMethod(commitParams, ...args)).then((status) => {
                 if (status !== false) {
                   return handleQuery()
                 }
@@ -1573,31 +1573,33 @@ export default /* define-vxe-component start */ defineVxeComponent({
               options: qfMethod
             }
             const handleQueryFooter = () => {
-              return Promise.resolve((oldBeforeQueryFooter || qfMethod)(commitParams, ...args)).then(rest => {
-                if (aqfMethod) {
-                  aqfMethod({ ...commitParams, response: rest, status: 'success' }, ...args)
-                } else {
-                  reactData.footerData = XEUtils.isArray(rest) ? rest : []
-                  if (oldAfterQueryFooter) {
-                    oldAfterQueryFooter({ ...commitParams, response: rest }, ...args)
+              return Promise.resolve((oldBeforeQueryFooter || qfMethod)(commitParams, ...args))
+                .then((rest) => {
+                  if (aqfMethod) {
+                    aqfMethod({ ...commitParams, response: rest, status: 'success' }, ...args)
+                  } else {
+                    reactData.footerData = XEUtils.isArray(rest) ? rest : []
+                    if (oldAfterQueryFooter) {
+                      oldAfterQueryFooter({ ...commitParams, response: rest }, ...args)
+                    }
                   }
-                }
-                if (qfSuccessMethod) {
-                  qfSuccessMethod({ ...commitParams, response: rest })
-                }
-                return { status: true }
-              }).catch((rest) => {
-                if (aqfMethod) {
-                  aqfMethod({ ...commitParams, response: rest, status: 'error' }, ...args)
-                }
-                if (qfErrorMethod) {
-                  qfErrorMethod({ ...commitParams, response: rest })
-                }
-                return { status: false }
-              })
+                  if (qfSuccessMethod) {
+                    qfSuccessMethod({ ...commitParams, response: rest })
+                  }
+                  return { status: true }
+                })
+                .catch((rest) => {
+                  if (aqfMethod) {
+                    aqfMethod({ ...commitParams, response: rest, status: 'error' }, ...args)
+                  }
+                  if (qfErrorMethod) {
+                    qfErrorMethod({ ...commitParams, response: rest })
+                  }
+                  return { status: false }
+                })
             }
             if (bqfMethod) {
-              return Promise.resolve(bqfMethod(commitParams, ...args)).then(status => {
+              return Promise.resolve(bqfMethod(commitParams, ...args)).then((status) => {
                 if (status !== false) {
                   return handleQueryFooter()
                 }
@@ -1637,7 +1639,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                 const handleDelete = () => {
                   reactData.tableLoading = true
                   return Promise.resolve((oldBeforeDelete || dMethod)(commitParams, ...args))
-                    .then(rest => {
+                    .then((rest) => {
                       reactData.tableLoading = false
                       if (adMethod) {
                         adMethod({ ...commitParams, response: rest, status: 'success' }, ...args)
@@ -1662,7 +1664,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                       }
                       return { status: true }
                     })
-                    .catch(rest => {
+                    .catch((rest) => {
                       reactData.tableLoading = false
                       if (adMethod) {
                         adMethod({ ...commitParams, response: rest, status: 'error' }, ...args)
@@ -1681,7 +1683,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                 }
 
                 if (bdMethod) {
-                  return Promise.resolve(bdMethod(commitParams, ...args)).then(status => {
+                  return Promise.resolve(bdMethod(commitParams, ...args)).then((status) => {
                     if (status !== false) {
                       return handleDelete()
                     }
@@ -1742,7 +1744,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                 const handleSave = () => {
                   reactData.tableLoading = true
                   return Promise.resolve((oldBeforeSave || sMethod)(commitParams, ...args))
-                    .then(rest => {
+                    .then((rest) => {
                       reactData.tableLoading = false
                       if (aSaveMethod) {
                         $xeTable.clearPendingRow()
@@ -1765,7 +1767,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                       }
                       return { status: true }
                     })
-                    .catch(rest => {
+                    .catch((rest) => {
                       reactData.tableLoading = false
                       if (aSaveMethod) {
                         aSaveMethod({ ...commitParams, response: rest, status: 'error' }, ...args)
@@ -1783,7 +1785,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                     })
                 }
                 if (bSaveMethod) {
-                  return Promise.resolve(bSaveMethod(commitParams, ...args)).then(status => {
+                  return Promise.resolve(bSaveMethod(commitParams, ...args)).then((status) => {
                     if (status !== false) {
                       return handleSave()
                     }
@@ -1817,13 +1819,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    getParams () {
+    getParams() {
       const $xeGantt = this
       const props = $xeGantt
 
       return props.params
     },
-    zoom () {
+    zoom() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -1832,23 +1834,23 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.maximize()
     },
-    isMaximized () {
+    isMaximized() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       return reactData.isZMax
     },
-    maximize () {
+    maximize() {
       const $xeGantt = this
 
       return $xeGantt.handleZoom(true)
     },
-    revert () {
+    revert() {
       const $xeGantt = this
 
       return $xeGantt.handleZoom()
     },
-    getFormData () {
+    getFormData() {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -1863,7 +1865,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
      * 已废弃，被 getFormFlatItems 替换
      * @deprecated
      */
-    getFormItems (itemIndex?: number): any {
+    getFormItems(itemIndex?: number): any {
       const $xeGantt = this
       const props = $xeGantt
 
@@ -1871,13 +1873,17 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const { formConfig } = props
       const { items } = formOpts
       const itemList: VxeFormItemProps[] = []
-      XEUtils.eachTree(formConfig && isEnableConf(formOpts) && items ? items : [], item => {
-        itemList.push(item)
-      }, { children: 'children' })
+      XEUtils.eachTree(
+        formConfig && isEnableConf(formOpts) && items ? items : [],
+        (item) => {
+          itemList.push(item)
+        },
+        { children: 'children' }
+      )
       // errLog('vxe.error.delFunc', ['getFormItems', 'getFormFlatItems'])
       return XEUtils.isUndefined(itemIndex) ? itemList : itemList[itemIndex]
     },
-    getFormFlatItems () {
+    getFormFlatItems() {
       const $xeGantt = this
 
       const $form = $xeGantt.$refs.refForm as VxeFormInstance
@@ -1886,7 +1892,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return []
     },
-    getFormNestedItems () {
+    getFormNestedItems() {
       const $xeGantt = this
 
       const $form = $xeGantt.$refs.refForm as VxeFormInstance
@@ -1895,7 +1901,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return []
     },
-    getFormItemByField (field: string) {
+    getFormItemByField(field: string) {
       const $xeGantt = this
 
       const $form = $xeGantt.$refs.refForm as VxeFormInstance
@@ -1904,7 +1910,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return null
     },
-    resetForm () {
+    resetForm() {
       const $xeGantt = this
 
       const $form = $xeGantt.$refs.refForm as VxeFormInstance
@@ -1913,7 +1919,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    validateForm () {
+    validateForm() {
       const $xeGantt = this
 
       const $form = $xeGantt.$refs.refForm as VxeFormInstance
@@ -1922,7 +1928,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    validateFormField (field: VxeFormItemPropTypes.Field | VxeFormItemPropTypes.Field[] | VxeFormDefines.ItemInfo | VxeFormDefines.ItemInfo[] | null) {
+    validateFormField(field: VxeFormItemPropTypes.Field | VxeFormItemPropTypes.Field[] | VxeFormDefines.ItemInfo | VxeFormDefines.ItemInfo[] | null) {
       const $xeGantt = this
 
       const $form = $xeGantt.$refs.refForm as VxeFormInstance
@@ -1931,7 +1937,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    clearFormValidate (field?: VxeFormItemPropTypes.Field | VxeFormItemPropTypes.Field[] | VxeFormDefines.ItemInfo | VxeFormDefines.ItemInfo[] | null) {
+    clearFormValidate(field?: VxeFormItemPropTypes.Field | VxeFormItemPropTypes.Field[] | VxeFormDefines.ItemInfo | VxeFormDefines.ItemInfo[] | null) {
       const $xeGantt = this
 
       const $form = $xeGantt.$refs.refForm as VxeFormInstance
@@ -1940,7 +1946,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    homePage () {
+    homePage() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -1948,7 +1954,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       tablePage.currentPage = 1
       return $xeGantt.$nextTick()
     },
-    homePageByEvent (evnt: Event) {
+    homePageByEvent(evnt: Event) {
       const $xeGantt = this
 
       const $pager = $xeGantt.$refs.refPager as VxePagerInstance
@@ -1956,7 +1962,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         $pager.homePageByEvent(evnt)
       }
     },
-    endPage () {
+    endPage() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -1965,7 +1971,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       tablePage.currentPage = pageCount
       return $xeGantt.$nextTick()
     },
-    endPageByEvent (evnt: Event) {
+    endPageByEvent(evnt: Event) {
       const $xeGantt = this
 
       const $pager = $xeGantt.$refs.refPager as VxePagerInstance
@@ -1973,14 +1979,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
         $pager.endPageByEvent(evnt)
       }
     },
-    getCurrentPage () {
+    getCurrentPage() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       const { tablePage } = reactData
       return tablePage.currentPage
     },
-    setCurrentPage (currentPage: number | string | null | undefined) {
+    setCurrentPage(currentPage: number | string | null | undefined) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -1989,7 +1995,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       tablePage.currentPage = Math.min(pageCount, Math.max(1, XEUtils.toNumber(currentPage)))
       return $xeGantt.$nextTick()
     },
-    setCurrentPageByEvent (evnt: Event, currentPage: number | string | null | undefined) {
+    setCurrentPageByEvent(evnt: Event, currentPage: number | string | null | undefined) {
       const $xeGantt = this
 
       const $pager = $xeGantt.$refs.refPager as VxePagerInstance
@@ -1997,14 +2003,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
         $pager.setCurrentPageByEvent(evnt, currentPage)
       }
     },
-    getPageSize () {
+    getPageSize() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       const { tablePage } = reactData
       return tablePage.pageSize
     },
-    setPageSize (pageSize: number | string | null | undefined) {
+    setPageSize(pageSize: number | string | null | undefined) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -2012,7 +2018,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       tablePage.pageSize = Math.max(1, XEUtils.toNumber(pageSize))
       return $xeGantt.$nextTick()
     },
-    setPageSizeByEvent (evnt: Event, pageSize: number | string | null | undefined) {
+    setPageSizeByEvent(evnt: Event, pageSize: number | string | null | undefined) {
       const $xeGantt = this
 
       const $pager = $xeGantt.$refs.refPager as VxePagerInstance
@@ -2020,7 +2026,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         $pager.setPageSizeByEvent(evnt, pageSize)
       }
     },
-    getProxyInfo () {
+    getProxyInfo() {
       const $xeGantt = this
       const props = $xeGantt
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
@@ -2040,7 +2046,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return null
     },
-    getCustomPagerData () {
+    getCustomPagerData() {
       const $xeGrid = this
       const props = $xeGrid
       const reactData = $xeGrid.reactData
@@ -2055,7 +2061,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return {}
     },
-    refreshTaskView () {
+    refreshTaskView() {
       const $xeGantt = this
 
       const $ganttView = $xeGantt.$refs.refGanttView as VxeGanttViewInstance
@@ -2064,20 +2070,20 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    hasTableViewVisible () {
+    hasTableViewVisible() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       return reactData.showLeftView
     },
-    showTableView () {
+    showTableView() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       reactData.showLeftView = true
       return $xeGantt.$nextTick()
     },
-    hideTableView () {
+    hideTableView() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -2088,20 +2094,20 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    hasTaskViewVisible () {
+    hasTaskViewVisible() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       return reactData.showRightView
     },
-    showTaskView () {
+    showTaskView() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       reactData.showRightView = true
       return $xeGantt.$nextTick()
     },
-    hideTaskView () {
+    hideTaskView() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -2115,7 +2121,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     /**
      * 关闭 bar tooltip
      */
-    closeTaskBarTooltip () {
+    closeTaskBarTooltip() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -2134,7 +2140,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    callSlot (slotFunc: any, params: any, h: CreateElement) {
+    callSlot(slotFunc: any, params: any, h: CreateElement) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
 
@@ -2148,7 +2154,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return []
     },
-    scrollToDateView (colDate: string | number | Date) {
+    scrollToDateView(colDate: string | number | Date) {
       const $xeGantt = this
 
       const $ganttView = $xeGantt.$refs.refGanttView as VxeGanttViewInstance
@@ -2159,7 +2165,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         const { visibleColumn, elemStore } = ganttViewInternalData
         const currDate = XEUtils.toStringDate(colDate)
         const currTime = currDate.getTime()
-        const colIndex = XEUtils.findIndexOf(visibleColumn, column => currTime === column.dateObj.date.getTime())
+        const colIndex = XEUtils.findIndexOf(visibleColumn, (column) => currTime === column.dateObj.date.getTime())
         const bodyScrollElem = getRefElem(elemStore['main-body-scroll'])
         if (colIndex > -1 && bodyScrollElem) {
           bodyScrollElem.scrollLeft = XEUtils.floor(colIndex * viewCellWidth)
@@ -2167,7 +2173,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    scrollToTaskView (rowOrRowid: any) {
+    scrollToTaskView(rowOrRowid: any) {
       const $xeGantt = this
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
@@ -2192,7 +2198,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return $xeGantt.$nextTick()
     },
-    getCriticalPath () {
+    getCriticalPath() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
       const internalData = $xeGantt.internalData
@@ -2208,7 +2214,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     /**
      * 获取需要排除的高度
      */
-    getExcludeHeight () {
+    getExcludeHeight() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -2221,12 +2227,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
         const bottomWrapper = $xeGantt.$refs.refBottomWrapper as HTMLDivElement
         const pagerWrapper = $xeGantt.$refs.refPagerWrapper as HTMLDivElement
         const parentEl = el.parentElement as HTMLElement
-        const parentPaddingSize = isZMax ? 0 : (parentEl ? getPaddingTopBottomSize(parentEl) : 0)
+        const parentPaddingSize = isZMax ? 0 : parentEl ? getPaddingTopBottomSize(parentEl) : 0
         return parentPaddingSize + getPaddingTopBottomSize(el) + getOffsetHeight(formWrapper) + getOffsetHeight(toolbarWrapper) + getOffsetHeight(topWrapper) + getOffsetHeight(bottomWrapper) + getOffsetHeight(pagerWrapper)
       }
       return 0
     },
-    getParentElem () {
+    getParentElem() {
       const $xeGrid = this
 
       const el = $xeGrid.$refs.refElem as HTMLDivElement
@@ -2240,18 +2246,18 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return parentEl
     },
-    getParentHeight () {
+    getParentHeight() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       const el = $xeGantt.$refs.refElem as HTMLDivElement
       if (el) {
         const parentEl = $xeGantt.getParentElem()
-        return (reactData.isZMax ? getDomNode().visibleHeight : (parentEl ? XEUtils.toNumber(getComputedStyle(parentEl).height) : 0)) - $xeGantt.getExcludeHeight()
+        return (reactData.isZMax ? getDomNode().visibleHeight : parentEl ? XEUtils.toNumber(getComputedStyle(parentEl).height) : 0) - $xeGantt.getExcludeHeight()
       }
       return 0
     },
-    triggerToolbarCommitEvent (params: any, evnt: any) {
+    triggerToolbarCommitEvent(params: any, evnt: any) {
       const $xeGantt = this
       const internalData = $xeGantt.internalData
 
@@ -2273,26 +2279,26 @@ export default /* define-vxe-component start */ defineVxeComponent({
         return rest
       }
     },
-    triggerToolbarBtnEvent (button: any, evnt: any) {
+    triggerToolbarBtnEvent(button: any, evnt: any) {
       const $xeGantt = this
 
       $xeGantt.triggerToolbarCommitEvent(button, evnt)
       $xeGantt.dispatchEvent('toolbar-button-click', { code: button.code, button }, evnt)
     },
-    triggerToolbarTolEvent (tool: any, evnt: any) {
+    triggerToolbarTolEvent(tool: any, evnt: any) {
       const $xeGantt = this
 
       $xeGantt.triggerToolbarCommitEvent(tool, evnt)
       $xeGantt.dispatchEvent('toolbar-tool-click', { code: tool.code, tool }, evnt)
     },
-    triggerZoomEvent (evnt: Event) {
+    triggerZoomEvent(evnt: Event) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       $xeGantt.zoom()
       $xeGantt.dispatchEvent('zoom', { type: reactData.isZMax ? 'max' : 'revert' }, evnt)
     },
-    handleTaskCellClickEvent (evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
+    handleTaskCellClickEvent(evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
@@ -2308,18 +2314,24 @@ export default /* define-vxe-component start */ defineVxeComponent({
         const { row } = params
         // 如果是当前行
         if (rowOpts.isCurrent || highlightCurrentRow) {
-          $xeTable.triggerCurrentRowEvent(evnt, Object.assign({
-            $table: $xeTable,
-            rowIndex: $xeTable.getRowIndex(row),
-            $rowIndex: $xeTable.getVMRowIndex(row)
-          }, params))
+          $xeTable.triggerCurrentRowEvent(
+            evnt,
+            Object.assign(
+              {
+                $table: $xeTable,
+                rowIndex: $xeTable.getRowIndex(row),
+                $rowIndex: $xeTable.getVMRowIndex(row)
+              },
+              params
+            )
+          )
         }
         // 如果是单选框
-        if ((radioColumn && radioOpts.trigger === 'row')) {
+        if (radioColumn && radioOpts.trigger === 'row') {
           $xeTable.triggerRadioRowEvent(evnt, params)
         }
         // 如果是复选框
-        if ((checkboxColumn && checkboxOpts.trigger === 'row')) {
+        if (checkboxColumn && checkboxOpts.trigger === 'row') {
           $xeTable.handleToggleCheckRowEvent(evnt, params)
         }
       }
@@ -2328,12 +2340,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
       reactData.activeLink = null
       $xeGantt.dispatchEvent('task-cell-click', params, evnt)
     },
-    handleTaskCellDblclickEvent (evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
+    handleTaskCellDblclickEvent(evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
       const $xeGantt = this
 
       $xeGantt.dispatchEvent('task-cell-dblclick', params, evnt)
     },
-    handleTaskBarClickEvent (evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
+    handleTaskBarClickEvent(evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
@@ -2346,12 +2358,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
       reactData.activeLink = null
       $xeGantt.dispatchEvent('task-bar-click', params, evnt)
     },
-    handleTaskBarDblclickEvent (evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
+    handleTaskBarDblclickEvent(evnt: MouseEvent, params: VxeGanttDefines.TaskCellClickParams) {
       const $xeGantt = this
 
       $xeGantt.dispatchEvent('task-bar-dblclick', params, evnt)
     },
-    triggerTaskBarTooltipEvent (evnt: MouseEvent, params: VxeGanttDefines.TaskBarMouseoverParams) {
+    triggerTaskBarTooltipEvent(evnt: MouseEvent, params: VxeGanttDefines.TaskBarMouseoverParams) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
       const internalData = $xeGantt.internalData
@@ -2394,7 +2406,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       })
     },
-    handleTargetEnterEvent (isClear: boolean) {
+    handleTargetEnterEvent(isClear: boolean) {
       const $xeGantt = this
       const internalData = $xeGantt.internalData
 
@@ -2408,7 +2420,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
     },
-    handleTaskBarTooltipLeaveEvent () {
+    handleTaskBarTooltipLeaveEvent() {
       const $xeGantt = this
       const internalData = $xeGantt.internalData
 
@@ -2428,14 +2440,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
         $xeGantt.closeTaskBarTooltip()
       }
     },
-    handleTableLinks () {
+    handleTableLinks() {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
       const { linkList } = reactData
       reactData.tableLinks = linkList.slice(0)
     },
-    handleTaskHeaderContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskHeaderContextmenuParams) {
+    handleTaskHeaderContextmenuEvent(evnt: Event, params: VxeGanttDefines.TaskHeaderContextmenuParams) {
       const $xeGantt = this
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
@@ -2449,7 +2461,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
     },
-    handleTaskBodyContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskBodyContextmenuParams) {
+    handleTaskBodyContextmenuEvent(evnt: Event, params: VxeGanttDefines.TaskBodyContextmenuParams) {
       const $xeGantt = this
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
@@ -2463,7 +2475,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
     },
-    handleTaskFooterContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskFooterContextmenuParams) {
+    handleTaskFooterContextmenuEvent(evnt: Event, params: VxeGanttDefines.TaskFooterContextmenuParams) {
       const $xeGantt = this
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
@@ -2477,7 +2489,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
     },
-    handleTaskBarContextmenuEvent (evnt: Event, params: VxeGanttDefines.TaskBarContextmenuParams) {
+    handleTaskBarContextmenuEvent(evnt: Event, params: VxeGanttDefines.TaskBarContextmenuParams) {
       const $xeGantt = this
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
@@ -2491,14 +2503,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
         }
       }
     },
-    loadColumn (columns: any[]) {
+    loadColumn(columns: any[]) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
       const slots = $xeGantt.$scopedSlots
       const $xeTable = $xeGantt.$refs.refTable as VxeTableConstructor & VxeTablePrivateMethods
 
       // 检查插槽
-      XEUtils.eachTree(columns, column => {
+      XEUtils.eachTree(columns, (column) => {
         const { type } = column
         if (column.slots) {
           XEUtils.each(column.slots, (func) => {
@@ -2517,13 +2529,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
       reactData.currRightSpacing = 0
       return $xeTable.loadColumn(columns)
     },
-    reloadColumn (columns: any[]) {
+    reloadColumn(columns: any[]) {
       const $xeGantt = this
 
       $xeGantt.clearAll()
       return $xeGantt.loadColumn(columns)
     },
-    getConfigSlot (slotConfigs?: Record<string, any>) {
+    getConfigSlot(slotConfigs?: Record<string, any>) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
 
@@ -2543,7 +2555,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       })
       return slotConf
     },
-    getToolbarSlots () {
+    getToolbarSlots() {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
 
@@ -2591,7 +2603,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return toolbarSlots
     },
-    getFuncSlot (optSlots: any, slotKey: any) {
+    getFuncSlot(optSlots: any, slotKey: any) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
 
@@ -2613,7 +2625,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     //
     // Render
     //
-    renderDefaultForm (h: CreateElement) {
+    renderDefaultForm(h: CreateElement) {
       const VxeUIFormComponent = VxeUI.getComponent('VxeForm')
 
       const $xeGantt = this
@@ -2628,7 +2640,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if (isEnableConf(formConfig) && formOpts.items && formOpts.items.length) {
         const formSlots: any = {}
         if (!(formOpts as any).inited) {
-          (formOpts as any).inited = true
+          ;(formOpts as any).inited = true
           const beforeItem = proxyOpts.beforeItem
           if (proxyOpts && beforeItem) {
             formOpts.items.forEach((item) => {
@@ -2665,7 +2677,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
       return []
     },
-    renderForm (h: CreateElement) {
+    renderForm(h: CreateElement) {
       const $xeGantt = this
       const props = $xeGantt
       const slots = $xeGantt.$scopedSlots
@@ -2675,15 +2687,19 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const hasForm = !!(formSlot || isEnableConf(formConfig))
 
       if (hasForm) {
-        return h('div', {
-          key: 'form',
-          ref: 'refFormWrapper',
-          class: 'vxe-gantt--form-wrapper'
-        }, formSlot ? formSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt }) : $xeGantt.renderDefaultForm(h))
+        return h(
+          'div',
+          {
+            key: 'form',
+            ref: 'refFormWrapper',
+            class: 'vxe-gantt--form-wrapper'
+          },
+          formSlot ? formSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt }) : $xeGantt.renderDefaultForm(h)
+        )
       }
       return renderEmptyElement($xeGantt)
     },
-    renderToolbar (h: CreateElement) {
+    renderToolbar(h: CreateElement) {
       const VxeUIToolbarComponent = VxeUI.getComponent('VxeToolbar')
 
       const $xeGantt = this
@@ -2695,92 +2711,115 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const toolbarOpts = $xeGantt.computeToolbarOpts
 
       if ((toolbarConfig && isEnableConf(toolbarOpts)) || toolbarSlot) {
-        return h('div', {
-          key: 'toolbar',
-          ref: 'refToolbarWrapper',
-          class: 'vxe-gantt--toolbar-wrapper'
-        }, toolbarSlot
-          ? toolbarSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt })
-          : [
-              h(VxeUIToolbarComponent, {
-                props: Object.assign({}, toolbarOpts, { slots: undefined }),
-                ref: 'refToolbar',
-                scopedSlots: $xeGantt.getToolbarSlots()
-              })
-            ]
+        return h(
+          'div',
+          {
+            key: 'toolbar',
+            ref: 'refToolbarWrapper',
+            class: 'vxe-gantt--toolbar-wrapper'
+          },
+          toolbarSlot
+            ? toolbarSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt })
+            : [
+                h(VxeUIToolbarComponent, {
+                  props: Object.assign({}, toolbarOpts, { slots: undefined }),
+                  ref: 'refToolbar',
+                  scopedSlots: $xeGantt.getToolbarSlots()
+                })
+              ]
         )
       }
       return renderEmptyElement($xeGantt)
     },
-    renderTop (h: CreateElement) {
+    renderTop(h: CreateElement) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
 
       const topSlot = slots.top
       return topSlot
-        ? h('div', {
-          key: 'top',
-          ref: 'refTopWrapper',
-          class: 'vxe-gantt--top-wrapper'
-        }, topSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt }))
+        ? h(
+          'div',
+          {
+            key: 'top',
+            ref: 'refTopWrapper',
+            class: 'vxe-gantt--top-wrapper'
+          },
+          topSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt })
+        )
         : renderEmptyElement($xeGantt)
     },
-    renderTableLeft (h: CreateElement) {
+    renderTableLeft(h: CreateElement) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
 
       const leftSlot = slots.left
       if (leftSlot) {
-        return h('div', {
-          class: 'vxe-gantt--left-wrapper'
-        }, leftSlot({ $grid: null, $gantt: $xeGantt }))
+        return h(
+          'div',
+          {
+            class: 'vxe-gantt--left-wrapper'
+          },
+          leftSlot({ $grid: null, $gantt: $xeGantt })
+        )
       }
       return renderEmptyElement($xeGantt)
     },
-    renderTableRight (h: CreateElement) {
+    renderTableRight(h: CreateElement) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
 
       const rightSlot = slots.right
       if (rightSlot) {
-        return h('div', {
-          class: 'vxe-gantt--right-wrapper'
-        }, rightSlot({ $grid: null, $gantt: $xeGantt }))
+        return h(
+          'div',
+          {
+            class: 'vxe-gantt--right-wrapper'
+          },
+          rightSlot({ $grid: null, $gantt: $xeGantt })
+        )
       }
       return renderEmptyElement($xeGantt)
     },
-    renderTable (h: CreateElement) {
+    renderTable(h: CreateElement) {
       const $xeGantt = this as unknown as VxeGanttConstructor & VxeGanttPrivateMethods
       const slots = $xeGantt.$scopedSlots
 
       const tableProps = $xeGantt.computeTableProps
-      return h('div', {
-        ref: 'refTableWrapper',
-        class: 'vxe-gantt--table-wrapper'
-      }, [
-        h(VxeTableComponent as Component, {
-          key: 'table',
-          props: tableProps,
-          on: getTableOns($xeGantt),
-          scopedSlots: slots,
-          ref: 'refTable'
-        })
-      ])
+      return h(
+        'div',
+        {
+          ref: 'refTableWrapper',
+          class: 'vxe-gantt--table-wrapper'
+        },
+        [
+          h(VxeTableComponent as Component, {
+            key: 'table',
+            props: tableProps,
+            on: getTableOns($xeGantt),
+            scopedSlots: slots,
+            ref: 'refTable'
+          })
+        ]
+      )
     },
-    renderBottom (h: CreateElement) {
+    renderBottom(h: CreateElement) {
       const $xeGantt = this
       const slots = $xeGantt.$scopedSlots
 
       const bottomSlot = slots.bottom
       return bottomSlot
-        ? h('div', {
-          key: 'bottom',
-          ref: 'refBottomWrapper',
-          class: 'vxe-gantt--bottom-wrapper'
-        }, bottomSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt }))
+        ? h(
+          'div',
+          {
+            key: 'bottom',
+            ref: 'refBottomWrapper',
+            class: 'vxe-gantt--bottom-wrapper'
+          },
+          bottomSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt })
+        )
         : renderEmptyElement($xeGantt)
     },
-    renderPager (h: CreateElement) {
+    renderPager(h: CreateElement) {
       const VxeUIPagerComponent = VxeUI.getComponent('VxePager')
 
       const $xeGantt = this
@@ -2793,44 +2832,52 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const pagerOpts = $xeGantt.computePagerOpts
       const pagerSlot = slots.pager
       if ((pagerConfig && isEnableConf(pagerOpts)) || slots.pager) {
-        return h('div', {
-          ref: 'refPagerWrapper',
-          key: 'pager',
-          class: 'vxe-gantt--pager-wrapper'
-        }, pagerSlot
-          ? pagerSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt })
-          : [
-              VxeUIPagerComponent
-                ? h(VxeUIPagerComponent, {
-                  ref: 'refPager',
-                  props: {
-                    ...pagerOpts,
-                    ...(proxyConfig && isEnableConf(proxyOpts) ? reactData.tablePage : {})
-                  },
-                  on: {
-                    'page-change': $xeGantt.pageChangeEvent
-                  },
-                  scopedSlots: $xeGantt.getConfigSlot(pagerOpts.slots)
-                })
-                : renderEmptyElement($xeGantt)
-            ])
+        return h(
+          'div',
+          {
+            ref: 'refPagerWrapper',
+            key: 'pager',
+            class: 'vxe-gantt--pager-wrapper'
+          },
+          pagerSlot
+            ? pagerSlot.call($xeGantt, { $grid: null, $gantt: $xeGantt })
+            : [
+                VxeUIPagerComponent
+                  ? h(VxeUIPagerComponent, {
+                    ref: 'refPager',
+                    props: {
+                      ...pagerOpts,
+                      ...(proxyConfig && isEnableConf(proxyOpts) ? reactData.tablePage : {})
+                    },
+                    on: {
+                      'page-change': $xeGantt.pageChangeEvent
+                    },
+                    scopedSlots: $xeGantt.getConfigSlot(pagerOpts.slots)
+                  })
+                  : renderEmptyElement($xeGantt)
+              ]
+        )
       }
       return renderEmptyElement($xeGantt)
     },
     /**
      * 渲染任务视图
      */
-    renderTaskView (h: CreateElement) {
-      return h('div', {
-        ref: 'refGanttWrapper',
-        class: 'vxe-gantt--view-wrapper'
-      }, [
-        h(GanttViewComponent, {
-          ref: 'refGanttView'
-        })
-      ])
+    renderTaskView(h: CreateElement) {
+      return h(
+        'div',
+        {
+          ref: 'refGanttWrapper',
+          class: 'vxe-gantt--view-wrapper'
+        },
+        [
+          h(GanttViewComponent, {
+            ref: 'refGanttView'
+          })
+        ]
+      )
     },
-    renderSplitBar (h: CreateElement) {
+    renderSplitBar(h: CreateElement) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -2847,48 +2894,67 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if (isResize) {
         ons.mousedown = $xeGantt.dragSplitEvent
       }
-      return h('div', {
-        class: ['vxe-gantt--view-split-bar', {
-          'is--resize': isResize
-        }]
-      }, [
-        h('div', {
-          class: 'vxe-gantt--view-split-bar-handle',
-          on: ons
-        }),
-        showCollapseTableButton || showCollapseTaskButton
-          ? h('div', {
-            class: 'vxe-gantt--view-split-bar-btn-wrapper'
-          }, [
-            showCollapseTableButton && showRightView
-              ? h('div', {
-                class: ['vxe-gantt--view-split-bar-action-btn', showLeftView ? 'is--prev' : 'is--next'],
-                on: {
-                  click: $xeGantt.handleSplitLeftViewEvent
-                }
-              }, [
-                h('i', {
-                  class: showLeftView ? getIcon().GANTT_VIEW_LEFT_OPEN : getIcon().GANTT_VIEW_LEFT_CLOSE
-                })
-              ])
-              : renderEmptyElement($xeGantt),
-            showCollapseTaskButton && showLeftView
-              ? h('div', {
-                class: ['vxe-gantt--view-split-bar-action-btn', showRightView ? 'is--next' : 'is--prev'],
-                on: {
-                  click: $xeGantt.handleSplitRightViewEvent
-                }
-              }, [
-                h('i', {
-                  class: showRightView ? getIcon().GANTT_VIEW_RIGHT_OPEN : getIcon().GANTT_VIEW_RIGHT_CLOSE
-                })
-              ])
-              : renderEmptyElement($xeGantt)
-          ])
-          : renderEmptyElement($xeGantt)
-      ])
+      return h(
+        'div',
+        {
+          class: [
+            'vxe-gantt--view-split-bar',
+            {
+              'is--resize': isResize
+            }
+          ]
+        },
+        [
+          h('div', {
+            class: 'vxe-gantt--view-split-bar-handle',
+            on: ons
+          }),
+          showCollapseTableButton || showCollapseTaskButton
+            ? h(
+              'div',
+              {
+                class: 'vxe-gantt--view-split-bar-btn-wrapper'
+              },
+              [
+                showCollapseTableButton && showRightView
+                  ? h(
+                    'div',
+                    {
+                      class: ['vxe-gantt--view-split-bar-action-btn', showLeftView ? 'is--prev' : 'is--next'],
+                      on: {
+                        click: $xeGantt.handleSplitLeftViewEvent
+                      }
+                    },
+                    [
+                      h('i', {
+                        class: showLeftView ? getIcon().GANTT_VIEW_LEFT_OPEN : getIcon().GANTT_VIEW_LEFT_CLOSE
+                      })
+                    ]
+                  )
+                  : renderEmptyElement($xeGantt),
+                showCollapseTaskButton && showLeftView
+                  ? h(
+                    'div',
+                    {
+                      class: ['vxe-gantt--view-split-bar-action-btn', showRightView ? 'is--next' : 'is--prev'],
+                      on: {
+                        click: $xeGantt.handleSplitRightViewEvent
+                      }
+                    },
+                    [
+                      h('i', {
+                        class: showRightView ? getIcon().GANTT_VIEW_RIGHT_OPEN : getIcon().GANTT_VIEW_RIGHT_CLOSE
+                      })
+                    ]
+                  )
+                  : renderEmptyElement($xeGantt)
+              ]
+            )
+            : renderEmptyElement($xeGantt)
+        ]
+      )
     },
-    renderChildLayout (h: CreateElement, layoutKeys: VxeGanttDefines.LayoutKey[]) {
+    renderChildLayout(h: CreateElement, layoutKeys: VxeGanttDefines.LayoutKey[]) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
@@ -2901,7 +2967,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const scrollYAutoHide = $xeGantt.computeScrollYAutoHide
       const { autoHideCollapseButton } = taskSplitOpts
       const childVNs: VNode[] = []
-      layoutKeys.forEach(key => {
+      layoutKeys.forEach((key) => {
         switch (key) {
           case 'Form':
             childVNs.push($xeGantt.renderForm(h))
@@ -2914,47 +2980,64 @@ export default /* define-vxe-component start */ defineVxeComponent({
             break
           case 'Gantt':
             childVNs.push(
-              h('div', {
-                ref: 'refGanttContainerElem',
-                key: 'tv',
-                class: ['vxe-gantt--gantt-container', `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
-                  'is--virtual-scrollbar': isVScrollbar,
-                  'ov-x--auto-hide': isVScrollbar && scrollXAutoHide,
-                  'ov-y--auto-hide': isVScrollbar && scrollYAutoHide,
-                  'show--left': showLeftView,
-                  'hide--left': !showLeftView,
-                  'show--right': showRightView,
-                  'hide--right': !showRightView,
-                  'is--ah-split-btn': autoHideCollapseButton
-                }]
-              }, [
-                $xeGantt.renderTableLeft(h),
-                $xeGantt.renderTable(h),
-                $xeGantt.renderSplitBar(h),
-                $xeGantt.renderTaskView(h),
-                $xeGantt.renderTableRight(h),
-                h('div', {
-                  ref: 'refClassifyWrapperElem'
-                }),
-                h('div', {
-                  ref: 'refResizableSplitTip',
-                  class: 'vxe-gantt--resizable-split-tip'
-                }, [
+              h(
+                'div',
+                {
+                  ref: 'refGanttContainerElem',
+                  key: 'tv',
+                  class: [
+                    'vxe-gantt--gantt-container',
+                    `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`,
+                    `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`,
+                    {
+                      'is--virtual-scrollbar': isVScrollbar,
+                      'ov-x--auto-hide': isVScrollbar && scrollXAutoHide,
+                      'ov-y--auto-hide': isVScrollbar && scrollYAutoHide,
+                      'show--left': showLeftView,
+                      'hide--left': !showLeftView,
+                      'show--right': showRightView,
+                      'hide--right': !showRightView,
+                      'is--ah-split-btn': autoHideCollapseButton
+                    }
+                  ]
+                },
+                [
+                  $xeGantt.renderTableLeft(h),
+                  $xeGantt.renderTable(h),
+                  $xeGantt.renderSplitBar(h),
+                  $xeGantt.renderTaskView(h),
+                  $xeGantt.renderTableRight(h),
                   h('div', {
-                    class: 'vxe-gantt--resizable-split-tip-number'
-                  }, [
-                    h('div', {
-                      class: 'vxe-gantt--resizable-split-number-left'
-                    }),
-                    h('div', {
-                      class: 'vxe-gantt--resizable-split-number-right'
-                    })
-                  ])
-                ]),
-                h('div', {
-                  class: 'vxe-gantt--border-line'
-                })
-              ])
+                    ref: 'refClassifyWrapperElem'
+                  }),
+                  h(
+                    'div',
+                    {
+                      ref: 'refResizableSplitTip',
+                      class: 'vxe-gantt--resizable-split-tip'
+                    },
+                    [
+                      h(
+                        'div',
+                        {
+                          class: 'vxe-gantt--resizable-split-tip-number'
+                        },
+                        [
+                          h('div', {
+                            class: 'vxe-gantt--resizable-split-number-left'
+                          }),
+                          h('div', {
+                            class: 'vxe-gantt--resizable-split-number-right'
+                          })
+                        ]
+                      )
+                    ]
+                  ),
+                  h('div', {
+                    class: 'vxe-gantt--border-line'
+                  })
+                ]
+              )
             )
             break
           case 'Bottom':
@@ -2970,7 +3053,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       })
       return childVNs
     },
-    renderLayout (h: CreateElement) {
+    renderLayout(h: CreateElement) {
       const VxeUITooltipComponent = VxeUI.getComponent('VxeTooltip')
 
       const $xeGantt = this
@@ -2985,36 +3068,60 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const asideRightSlot = slots.asideRight || slots['aside-right']
       const taskBarTooltipSlot = slots.taskBarTooltip || slots['task-bar-tooltip']
       return [
-        h('div', {
-          class: 'vxe-gantt--layout-header-wrapper'
-        }, $xeGantt.renderChildLayout(h, headKeys)),
-        h('div', {
-          class: 'vxe-gantt--layout-body-wrapper'
-        }, [
-          asideLeftSlot
-            ? h('div', {
-              class: 'vxe-gantt--layout-aside-left-wrapper'
-            }, asideLeftSlot({}))
-            : renderEmptyElement($xeGantt),
-          h('div', {
-            class: 'vxe-gantt--layout-body-content-wrapper'
-          }, $xeGantt.renderChildLayout(h, bodyKeys)),
-          asideRightSlot
-            ? h('div', {
-              class: 'vxe-gantt--layout-aside-right-wrapper'
-            }, asideRightSlot({}))
-            : renderEmptyElement($xeGantt)
-        ]),
-        h('div', {
-          class: 'vxe-gantt--layout-footer-wrapper'
-        }, $xeGantt.renderChildLayout(h, footKeys)),
+        h(
+          'div',
+          {
+            class: 'vxe-gantt--layout-header-wrapper'
+          },
+          $xeGantt.renderChildLayout(h, headKeys)
+        ),
+        h(
+          'div',
+          {
+            class: 'vxe-gantt--layout-body-wrapper'
+          },
+          [
+            asideLeftSlot
+              ? h(
+                'div',
+                {
+                  class: 'vxe-gantt--layout-aside-left-wrapper'
+                },
+                asideLeftSlot({})
+              )
+              : renderEmptyElement($xeGantt),
+            h(
+              'div',
+              {
+                class: 'vxe-gantt--layout-body-content-wrapper'
+              },
+              $xeGantt.renderChildLayout(h, bodyKeys)
+            ),
+            asideRightSlot
+              ? h(
+                'div',
+                {
+                  class: 'vxe-gantt--layout-aside-right-wrapper'
+                },
+                asideRightSlot({})
+              )
+              : renderEmptyElement($xeGantt)
+          ]
+        ),
+        h(
+          'div',
+          {
+            class: 'vxe-gantt--layout-footer-wrapper'
+          },
+          $xeGantt.renderChildLayout(h, footKeys)
+        ),
         h('div', {
           ref: 'refPopupContainerElem'
         }),
         h('div', {}, [
-        /**
-          * 任务条提示
-          */
+          /**
+           * 任务条提示
+           */
           h(VxeUITooltipComponent, {
             key: 'gtp',
             ref: 'refTooltip',
@@ -3037,8 +3144,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
                   content: () => {
                     const { row, content: tooltipContent } = barTipStore
                     if (row) {
-                      return h('div', {
-                      }, taskBarTooltipSlot(Object.assign({ tooltipContent, $gantt: $xeGantt }, barTipStore.params)))
+                      return h('div', {}, taskBarTooltipSlot(Object.assign({ tooltipContent, $gantt: $xeGantt }, barTipStore.params)))
                     }
                     return renderEmptyElement($xeGantt)
                   }
@@ -3048,7 +3154,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
         ])
       ]
     },
-    renderVN (h: CreateElement): VNode {
+    renderVN(h: CreateElement): VNode {
       const $xeGantt = this
       const props = $xeGantt
       const reactData = $xeGantt.reactData
@@ -3062,28 +3168,38 @@ export default /* define-vxe-component start */ defineVxeComponent({
       const tableBorder = $xeGantt.computeTableBorder
       const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
       const scrollbarYToLeft = $xeGantt.computeScrollbarYToLeft
-      return h('div', {
-        ref: 'refElem',
-        class: ['vxe-gantt', `border--${tableBorder}`, `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`, `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`, {
-          [`size--${vSize}`]: vSize,
-          'is--virtual-scrollbar': isVScrollbar,
-          'is--round': props.round,
-          'show--animat': taskSplitOpts.animation,
-          'is--maximize': reactData.isZMax,
-          'is--loading': isLoading,
-          'is--animat': showSplitAnimat,
-          'show--left': showLeftView,
-          'hide--left': !showLeftView,
-          'show--right': showRightView,
-          'hide--right': !showRightView,
-          'is--scroll-y': overflowY,
-          'is--scroll-x': overflowX
-        }],
-        style: wrapperStyle
-      }, $xeGantt.renderLayout(h))
+      return h(
+        'div',
+        {
+          ref: 'refElem',
+          class: [
+            'vxe-gantt',
+            `border--${tableBorder}`,
+            `sx-pos--${scrollbarXToTop ? 'top' : 'bottom'}`,
+            `sy-pos--${scrollbarYToLeft ? 'left' : 'right'}`,
+            {
+              [`size--${vSize}`]: vSize,
+              'is--virtual-scrollbar': isVScrollbar,
+              'is--round': props.round,
+              'show--animat': taskSplitOpts.animation,
+              'is--maximize': reactData.isZMax,
+              'is--loading': isLoading,
+              'is--animat': showSplitAnimat,
+              'show--left': showLeftView,
+              'hide--left': !showLeftView,
+              'show--right': showRightView,
+              'hide--right': !showRightView,
+              'is--scroll-y': overflowY,
+              'is--scroll-x': overflowX
+            }
+          ],
+          style: wrapperStyle
+        },
+        $xeGantt.renderLayout(h)
+      )
     }
   },
-  created () {
+  created() {
     // 使用已安装的组件，如果未安装则不渲染
     const VxeUIFormComponent = VxeUI.getComponent('VxeForm')
     const VxeUIPagerComponent = VxeUI.getComponent('VxePager')
@@ -3154,13 +3270,13 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
     if (($xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods).handleTaskLoadLinks) {
       if (props.links) {
-        ($xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods).handleTaskLoadLinks(props.links)
+        ;($xeGantt as unknown as VxeGanttConstructor & VxeGanttPrivateMethods).handleTaskLoadLinks(props.links)
       }
     }
     $xeGantt.handleTaskScaleConfig()
     $xeGantt.initPages()
   },
-  mounted () {
+  mounted() {
     const $xeGantt = this
     const props = $xeGantt
 
@@ -3173,7 +3289,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     $xeGantt.initGanttView()
     globalEvents.on($xeGantt, 'keydown', $xeGantt.handleGlobalKeydownEvent)
   },
-  beforeDestroy () {
+  beforeDestroy() {
     const $xeGantt = this
     const reactData = $xeGantt.reactData
     const internalData = $xeGantt.internalData
@@ -3181,12 +3297,12 @@ export default /* define-vxe-component start */ defineVxeComponent({
     XEUtils.assign(reactData, createReactData())
     XEUtils.assign(internalData, createInternalData())
   },
-  destroyed () {
+  destroyed() {
     const $xeGantt = this
 
     globalEvents.off($xeGantt, 'keydown')
   },
-  render (this: any, h) {
+  render(this: any, h) {
     return this.renderVN(h)
   }
 }) /* define-vxe-component end */

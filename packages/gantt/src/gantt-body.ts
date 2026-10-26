@@ -23,15 +23,15 @@ export default defineVxeComponent({
   },
   computed: {
     ...({} as {
-      $xeGantt(): (VxeGanttConstructor & VxeGanttPrivateMethods)
-      $xeGanttView(): (VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
+      $xeGantt(): VxeGanttConstructor & VxeGanttPrivateMethods
+      $xeGanttView(): VxeGanttViewConstructor & VxeGanttViewPrivateMethods
     })
   },
   methods: {
     //
     // Render
     //
-    renderColumn (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number, column: VxeGanttDefines.ViewColumn, $columnIndex: number) {
+    renderColumn(h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, row: any, rowid: string, rowIndex: number, $rowIndex: number, _rowIndex: number, column: VxeGanttDefines.ViewColumn, $columnIndex: number) {
       const _vm = this
       const $xeGanttView = _vm.$xeGanttView
       const $xeGantt = _vm.$xeGantt
@@ -112,36 +112,40 @@ export default defineVxeComponent({
         rowIndex,
         _rowIndex
       }
-      return h('td', {
-        key: cellClassName || cellStyle ? field : $columnIndex,
-        class: [
-          'vxe-gantt-view--body-column',
-          {
-            'is--now': showNowLine && todayValue === field
-          },
-          getClass(cellClassName, ctParams)
-        ],
-        style: cellStyle
-          ? Object.assign({}, XEUtils.isFunction(cellStyle) ? cellStyle(ctParams) : cellStyle, {
-            height: `${cellHeight}px`
-          })
-          : {
-              height: `${cellHeight}px`
+      return h(
+        'td',
+        {
+          key: cellClassName || cellStyle ? field : $columnIndex,
+          class: [
+            'vxe-gantt-view--body-column',
+            {
+              'is--now': showNowLine && todayValue === field
             },
-        on: {
-          click (evnt: MouseEvent) {
-            $xeGantt.handleTaskCellClickEvent(evnt, { row, column })
-          },
-          dblclick (evnt: MouseEvent) {
-            $xeGantt.handleTaskCellDblclickEvent(evnt, { row, column })
-          },
-          contextmenu (evnt: Event) {
-            $xeGantt.handleTaskBodyContextmenuEvent(evnt, ctParams)
+            getClass(cellClassName, ctParams)
+          ],
+          style: cellStyle
+            ? Object.assign({}, XEUtils.isFunction(cellStyle) ? cellStyle(ctParams) : cellStyle, {
+              height: `${cellHeight}px`
+            })
+            : {
+                height: `${cellHeight}px`
+              },
+          on: {
+            click(evnt: MouseEvent) {
+              $xeGantt.handleTaskCellClickEvent(evnt, { row, column })
+            },
+            dblclick(evnt: MouseEvent) {
+              $xeGantt.handleTaskCellDblclickEvent(evnt, { row, column })
+            },
+            contextmenu(evnt: Event) {
+              $xeGantt.handleTaskBodyContextmenuEvent(evnt, ctParams)
+            }
           }
-        }
-      }, tdVNs)
+        },
+        tdVNs
+      )
     },
-    renderRows (h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) {
+    renderRows(h: CreateElement, $xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) {
       const _vm = this
       const $xeGanttView = _vm.$xeGanttView
       const $xeGantt = _vm.$xeGantt
@@ -167,7 +171,7 @@ export default defineVxeComponent({
 
       const { tableColumn, scrollYLoad } = reactData
 
-      const trVNs:VNode[] = []
+      const trVNs: VNode[] = []
       tableData.forEach((row, $rowIndex) => {
         const rowid = $xeTable.getRowid(row)
         const rowRest = fullAllDataRowIdData[rowid] || {}
@@ -209,25 +213,29 @@ export default defineVxeComponent({
           _rowIndex
         }
         trVNs.push(
-          h('tr', {
-            key: rowClassName || rowStyle || cellClassName || cellStyle ? rowid : $rowIndex,
-            class: [
-              'vxe-gantt-view--body-row',
-              {
-                'row--stripe': stripe && (_rowIndex + 1) % 2 === 0,
-                'is--new': isNewRow,
-                'row--radio': radioOpts.highlight && $xeTable.eqRow(selectRadioRow, row),
-                'row--checked': checkboxOpts.highlight && $xeTable.isCheckedByCheckboxRow(row),
-                'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid]
+          h(
+            'tr',
+            {
+              key: rowClassName || rowStyle || cellClassName || cellStyle ? rowid : $rowIndex,
+              class: [
+                'vxe-gantt-view--body-row',
+                {
+                  'row--stripe': stripe && (_rowIndex + 1) % 2 === 0,
+                  'is--new': isNewRow,
+                  'row--radio': radioOpts.highlight && $xeTable.eqRow(selectRadioRow, row),
+                  'row--checked': checkboxOpts.highlight && $xeTable.isCheckedByCheckboxRow(row),
+                  'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid]
+                },
+                getClass(rowClassName, rowParams)
+              ],
+              style: rowStyle ? (XEUtils.isFunction(rowStyle) ? rowStyle(rowParams) || undefined : rowStyle) : undefined,
+              attrs: {
+                rowid
               },
-              getClass(rowClassName, rowParams)
-            ],
-            style: rowStyle ? (XEUtils.isFunction(rowStyle) ? rowStyle(rowParams) || undefined : rowStyle) : undefined,
-            attrs: {
-              rowid
+              on: trOns
             },
-            on: trOns
-          }, tableColumn.map((column, $columnIndex) => _vm.renderColumn(h, $xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex, column, $columnIndex)))
+            tableColumn.map((column, $columnIndex) => _vm.renderColumn(h, $xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex, column, $columnIndex))
+          )
         )
         let isExpandTree = false
         let rowChildren: any[] = []
@@ -243,7 +251,7 @@ export default defineVxeComponent({
       })
       return trVNs
     },
-    renderVN (h: CreateElement) {
+    renderVN(h: CreateElement) {
       const _vm = this
       const $xeGantt = _vm.$xeGantt
       const $xeGanttView = _vm.$xeGanttView
@@ -252,48 +260,64 @@ export default defineVxeComponent({
       const $xeTable = $xeGanttView.internalData.xeTable
 
       const { tableData, tableColumn, viewCellWidth } = reactData
-      return h('div', {
-        ref: 'refElem',
-        class: 'vxe-gantt-view--body-wrapper'
-      }, [
-        h('div', {
-          ref: 'refBodyScroll',
-          class: 'vxe-gantt-view--body-inner-wrapper',
-          on: {
-            scroll: $xeGanttView.triggerBodyScrollEvent,
-            contextmenu (evnt: Event) {
-              $xeGantt.handleTaskBodyContextmenuEvent(evnt, { source: sourceType, type: viewType, rowIndex: -1, $rowIndex: -1, _rowIndex: -1 })
-            }
-          }
-        }, [
-          h('div', {
-            ref: 'refBodyXSpace',
-            class: 'vxe-body--x-space'
-          }),
-          h('div', {
-            ref: 'refBodyYSpace',
-            class: 'vxe-body--y-space'
-          }),
-          h('table', {
-            ref: 'refBodyTable',
-            class: 'vxe-gantt-view--body-table'
-          }, [
-            h('colgroup', {}, tableColumn.map((column, cIndex) => {
-              return h('col', {
-                key: cIndex,
-                style: {
-                  width: `${viewCellWidth}px`
+      return h(
+        'div',
+        {
+          ref: 'refElem',
+          class: 'vxe-gantt-view--body-wrapper'
+        },
+        [
+          h(
+            'div',
+            {
+              ref: 'refBodyScroll',
+              class: 'vxe-gantt-view--body-inner-wrapper',
+              on: {
+                scroll: $xeGanttView.triggerBodyScrollEvent,
+                contextmenu(evnt: Event) {
+                  $xeGantt.handleTaskBodyContextmenuEvent(evnt, { source: sourceType, type: viewType, rowIndex: -1, $rowIndex: -1, _rowIndex: -1 })
                 }
-              })
-            })),
-            h('tbody', {}, $xeTable ? _vm.renderRows(h, $xeTable, tableData) : [])
-          ]),
-          h(GanttViewChartComponent)
-        ])
-      ])
+              }
+            },
+            [
+              h('div', {
+                ref: 'refBodyXSpace',
+                class: 'vxe-body--x-space'
+              }),
+              h('div', {
+                ref: 'refBodyYSpace',
+                class: 'vxe-body--y-space'
+              }),
+              h(
+                'table',
+                {
+                  ref: 'refBodyTable',
+                  class: 'vxe-gantt-view--body-table'
+                },
+                [
+                  h(
+                    'colgroup',
+                    {},
+                    tableColumn.map((column, cIndex) => {
+                      return h('col', {
+                        key: cIndex,
+                        style: {
+                          width: `${viewCellWidth}px`
+                        }
+                      })
+                    })
+                  ),
+                  h('tbody', {}, $xeTable ? _vm.renderRows(h, $xeTable, tableData) : [])
+                ]
+              ),
+              h(GanttViewChartComponent)
+            ]
+          )
+        ]
+      )
     }
   },
-  mounted () {
+  mounted() {
     const _vm = this
     const $xeGanttView = _vm.$xeGanttView
     const { internalData } = $xeGanttView
@@ -306,7 +330,7 @@ export default defineVxeComponent({
     elemStore[`${prefix}xSpace`] = _vm.$refs.refBodyXSpace as HTMLDivElement
     elemStore[`${prefix}ySpace`] = _vm.$refs.refBodyYSpace as HTMLDivElement
   },
-  destroyed () {
+  destroyed() {
     const _vm = this
     const $xeGanttView = _vm.$xeGanttView
     const { internalData } = $xeGanttView
@@ -319,7 +343,7 @@ export default defineVxeComponent({
     elemStore[`${prefix}xSpace`] = null
     elemStore[`${prefix}ySpace`] = null
   },
-  render (this: any, h) {
+  render(this: any, h) {
     return this.renderVN(h)
   }
 })
