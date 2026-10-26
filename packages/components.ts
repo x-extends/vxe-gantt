@@ -15,6 +15,10 @@ export function install(app: VueConstructor, options?: VxeGlobalConfig) {
   components.forEach((component) => app.use(component))
 }
 
+// eslint-disable-next-line import/export
+export { VxeUI }
+
+// eslint-disable-next-line import/export
 export * from '@vxe-ui/core'
 
 // Components
