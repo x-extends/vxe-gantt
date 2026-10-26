@@ -15,7 +15,7 @@ export function install(app: App, options?: VxeGlobalConfig) {
   components.forEach((component) => app.use(component))
 }
 
-export { VxeUI }
+export * from '@vxe-ui/core'
 
 // Components
 export * from './gantt'
