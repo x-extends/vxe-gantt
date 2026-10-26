@@ -1,6 +1,6 @@
 {
   "name": "vxe-gantt",
-  "version": "4.9.3",
+  "version": "4.9.4",
   "description": "A vue based gantt component",
   "scripts": {
     "update": "npm install --legacy-peer-deps",
@@ -58,6 +58,7 @@
     "gulp-sourcemaps": "^3.0.0",
     "gulp-typescript": "^5.0.1",
     "gulp-uglify": "^3.0.2",
+    "oxfmt": "~0.51.0",
     "postcss": "^8.4.38",
     "sass": "~1.101.7",
     "sass-loader": "^14.2.1",
