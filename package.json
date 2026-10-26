@@ -66,8 +66,8 @@
     "typescript": "~5.9.3",
     "vue": "3.4.27",
     "vue-router": "~4.5.1",
-    "vxe-pc-ui": "4.20.22",
-    "vxe-table": "4.23.5"
+    "vxe-pc-ui": "4.20.23",
+    "vxe-table": "4.23.6"
   },
   "vetur": {
     "tags": "helper/vetur/tags.json",
