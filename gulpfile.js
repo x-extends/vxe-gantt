@@ -41,12 +41,12 @@ const languages = [
 
 const styleCode = 'require(\'./style.css\')'
 
-function toExportName (name) {
+function toExportName(name) {
   const str = XEUtils.camelCase(name)
   return name === 'ui' ? 'UI' : `${str.slice(0, 1).toUpperCase()}${str.slice(1)}`
 }
 
-gulp.task('build_escode', function () {
+gulp.task('build_escode', function() {
   [coreName, ...componentList].forEach(name => {
     const exportName = `Vxe${toExportName(name)}`
     const esCode = `import ${exportName} from '../${name}'\nexport * from '../${name}'\nexport default ${exportName}`
@@ -64,7 +64,7 @@ gulp.task('build_escode', function () {
     .pipe(gulp.dest(esmOutDir))
 })
 
-gulp.task('build_esjs', gulp.series('build_escode', function () {
+gulp.task('build_esjs', gulp.series('build_escode', function() {
   return gulp.src([
     'packages_temp/index.ts'
   ])
@@ -78,7 +78,7 @@ gulp.task('build_esjs', gulp.series('build_escode', function () {
     .pipe(gulp.dest(esmOutDir))
 }))
 
-gulp.task('build_es_all', gulp.series('build_esjs', async () => {
+gulp.task('build_es_all', gulp.series('build_esjs', async() => {
   const rollupConfig = {
     input: `${esmOutDir}/index.esm.js`,
     output: {
@@ -100,7 +100,7 @@ gulp.task('build_es_all', gulp.series('build_esjs', async () => {
   fs.writeFileSync(`${distOutDir}/all.esm.js`, output[0].code, 'utf-8')
 }))
 
-gulp.task('build_commoncode', function () {
+gulp.task('build_commoncode', function() {
   return gulp.src([
     'packages_temp/**.ts',
     'packages_temp/**/*.ts',
@@ -121,7 +121,7 @@ gulp.task('build_commoncode', function () {
     .pipe(gulp.dest(commOutDir))
 })
 
-gulp.task('build_commonjs', gulp.series('build_commoncode', function () {
+gulp.task('build_commonjs', gulp.series('build_commoncode', function() {
   return gulp.src([
     'packages_temp/index.ts'
   ])
@@ -144,7 +144,7 @@ gulp.task('build_common_all', gulp.series('build_commonjs'))
 const unicodeRE = /[^\x00-\xff]/g
 const contentRE = /(?<!-)content\s*:\s*([^;}]+)/g
 
-function toCSSUnicode (css) {
+function toCSSUnicode(css) {
   return css.replace(contentRE, (u) => {
     return u.replace(unicodeRE, (m) => {
       return '\\' + m.charCodeAt(0).toString(16)
@@ -252,7 +252,7 @@ gulp.task('build_icon', () => {
   )
 })
 
-function buildStyle (name, dirName) {
+function buildStyle(name, dirName) {
   return gulp.src(`styles/components/${name}.scss`)
     .pipe(sass())
     .pipe(prefixer({

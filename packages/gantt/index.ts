@@ -4,7 +4,7 @@ import { checkDependVersion } from '../ui/src/depend'
 import VxeGanttComponent from './src/gantt'
 
 export const VxeGantt = Object.assign({}, VxeGanttComponent, {
-  install (app: App) {
+  install(app: App) {
     checkDependVersion()
     app.component(VxeGanttComponent.name as string, VxeGanttComponent)
   }

@@ -21,7 +21,7 @@ declare global {
 }
 
 VxeUI.setConfig({
-  permissionMethod ({ code }) {
+  permissionMethod({ code }) {
     if (code === 'xx') {
       return {
         visible: true,

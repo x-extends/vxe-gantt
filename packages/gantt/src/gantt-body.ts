@@ -13,8 +13,8 @@ const viewType = 'body'
 
 export default defineVxeComponent({
   name: 'VxeGanttViewBody',
-  setup () {
-    const $xeGantt = inject('$xeGantt', {} as (VxeGanttConstructor & VxeGanttPrivateMethods))
+  setup() {
+    const $xeGantt = inject('$xeGantt', {} as VxeGanttConstructor & VxeGanttPrivateMethods)
     const $xeGanttView = inject('$xeGanttView', {} as VxeGanttViewConstructor & VxeGanttViewPrivateMethods)
 
     const { computeTaskViewOpts, computeScaleUnit } = $xeGantt.getComputeMaps()
@@ -101,32 +101,36 @@ export default defineVxeComponent({
         rowIndex,
         _rowIndex
       }
-      return h('td', {
-        key: cellClassName || cellStyle ? field : $columnIndex,
-        class: [
-          'vxe-gantt-view--body-column',
-          {
-            'is--now': showNowLine && todayValue === field
-          },
-          getClass(cellClassName, ctParams)
-        ],
-        style: cellStyle
-          ? Object.assign({}, XEUtils.isFunction(cellStyle) ? cellStyle(ctParams) : cellStyle, {
-            height: `${cellHeight}px`
-          })
-          : {
-              height: `${cellHeight}px`
+      return h(
+        'td',
+        {
+          key: cellClassName || cellStyle ? field : $columnIndex,
+          class: [
+            'vxe-gantt-view--body-column',
+            {
+              'is--now': showNowLine && todayValue === field
             },
-        onClick (evnt) {
-          $xeGantt.handleTaskCellClickEvent(evnt, { row, column })
+            getClass(cellClassName, ctParams)
+          ],
+          style: cellStyle
+            ? Object.assign({}, XEUtils.isFunction(cellStyle) ? cellStyle(ctParams) : cellStyle, {
+              height: `${cellHeight}px`
+            })
+            : {
+                height: `${cellHeight}px`
+              },
+          onClick(evnt) {
+            $xeGantt.handleTaskCellClickEvent(evnt, { row, column })
+          },
+          onDblclick(evnt) {
+            $xeGantt.handleTaskCellDblclickEvent(evnt, { row, column })
+          },
+          onContextmenu(evnt) {
+            $xeGantt.handleTaskBodyContextmenuEvent(evnt, ctParams)
+          }
         },
-        onDblclick (evnt) {
-          $xeGantt.handleTaskCellDblclickEvent(evnt, { row, column })
-        },
-        onContextmenu (evnt) {
-          $xeGantt.handleTaskBodyContextmenuEvent(evnt, ctParams)
-        }
-      }, tdVNs)
+        tdVNs
+      )
     }
 
     const renderRows = ($xeTable: VxeTableConstructor & VxeTableMethods & VxeTablePrivateMethods, tableData: any[]) => {
@@ -151,7 +155,7 @@ export default defineVxeComponent({
 
       const { tableColumn, scrollYLoad } = reactData
 
-      const trVNs:VNode[] = []
+      const trVNs: VNode[] = []
       tableData.forEach((row, $rowIndex) => {
         const rowid = $xeTable.getRowid(row)
         const rowRest = fullAllDataRowIdData[rowid] || {}
@@ -193,23 +197,27 @@ export default defineVxeComponent({
           _rowIndex
         }
         trVNs.push(
-          h('tr', {
-            key: rowClassName || rowStyle || cellClassName || cellStyle ? rowid : $rowIndex,
-            class: [
-              'vxe-gantt-view--body-row',
-              {
-                'row--stripe': stripe && (_rowIndex + 1) % 2 === 0,
-                'is--new': isNewRow,
-                'row--radio': radioOpts.highlight && $xeTable.eqRow(selectRadioRow, row),
-                'row--checked': checkboxOpts.highlight && $xeTable.isCheckedByCheckboxRow(row),
-                'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid]
-              },
-              getClass(rowClassName, rowParams)
-            ],
-            rowid,
-            style: rowStyle ? (XEUtils.isFunction(rowStyle) ? rowStyle(rowParams) || undefined : rowStyle) : undefined,
-            ...trOns
-          }, tableColumn.map((column, $columnIndex) => renderColumn($xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex, column, $columnIndex)))
+          h(
+            'tr',
+            {
+              key: rowClassName || rowStyle || cellClassName || cellStyle ? rowid : $rowIndex,
+              class: [
+                'vxe-gantt-view--body-row',
+                {
+                  'row--stripe': stripe && (_rowIndex + 1) % 2 === 0,
+                  'is--new': isNewRow,
+                  'row--radio': radioOpts.highlight && $xeTable.eqRow(selectRadioRow, row),
+                  'row--checked': checkboxOpts.highlight && $xeTable.isCheckedByCheckboxRow(row),
+                  'row--pending': !!pendingRowFlag && !!pendingRowMaps[rowid]
+                },
+                getClass(rowClassName, rowParams)
+              ],
+              rowid,
+              style: rowStyle ? (XEUtils.isFunction(rowStyle) ? rowStyle(rowParams) || undefined : rowStyle) : undefined,
+              ...trOns
+            },
+            tableColumn.map((column, $columnIndex) => renderColumn($xeTable, row, rowid, rowIndex, $rowIndex, _rowIndex, column, $columnIndex))
+          )
         )
         let isExpandTree = false
         let rowChildren: any[] = []
@@ -229,43 +237,59 @@ export default defineVxeComponent({
     const renderVN = () => {
       const $xeTable = $xeGanttView.internalData.xeTable
       const { tableData, tableColumn, viewCellWidth } = reactData
-      return h('div', {
-        ref: refElem,
-        class: 'vxe-gantt-view--body-wrapper'
-      }, [
-        h('div', {
-          ref: refBodyScroll,
-          class: 'vxe-gantt-view--body-inner-wrapper',
-          onScroll: $xeGanttView.triggerBodyScrollEvent,
-          onContextmenu (evnt) {
-            $xeGantt.handleTaskBodyContextmenuEvent(evnt, { source: sourceType, type: viewType, rowIndex: -1, $rowIndex: -1, _rowIndex: -1 })
-          }
-        }, [
-          h('div', {
-            ref: refBodyXSpace,
-            class: 'vxe-body--x-space'
-          }),
-          h('div', {
-            ref: refBodyYSpace,
-            class: 'vxe-body--y-space'
-          }),
-          h('table', {
-            ref: refBodyTable,
-            class: 'vxe-gantt-view--body-table'
-          }, [
-            h('colgroup', {}, tableColumn.map((column, cIndex) => {
-              return h('col', {
-                key: cIndex,
-                style: {
-                  width: `${viewCellWidth}px`
-                }
-              })
-            })),
-            h('tbody', {}, $xeTable ? renderRows($xeTable, tableData) : [])
-          ]),
-          h(GanttViewChartComponent)
-        ])
-      ])
+      return h(
+        'div',
+        {
+          ref: refElem,
+          class: 'vxe-gantt-view--body-wrapper'
+        },
+        [
+          h(
+            'div',
+            {
+              ref: refBodyScroll,
+              class: 'vxe-gantt-view--body-inner-wrapper',
+              onScroll: $xeGanttView.triggerBodyScrollEvent,
+              onContextmenu(evnt) {
+                $xeGantt.handleTaskBodyContextmenuEvent(evnt, { source: sourceType, type: viewType, rowIndex: -1, $rowIndex: -1, _rowIndex: -1 })
+              }
+            },
+            [
+              h('div', {
+                ref: refBodyXSpace,
+                class: 'vxe-body--x-space'
+              }),
+              h('div', {
+                ref: refBodyYSpace,
+                class: 'vxe-body--y-space'
+              }),
+              h(
+                'table',
+                {
+                  ref: refBodyTable,
+                  class: 'vxe-gantt-view--body-table'
+                },
+                [
+                  h(
+                    'colgroup',
+                    {},
+                    tableColumn.map((column, cIndex) => {
+                      return h('col', {
+                        key: cIndex,
+                        style: {
+                          width: `${viewCellWidth}px`
+                        }
+                      })
+                    })
+                  ),
+                  h('tbody', {}, $xeTable ? renderRows($xeTable, tableData) : [])
+                ]
+              ),
+              h(GanttViewChartComponent)
+            ]
+          )
+        ]
+      )
     }
 
     onMounted(() => {

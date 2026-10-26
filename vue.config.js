@@ -2,7 +2,7 @@ const path = require('path')
 const pkg = require('./package.json')
 const { defineConfig } = require('@vue/cli-service')
 
-function resolve (dir) {
+function resolve(dir) {
   return path.join(__dirname, '.', dir)
 }
 

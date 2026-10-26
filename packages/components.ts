@@ -6,14 +6,12 @@ import type { VxeGlobalConfig } from 'vxe-pc-ui'
 
 const { setConfig } = VxeUI
 
-const components = [
-  VxeGantt
-]
+const components = [VxeGantt]
 
-export function install (app: App, options?: VxeGlobalConfig) {
+export function install(app: App, options?: VxeGlobalConfig) {
   setConfig(options)
 
-  components.forEach(component => app.use(component))
+  components.forEach((component) => app.use(component))
 }
 
 export { VxeUI }

@@ -82,7 +82,7 @@ const FONT_EXTS = new Set(['.ttf', '.otf', '.woff', '.woff2', '.eot', '.svg'])
 const rel = p => path.relative(ROOT, p).replace(/\\/g, '/') || '.'
 
 /* --------------------------- 前置校验 --------------------------- */
-function assertNotSame (a, b, label) {
+function assertNotSame(a, b, label) {
   if (a === b) { console.error(`[build] ${label} 不能相同: ${rel(a)}`); process.exit(1) }
 }
 assertNotSame(ES_DIR, LIB_DIR, 'OUT_ES 与 OUT_LIB')
@@ -94,7 +94,7 @@ assertNotSame(SRC_TMPL_DIR, ES_DIR, 'SRC_TMPL 与 OUT_ES')
 assertNotSame(SRC_TMPL_DIR, LIB_DIR, 'SRC_TMPL 与 OUT_LIB')
 assertNotSame(SRC_TMPL_DIR, DIST_DIR, 'SRC_TMPL 与 OUT_DIST')
 
-function capitalize (str) {
+function capitalize(str) {
   if (!str) return str
   return str[0].toUpperCase() + str.slice(1)
 }
@@ -103,7 +103,7 @@ function capitalize (str) {
  * 把任意字符串（如包名 '@vxe-ui/core'）转成合法的 JS 标识符。
  * 只用于 UMD 工厂函数的形参名，对外部使用者的 API 没有任何影响。
  */
-function toSafeIdent (input) {
+function toSafeIdent(input) {
   let id = String(input).replace(/[^a-zA-Z0-9_$]/g, '_')
   if (!id) id = '_mod'
   if (/^[0-9]/.test(id)) id = '_' + id
@@ -111,7 +111,7 @@ function toSafeIdent (input) {
 }
 
 /* --------------------------- CSS 处理 --------------------------- */
-async function processCss (rawCss) {
+async function processCss(rawCss) {
   const { css } = await postcss([autoprefixer()]).process(rawCss, { from: undefined })
   const { code: cssMin } = await esbuild.transform(css, {
     loader: 'css',
@@ -122,9 +122,9 @@ async function processCss (rawCss) {
 
 /* ------------------------------ IO ------------------------------ */
 
-async function walk (dir, filter) {
+async function walk(dir, filter) {
   const out = []
-  async function visit (d) {
+  async function visit(d) {
     let entries
     try { entries = await fsp.readdir(d, { withFileTypes: true }) } catch { return }
     await Promise.all(entries.map(async e => {
@@ -138,7 +138,7 @@ async function walk (dir, filter) {
   return out.sort()
 }
 
-function run (cmd, args, opts = {}) {
+function run(cmd, args, opts = {}) {
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, args, { stdio: 'inherit', ...opts })
     p.on('error', reject)
@@ -148,7 +148,7 @@ function run (cmd, args, opts = {}) {
 
 /* --------------------------- 临时工作区 --------------------------- */
 
-async function copySrcToTmpl () {
+async function copySrcToTmpl() {
   await fsp.rm(SRC_TMPL_DIR, { recursive: true, force: true })
   await fsp.cp(SRC_DIR, SRC_TMPL_DIR, {
     recursive: true,
@@ -160,7 +160,7 @@ async function copySrcToTmpl () {
   })
 }
 
-async function generateAliasSources () {
+async function generateAliasSources() {
   const results = await Promise.all(componentList.map(async name => {
     const compDir = path.join(SRC_TMPL_DIR, name)
     let stat
@@ -180,13 +180,13 @@ async function generateAliasSources () {
 }
 
 /* ------------------------------ 样式编译 ------------------------------ */
-function buildCssIcon (rawCss) {
+function buildCssIcon(rawCss) {
   return rawCss.replace('url("./icon/iconfont.woff2")', `url("./iconfont.${buildTime}.woff2")`)
     .replace('url("./icon/iconfont.woff")', `url("./iconfont.${buildTime}.woff")`)
     .replace('url("./icon/iconfont.ttf")', `url("./iconfont.${buildTime}.ttf")`)
 }
 
-async function buildStyles () {
+async function buildStyles() {
   const sassOpts = {
     loadPaths: [STYLES_DIR, path.join(ROOT, 'node_modules')],
     silenceDeprecations: ['import', 'legacy-js-api']
@@ -244,7 +244,7 @@ async function buildStyles () {
   return results.filter(Boolean)
 }
 
-async function buildDistStyle () {
+async function buildDistStyle() {
   const scssFile = path.join(STYLES_DIR, 'all.scss')
   let stat
   try { stat = await fsp.stat(scssFile) } catch { return null }
@@ -295,7 +295,7 @@ async function buildDistStyle () {
  * - 不会清理输出目录其他产物
  * - 由 doIcon 开关控制是否执行（在 main 中判断）
  */
-function getRenamedRelPath (relPath) {
+function getRenamedRelPath(relPath) {
   const base = path.basename(relPath)
   const ext = path.extname(base)
   const name = base.slice(0, base.length - ext.length)
@@ -305,7 +305,7 @@ function getRenamedRelPath (relPath) {
   return dir === '.' ? newBase : path.join(dir, newBase)
 }
 
-async function cleanupOldIconFonts (dir) {
+async function cleanupOldIconFonts(dir) {
   let entries
   try { entries = await fsp.readdir(dir, { withFileTypes: true }) } catch { return }
   const current = String(buildTime)
@@ -322,7 +322,7 @@ async function cleanupOldIconFonts (dir) {
   }))
 }
 
-async function copyIconAssets () {
+async function copyIconAssets() {
   let stat
   try { stat = await fsp.stat(ICON_DIR) } catch { return null }
   if (!stat.isDirectory()) return null
@@ -392,7 +392,7 @@ const DEFINE_VXE_COMPONENT_START = '/* define-vxe-component start */ defineVxeCo
  * - 只匹配一半时语法错误，esbuild 会直接报错
  * - .d.ts 由 tsc 生成，不经过此插件，类型约束完整保留
  */
-function stripDefineVxeComponent (source) {
+function stripDefineVxeComponent(source) {
   return source
     // 1. 移除起包裹，保留内部对象
     .replace(DEFINE_VXE_COMPONENT_START, '{')
@@ -402,7 +402,7 @@ function stripDefineVxeComponent (source) {
 
 const stripDefineVxeComponentPlugin = {
   name: 'strip-define-vxe-component',
-  setup (build) {
+  setup(build) {
     build.onLoad({ filter: /\.(ts|tsx)$/ }, async args => {
       // 只处理临时目录内的源码，不碰 node_modules
       if (!args.path.startsWith(SRC_TMPL_PREFIX)) return null
@@ -420,7 +420,7 @@ const stripDefineVxeComponentPlugin = {
 
 const scssStubPlugin = {
   name: 'scss-stub',
-  setup (build) {
+  setup(build) {
     build.onResolve({ filter: /\.(scss|sass|css|less|styl)$/ }, args => ({
       path: args.path,
       namespace: 'scss-stub'
@@ -432,7 +432,7 @@ const scssStubPlugin = {
   }
 }
 
-async function buildBundle () {
+async function buildBundle() {
   const entry = path.join(SRC_TMPL_DIR, 'index.ts')
   let stat
   try { stat = await fsp.stat(entry) } catch { return null }
@@ -467,7 +467,7 @@ async function buildBundle () {
 
 /* ------------------------------ UMD Bundle ------------------------------ */
 
-async function buildUmdBundle () {
+async function buildUmdBundle() {
   const entry = path.join(SRC_TMPL_DIR, umdEntry)
   let stat
   try { stat = await fsp.stat(entry) } catch { return null }
@@ -568,7 +568,7 @@ async function buildUmdBundle () {
 
 /* ------------------------------ 语言包编译 ------------------------------ */
 
-async function buildLocales () {
+async function buildLocales() {
   // 如果源码目录不存在，则跳过
   let stat
   try { stat = await fsp.stat(LOCALE_DIR_TMPL) } catch { return null }
@@ -651,7 +651,7 @@ async function buildLocales () {
 
 let FILES = []
 
-function esbuildTranspile (format, outdir) {
+function esbuildTranspile(format, outdir) {
   const srcPlugins = doStripDefineWrapper ? [stripDefineVxeComponentPlugin] : []
   return esbuild.build({
     entryPoints: FILES,
@@ -672,7 +672,7 @@ function esbuildTranspile (format, outdir) {
   })
 }
 
-function buildTypes () {
+function buildTypes() {
   const tmpConfig = path.join(ROOT, '.tsconfig.build-dts.json')
   const types = tsconfig.compilerOptions && tsconfig.compilerOptions.types
   const config = {
@@ -694,7 +694,7 @@ function buildTypes () {
     .finally(() => { try { fs.unlinkSync(tmpConfig) } catch { } })
 }
 
-async function aliasEntry (dir, from, to) {
+async function aliasEntry(dir, from, to) {
   try {
     await fsp.copyFile(path.join(dir, from), path.join(dir, to))
   } catch {
@@ -704,7 +704,7 @@ async function aliasEntry (dir, from, to) {
 
 /* ------------------------------ main ------------------------------ */
 
-async function main () {
+async function main() {
   const t0 = Date.now()
 
   console.log(`[build] 源码 ${SRC} | CPU ${os.cpus().length} 核`)
