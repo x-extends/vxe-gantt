@@ -5,6 +5,11 @@
   "scripts": {
     "update": "npm install --legacy-peer-deps",
     "serve": "vue-cli-service serve",
+    "lint": "vue-cli-service lint",
+    "lint:es": "eslint packages/**",
+    "lint:ox": "oxfmt --check packages/**",
+    "esfix": "eslint --fix packages/**",
+    "oxfix": "oxfmt packages/** --write",
     "lib:pack": "vue-cli-service build --target lib --name index --dest lib_temp index.ts",
     "lib:modules": "gulp build",
     "lib:old": "npm run lib:pack && npm run lib:modules",
