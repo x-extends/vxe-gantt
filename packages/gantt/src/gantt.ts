@@ -308,7 +308,7 @@ function getViewTypeLevel(type: VxeGanttDefines.ColumnScaleType) {
   return viewTypeLevelMaps[type || 'date'] || viewTypeLevelMaps.date
 }
 
-export default defineVxeComponent({
+export default /* define-vxe-component start */ defineVxeComponent({
   name: 'VxeGantt',
   mixins: [],
   props: {
@@ -3314,4 +3314,4 @@ export default defineVxeComponent({
   render() {
     return this.renderVN()
   }
-})
+}) /* define-vxe-component end */
