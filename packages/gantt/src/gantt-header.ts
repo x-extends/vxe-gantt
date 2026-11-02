@@ -11,7 +11,7 @@ const { getI18n } = VxeUI
 const sourceType = 'gantt'
 const viewType = 'header'
 
-export default defineVxeComponent({
+export default /* define-vxe-component start */ defineVxeComponent({
   name: 'VxeGanttViewHeader',
   setup() {
     const $xeGantt = inject('$xeGantt', {} as VxeGanttConstructor & VxeGanttPrivateMethods)
@@ -190,4 +190,4 @@ export default defineVxeComponent({
 
     return renderVN
   }
-})
+}) /* define-vxe-component end */

@@ -14,7 +14,7 @@ const { getIcon, renderEmptyElement } = VxeUI
 const sourceType = 'gantt'
 const viewType = 'chart'
 
-export default defineVxeComponent({
+export default /* define-vxe-component start */ defineVxeComponent({
   name: 'VxeGanttViewChart',
   setup() {
     const $xeGantt = inject('$xeGantt', {} as VxeGanttConstructor & VxeGanttPrivateMethods)
@@ -652,4 +652,4 @@ export default defineVxeComponent({
 
     return renderVN
   }
-})
+}) /* define-vxe-component end */

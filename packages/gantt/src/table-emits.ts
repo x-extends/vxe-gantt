@@ -1,6 +1,6 @@
 import type { VxeTableEmits } from 'vxe-table'
 
-export const tableEmits: VxeTableEmits = [
+export const tableComponeEmits: VxeTableEmits = [
   'ready',
   'init-rendered',
   'data-rendered',

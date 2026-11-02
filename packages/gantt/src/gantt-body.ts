@@ -11,7 +11,7 @@ import type { VxeGanttViewConstructor, VxeGanttViewPrivateMethods, VxeGanttConst
 const sourceType = 'gantt'
 const viewType = 'body'
 
-export default defineVxeComponent({
+export default /* define-vxe-component start */ defineVxeComponent({
   name: 'VxeGanttViewBody',
   setup() {
     const $xeGantt = inject('$xeGantt', {} as VxeGanttConstructor & VxeGanttPrivateMethods)
@@ -314,4 +314,4 @@ export default defineVxeComponent({
 
     return renderVN
   }
-})
+}) /* define-vxe-component end */

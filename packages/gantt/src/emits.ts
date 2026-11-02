@@ -1,9 +1,9 @@
-import { gridEmits } from './grid-emits'
+import { gridComponeEmits } from './grid-emits'
 
 import type { VxeGanttEmits } from '../../../types'
 
-export const ganttEmits: VxeGanttEmits = [
-  ...gridEmits,
+export const ganttComponeEmits: VxeGanttEmits = [
+  ...gridComponeEmits,
 
   'task-cell-click',
   'task-cell-dblclick',

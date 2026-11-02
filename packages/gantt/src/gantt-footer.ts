@@ -6,7 +6,7 @@ import type { VxeGanttConstructor, VxeGanttPrivateMethods, VxeGanttViewConstruct
 const sourceType = 'gantt'
 const viewType = 'footer'
 
-export default defineVxeComponent({
+export default /* define-vxe-component start */ defineVxeComponent({
   name: 'VxeGanttViewFooter',
   setup() {
     const $xeGantt = inject('$xeGantt', {} as VxeGanttConstructor & VxeGanttPrivateMethods)
@@ -52,4 +52,4 @@ export default defineVxeComponent({
 
     return renderVN
   }
-})
+}) /* define-vxe-component end */

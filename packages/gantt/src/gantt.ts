@@ -5,9 +5,9 @@ import { getLastZIndex, nextZIndex, isEnableConf, hasEnableConf, formatText, get
 import { getOffsetHeight, getPaddingTopBottomSize, getDomNode, toCssUnit, addClass, removeClass, hasClass } from '../../ui/src/dom'
 import { getSlotVNs } from '../../ui/src/vn'
 import { VxeUI } from '@vxe-ui/core'
-import { ganttEmits } from './emits'
+import { ganttComponeEmits } from './emits'
 import { getRefElem } from './util'
-import { tableEmits } from './table-emits'
+import { tableComponeEmits } from './table-emits'
 import { createComponentLog } from '../../ui/src/log'
 import GanttViewComponent from './gantt-view'
 import { VxeTable as VxeTableComponent } from 'vxe-table'
@@ -364,7 +364,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       default: () => getConfig().gantt.size || getConfig().size
     }
   },
-  emits: ganttEmits,
+  emits: ganttComponeEmits,
   setup(props, context) {
     const { slots, emit } = context
 
@@ -1322,7 +1322,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
     }
 
     const tableCompEvents: VxeTableEventProps = {}
-    tableEmits.forEach((name) => {
+    tableComponeEmits.forEach((name) => {
       const type = XEUtils.camelCase(`on-${name}`) as keyof VxeTableEventProps
       tableCompEvents[type] = (...args: any[]) => emit(name, ...args)
     })

@@ -146,7 +146,7 @@ function createReactData(): GanttViewReactData {
 const maxYHeight = 5e6
 // const maxXWidth = 5e6
 
-export default defineVxeComponent({
+export default /* define-vxe-component start */ defineVxeComponent({
   name: 'VxeGanttView',
   setup(props, context) {
     const xID = XEUtils.uniqueId()
@@ -2692,4 +2692,4 @@ export default defineVxeComponent({
   render() {
     return this.renderVN()
   }
-})
+}) /* define-vxe-component end */
