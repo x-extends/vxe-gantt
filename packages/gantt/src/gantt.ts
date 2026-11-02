@@ -18,10 +18,10 @@ const { warnLog, errLog } = createComponentLog('gantt')
 
 const { getConfig, getIcon, getI18n, commands, globalMixins, createEvent, globalEvents, GLOBAL_EVENT_KEYS, renderEmptyElement } = VxeUI
 
-const tableProps = VxeTableComponent.props
+const tableComponeProps = VxeTableComponent.props
 
 const tableMethods: VxeTableMethods = {} as VxeTableMethods
-const propKeys = Object.keys(tableProps) as (keyof VxeTableProps)[]
+const propKeys = Object.keys(tableComponeProps) as (keyof VxeTableProps)[]
 
 const defaultLayouts: VxeGanttPropTypes.Layouts = [['Form'], ['Toolbar', 'Top', 'Gantt', 'Bottom', 'Pager']]
 
@@ -159,9 +159,12 @@ function createReactData(): GanttReactData {
 
 export default /* define-vxe-component start */ defineVxeComponent({
   name: 'VxeGantt',
-  mixins: [globalMixins.sizeMixin, globalMixins.vScrollbarMixin],
+  mixins: [
+    globalMixins.sizeMixin,
+    globalMixins.vScrollbarMixin
+  ],
   props: {
-    ...(tableProps as unknown as {
+    ...(tableComponeProps as unknown as {
       border: PropType<VxeTablePropTypes.Border>
       round: PropType<VxeTablePropTypes.Round>
       loading: PropType<VxeTablePropTypes.Loading>
