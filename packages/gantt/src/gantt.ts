@@ -2897,71 +2897,52 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if (isResize) {
         ons.mousedown = $xeGantt.dragSplitEvent
       }
-      return h(
-        'div',
-        {
-          class: [
-            'vxe-gantt--view-split-bar',
-            {
-              'is--resize': isResize
-            }
-          ]
-        },
-        [
-          h('div', {
-            class: 'vxe-gantt--view-split-bar-handle',
-            on: ons
-          }),
-          showCollapseTableButton || showCollapseTaskButton
-            ? h(
-              'div',
-              {
-                class: 'vxe-gantt--view-split-bar-btn-wrapper'
-              },
-              [
-                showCollapseTableButton && showRightView
-                  ? h(
-                    'div',
-                    {
-                      class: ['vxe-gantt--view-split-bar-action-btn', showLeftView ? 'is--prev' : 'is--next'],
-                      on: {
-                        click: $xeGantt.handleSplitLeftViewEvent
-                      }
-                    },
-                    [
-                      h('i', {
-                        class: showLeftView ? getIcon().GANTT_VIEW_LEFT_OPEN : getIcon().GANTT_VIEW_LEFT_CLOSE
-                      })
-                    ]
-                  )
-                  : renderEmptyElement($xeGantt),
-                showCollapseTaskButton && showLeftView
-                  ? h(
-                    'div',
-                    {
-                      class: ['vxe-gantt--view-split-bar-action-btn', showRightView ? 'is--next' : 'is--prev'],
-                      on: {
-                        click: $xeGantt.handleSplitRightViewEvent
-                      }
-                    },
-                    [
-                      h('i', {
-                        class: showRightView ? getIcon().GANTT_VIEW_RIGHT_OPEN : getIcon().GANTT_VIEW_RIGHT_CLOSE
-                      })
-                    ]
-                  )
-                  : renderEmptyElement($xeGantt)
-              ]
-            )
-            : renderEmptyElement($xeGantt)
-        ]
-      )
+      return h('div', {
+        class: ['vxe-gantt--view-split-bar', {
+          'is--resize': isResize
+        }]
+      }, [
+        h('div', {
+          class: 'vxe-gantt--view-split-bar-handle',
+          on: ons
+        }),
+        showCollapseTableButton || showCollapseTaskButton
+          ? h('div', {
+            class: 'vxe-gantt--view-split-bar-btn-wrapper'
+          }, [
+            showCollapseTableButton && showRightView
+              ? h('div', {
+                class: ['vxe-gantt--view-split-bar-action-btn', showLeftView ? 'is--prev' : 'is--next'],
+                on: {
+                  click: $xeGantt.handleSplitLeftViewEvent
+                }
+              }, [
+                h('i', {
+                  class: showLeftView ? getIcon().GANTT_VIEW_LEFT_OPEN : getIcon().GANTT_VIEW_LEFT_CLOSE
+                })
+              ])
+              : renderEmptyElement($xeGantt),
+            showCollapseTaskButton && showLeftView
+              ? h('div', {
+                class: ['vxe-gantt--view-split-bar-action-btn', showRightView ? 'is--next' : 'is--prev'],
+                on: {
+                  click: $xeGantt.handleSplitRightViewEvent
+                }
+              }, [
+                h('i', {
+                  class: showRightView ? getIcon().GANTT_VIEW_RIGHT_OPEN : getIcon().GANTT_VIEW_RIGHT_CLOSE
+                })
+              ])
+              : renderEmptyElement($xeGantt)
+          ])
+          : renderEmptyElement($xeGantt)
+      ])
     },
     renderChildLayout(h: CreateElement, layoutKeys: VxeGanttDefines.LayoutKey[]) {
       const $xeGantt = this
       const reactData = $xeGantt.reactData
 
-      const { showLeftView, showRightView } = reactData
+      const { showLeftView, showRightView, overflowY, overflowX } = reactData
       const isVScrollbar = $xeGantt.computeIsVScrollbar
       const taskSplitOpts = $xeGantt.computeTaskSplitOpts
       const scrollbarXToTop = $xeGantt.computeScrollbarXToTop
@@ -3000,7 +2981,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
                       'hide--left': !showLeftView,
                       'show--right': showRightView,
                       'hide--right': !showRightView,
-                      'is--ah-split-btn': autoHideCollapseButton
+                      'is--ah-split-btn': autoHideCollapseButton,
+                      'is--scroll-y': overflowY,
+                      'is--scroll-x': overflowX
                     }
                   ]
                 },
