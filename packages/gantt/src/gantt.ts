@@ -2857,65 +2857,48 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if (isResize) {
         ons.onMousedown = dragSplitEvent
       }
-      return h(
-        'div',
-        {
-          class: [
-            'vxe-gantt--view-split-bar',
-            {
-              'is--resize': isResize
-            }
+      return h('div', {
+        class: ['vxe-gantt--view-split-bar', {
+          'is--resize': isResize
+        }]
+      }, [
+        h('div', {
+          class: 'vxe-gantt--view-split-bar-handle',
+          ...ons
+        }),
+        showCollapseTableButton || showCollapseTaskButton
+          ? h('div', {
+            class: 'vxe-gantt--view-split-bar-btn-wrapper'
+          }, [
+            showCollapseTableButton && showRightView
+              ? h('div', {
+                class: ['vxe-gantt--view-split-bar-action-btn', showLeftView ? 'is--prev' : 'is--next'],
+                onClick: handleSplitLeftViewEvent
+              }, [
+                h('i', {
+                  class: showLeftView ? getIcon().GANTT_VIEW_LEFT_OPEN : getIcon().GANTT_VIEW_LEFT_CLOSE
+                })
+              ])
+              : renderEmptyElement($xeGantt),
+            showCollapseTaskButton && showLeftView
+              ? h('div', {
+                class: ['vxe-gantt--view-split-bar-action-btn', showRightView ? 'is--next' : 'is--prev'],
+                onClick: handleSplitRightViewEvent
+              }, [
+                h('i', {
+                  class: showRightView ? getIcon().GANTT_VIEW_RIGHT_OPEN : getIcon().GANTT_VIEW_RIGHT_CLOSE
+                })
+              ])
+              : renderEmptyElement($xeGantt)
           ]
-        },
-        [
-          h('div', {
-            class: 'vxe-gantt--view-split-bar-handle',
-            ...ons
-          }),
-          showCollapseTableButton || showCollapseTaskButton
-            ? h(
-              'div',
-              {
-                class: 'vxe-gantt--view-split-bar-btn-wrapper'
-              },
-              [
-                showCollapseTableButton && showRightView
-                  ? h(
-                    'div',
-                    {
-                      class: ['vxe-gantt--view-split-bar-action-btn', showLeftView ? 'is--prev' : 'is--next'],
-                      onClick: handleSplitLeftViewEvent
-                    },
-                    [
-                      h('i', {
-                        class: showLeftView ? getIcon().GANTT_VIEW_LEFT_OPEN : getIcon().GANTT_VIEW_LEFT_CLOSE
-                      })
-                    ]
-                  )
-                  : renderEmptyElement($xeGantt),
-                showCollapseTaskButton && showLeftView
-                  ? h(
-                    'div',
-                    {
-                      class: ['vxe-gantt--view-split-bar-action-btn', showRightView ? 'is--next' : 'is--prev'],
-                      onClick: handleSplitRightViewEvent
-                    },
-                    [
-                      h('i', {
-                        class: showRightView ? getIcon().GANTT_VIEW_RIGHT_OPEN : getIcon().GANTT_VIEW_RIGHT_CLOSE
-                      })
-                    ]
-                  )
-                  : renderEmptyElement($xeGantt)
-              ]
-            )
-            : renderEmptyElement($xeGantt)
-        ]
+          )
+          : renderEmptyElement($xeGantt)
+      ]
       )
     }
 
     const renderChildLayout = (layoutKeys: VxeGanttDefines.LayoutKey[]) => {
-      const { showLeftView, showRightView } = reactData
+      const { showLeftView, showRightView, overflowY, overflowX } = reactData
       const isVScrollbar = computeIsVScrollbar.value
       const taskSplitOpts = computeTaskSplitOpts.value
       const scrollbarXToTop = computeScrollbarXToTop.value
@@ -2954,7 +2937,9 @@ export default /* define-vxe-component start */ defineVxeComponent({
                       'hide--left': !showLeftView,
                       'show--right': showRightView,
                       'hide--right': !showRightView,
-                      'is--ah-split-btn': autoHideCollapseButton
+                      'is--ah-split-btn': autoHideCollapseButton,
+                      'is--scroll-y': overflowY,
+                      'is--scroll-x': overflowX
                     }
                   ]
                 },
