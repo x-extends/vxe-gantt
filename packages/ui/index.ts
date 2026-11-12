@@ -129,4 +129,8 @@ setIcon({
   GANTT_VIEW_TASK_MILESTONE: iconPrefix + 'square-fill rotate45'
 })
 
+export {
+  VxeUI
+}
+
 export default VxeUI

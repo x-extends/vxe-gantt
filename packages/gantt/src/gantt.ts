@@ -145,7 +145,6 @@ const tableComponentMethodKeys: (keyof VxeTableMethods)[] = [
   'isRowExpandLoaded',
   'clearRowExpandLoaded',
   'reloadRowExpand',
-  'reloadRowExpand',
   'toggleRowExpand',
   'setAllRowExpand',
   'setRowExpand',
@@ -424,14 +423,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
 
     const ganttExtendTableMethods = extendTableMethods(tableComponentMethodKeys) as VxeTableMethods
 
-    tableComponentMethodKeys.forEach((name) => {
-      ganttExtendTableMethods[name] = (...args: any[]) => {
-        const $xeTable: any = refTable.value
-        if ($xeTable && $xeTable[name]) {
-          return $xeTable && $xeTable[name](...args)
-        }
-      }
-    })
+    // tableComponentMethodKeys.forEach((name) => {
+    //   ganttExtendTableMethods[name] = (...args: any[]) => {
+    //     const $xeTable: any = refTable.value
+    //     if ($xeTable && $xeTable[name]) {
+    //       return $xeTable && $xeTable[name](...args)
+    //     }
+    //   }
+    // })
 
     const computeProxyOpts = computed(() => {
       return XEUtils.merge({}, XEUtils.clone(getConfig().gantt.proxyConfig, true), props.proxyConfig)
@@ -2006,14 +2005,14 @@ export default /* define-vxe-component start */ defineVxeComponent({
         if ($form) {
           return $form.validate()
         }
-        return nextTick()
+        return Promise.resolve()
       },
       validateFormField(field) {
         const $form = refForm.value
         if ($form) {
           return $form.validateField(field)
         }
-        return nextTick()
+        return Promise.resolve()
       },
       clearFormValidate(field) {
         const $form = refForm.value
