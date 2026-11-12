@@ -15,10 +15,7 @@ export function install(app: App, options?: VxeGlobalConfig) {
   components.forEach((component) => app.use(component))
 }
 
-// eslint-disable-next-line import/export
-export { VxeUI }
-
-// eslint-disable-next-line import/export
+// 兼容老版本
 export * from '@vxe-ui/core'
 
 // Components
