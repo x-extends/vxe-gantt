@@ -1929,7 +1929,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if ($form) {
         return $form.validate()
       }
-      return $xeGantt.$nextTick()
+      return Promise.resolve()
     },
     validateFormField(field: VxeFormItemPropTypes.Field | VxeFormItemPropTypes.Field[] | VxeFormDefines.ItemInfo | VxeFormDefines.ItemInfo[] | null) {
       const $xeGantt = this
@@ -1938,7 +1938,7 @@ export default /* define-vxe-component start */ defineVxeComponent({
       if ($form) {
         return $form.validateField(field)
       }
-      return $xeGantt.$nextTick()
+      return Promise.resolve()
     },
     clearFormValidate(field?: VxeFormItemPropTypes.Field | VxeFormItemPropTypes.Field[] | VxeFormDefines.ItemInfo | VxeFormDefines.ItemInfo[] | null) {
       const $xeGantt = this
