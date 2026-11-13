@@ -106,8 +106,8 @@ export default /* define-vxe-component start */ defineVxeComponent({
       }
 
       let cbVNs: VNode[] = []
-      if ($xeGantt.renderGanttTaskBarContent) {
-        cbVNs = $xeGantt.renderGanttTaskBarContent(ctParams, {
+      if ($xeGantt.renderGanttTkBarCont) {
+        cbVNs = $xeGantt.renderGanttTkBarCont(ctParams, {
           $gantt: $xeGantt,
           $table: $xeTable,
           rowid
